@@ -77,6 +77,8 @@
   .tabs button{flex:1;padding:8px 6px;background:transparent;border:none;border-radius:9px;
     cursor:pointer;transition:background .15s;display:flex;align-items:center;justify-content:center;}
   .tabs button.active{background:var(--card);box-shadow:0 1px 3px rgba(0,0,0,0.08);}
+  html.dark .tabs{background:#26262b;}
+  html.dark .tabs button.active{background:#000;}
   .tab-logo{height:22px;width:auto;display:block;}
   .tab-logo text{font-family:'Rubik Wet Paint', cursive;fill:#fff;stroke:#111;stroke-width:2.6;}
 
@@ -193,6 +195,15 @@
   .wavy-btn.wavy-neighbor{color:#93c5fd;}
   .history-hint{font-size:10.5px;color:var(--dim);text-align:center;margin:-2px 0 10px;}
 
+  .history-and-clock{display:flex;align-items:center;gap:14px;}
+  .history-and-clock #play-history{flex:1;min-width:0;}
+  .play-clock{display:none;}
+  @media (orientation: landscape){
+    .play-clock{display:block;flex-shrink:0;font-family:-apple-system,sans-serif;
+      font-weight:700;font-size:22px;color:var(--text);white-space:nowrap;padding-bottom:14px;}
+    .play-clock .secs{font-size:12px;font-weight:500;opacity:0.45;margin-left:2px;}
+  }
+
   .flow-badge{display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:700;
     color:#2563eb;background:#dbeafe;border-radius:6px;padding:2px 7px;margin-bottom:5px;}
   html.dark .flow-badge{background:#1e2b4d;color:#93c5fd;}
@@ -227,6 +238,9 @@
     padding:12px 14px;margin-bottom:10px;box-shadow:0 1px 2px rgba(0,0,0,0.04);cursor:pointer;}
   .crate-card-icon{width:44px;height:44px;border-radius:10px;background:var(--bg);
     display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;color:var(--text);}
+  .crate-card.flow-crate{border:2px solid #3b82f6;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='16'%3E%3Cpath d='M0,8 Q10,0 20,8 T40,8' stroke='%233b82f6' stroke-width='1.5' fill='none' opacity='0.16'/%3E%3C/svg%3E");
+    background-repeat:repeat;}
   .crate-card.flow-crate .crate-card-icon{background:#dbeafe;color:#2563eb;font-weight:800;}
   html.dark .crate-card.flow-crate .crate-card-icon{background:#1e2b4d;color:#93c5fd;}
   .crate-card-info{flex:1;min-width:0;}
@@ -239,7 +253,7 @@
     border:1.5px dashed var(--line);border-radius:12px;padding:12px;
     font-size:13px;font-weight:600;color:var(--dim);cursor:pointer;}
 
-  .back-btn{background:none;border:none;color:var(--accent);font-size:13.5px;font-weight:600;
+  .back-btn{background:none;border:none;color:var(--text);font-size:13.5px;font-weight:600;
     padding:2px 0 14px;cursor:pointer;}
 
   .organise-row{display:flex;align-items:center;gap:10px;background:var(--card);border-radius:12px;
@@ -320,9 +334,9 @@
       </svg>
     </button>
     <button data-tab="organise">
-      <svg class="tab-logo" viewBox="0 0 138 26" xmlns="http://www.w3.org/2000/svg">
-        <text x="2" y="20" font-size="15" stroke-linejoin="round" paint-order="stroke fill"
-          letter-spacing="-0.5" rotate="-3,2,-2,3,-2,3,-1,2" transform="rotate(-1 68 13)">ORGANISE</text>
+      <svg class="tab-logo" viewBox="0 0 158 26" xmlns="http://www.w3.org/2000/svg">
+        <text x="79" y="20" font-size="19" text-anchor="middle" stroke-linejoin="round" paint-order="stroke fill"
+          letter-spacing="-1" rotate="-4,3,-2,4,-3,2,-1,3" transform="rotate(-1 79 13)">ORGANISE</text>
       </svg>
     </button>
     <button data-tab="match">
@@ -378,6 +392,14 @@
         </div>
         <div class="chev">›</div>
       </div>
+      <div class="crate-card" id="open-history-folder">
+        <div class="crate-card-icon">🕘</div>
+        <div class="crate-card-info">
+          <div class="t">History</div>
+          <div class="a" id="history-folder-count"></div>
+        </div>
+        <div class="chev">›</div>
+      </div>
       <div class="section-lbl" style="margin-top:16px;">Your Crates</div>
       <div id="crates-list"></div>
       <button class="new-crate-btn" id="new-crate-btn">+ New Crate</button>
@@ -404,11 +426,15 @@
       <input type="text" id="now-playing-input" placeholder="Type a track title or artist…" autocomplete="off">
       <div class="now-suggestions" id="now-suggestions"></div>
     </div>
-    <div id="play-history"></div>
+    <div class="history-and-clock">
+      <div id="play-history"></div>
+      <div class="play-clock" id="play-clock"></div>
+    </div>
     <div id="chart-holder"></div>
     <div id="now-card-holder"></div>
     <div id="match-section" style="display:none;"><div class="section-lbl">Top matches</div></div>
     <div id="match-list"></div>
+    <button class="play-reset-btn" id="save-history-btn">💾 Save this session's history</button>
     <button class="play-reset-btn" id="play-reset-btn">↺ Reset — clear played history &amp; start a clean slate</button>
   </section>
 
@@ -2186,6 +2212,39 @@ async function saveCrates(){
     else localStorage.setItem(CRATES_KEY, JSON.stringify(crates));
   }catch(e){ console.error('crates save failed', e); }
 }
+
+const HISTORY_KEY = 'cratebuddy:history';
+let historySessions = [];
+async function loadHistorySessions(){
+  try{
+    if(hasArtifactStorage){
+      const r = await window.storage.get(HISTORY_KEY, false).catch(()=>null);
+      historySessions = r && r.value ? JSON.parse(r.value) : [];
+    } else {
+      const raw = localStorage.getItem(HISTORY_KEY);
+      historySessions = raw ? JSON.parse(raw) : [];
+    }
+  }catch(e){ historySessions = []; }
+}
+async function saveHistorySessions(){
+  try{
+    if(hasArtifactStorage) await window.storage.set(HISTORY_KEY, JSON.stringify(historySessions), false);
+    else localStorage.setItem(HISTORY_KEY, JSON.stringify(historySessions));
+  }catch(e){ console.error('history save failed', e); }
+}
+document.getElementById('save-history-btn').addEventListener('click', async ()=>{
+  if(playHistory.length===0){ showInfoToast('No session history to save yet', true); return; }
+  const defaultName = `Session – ${new Date().toLocaleDateString()}`;
+  const name = prompt('Name this session:', defaultName);
+  if(!name || !name.trim()) return;
+  historySessions.unshift({
+    id:'h_'+Date.now()+'_'+Math.random().toString(36).slice(2,7),
+    name:name.trim(), savedAt:Date.now(), trackIds:[...playHistory]
+  });
+  await saveHistorySessions();
+  showInfoToast(`Saved "${name.trim()}" to History`, false);
+});
+
 // Keeps crates/Flow clean when a track is deleted from the library entirely.
 async function cleanupReferencesToTrack(id){
   let cratesChanged=false;
@@ -2240,8 +2299,9 @@ function wireTrackPicker(idPrefix, excludeIds, onPick, singleSelect){
   input.addEventListener('blur', ()=>setTimeout(()=>box.classList.remove('show'),150));
 }
 
-let openCrateId = null; // null = list view, '__flow__' = Flow crate, or a crate id
+let openCrateId = null; // null = list view, '__flow__' = Flow crate, '__history__' = History folder, or a crate id
 let manualFlowFrom = null, manualFlowTo = null;
+let openHistorySessionId = null; // only relevant when openCrateId === '__history__'
 
 function renderOrganise(){
   const listView = document.getElementById('organise-list-view');
@@ -2252,6 +2312,10 @@ function renderOrganise(){
   } else {
     listView.style.display='none'; detailView.style.display='block';
     if(openCrateId==='__flow__') renderFlowDetail();
+    else if(openCrateId==='__history__'){
+      if(openHistorySessionId) renderHistorySessionDetail();
+      else renderHistoryFolder();
+    }
     else renderCrateDetail();
   }
 }
@@ -2259,6 +2323,8 @@ function renderOrganise(){
 function renderOrganiseList(){
   document.getElementById('flow-crate-count').textContent =
     flows.length + (flows.length===1 ? ' saved transition' : ' saved transitions');
+  document.getElementById('history-folder-count').textContent =
+    historySessions.length + (historySessions.length===1 ? ' saved session' : ' saved sessions');
   const el = document.getElementById('crates-list');
   if(crates.length===0){
     el.innerHTML = `<div class="lib-empty">No crates yet — create one below.</div>`;
@@ -2292,9 +2358,65 @@ function renderOrganiseList(){
   }
 }
 document.getElementById('open-flow-crate').addEventListener('click', ()=>{ openCrateId='__flow__'; renderOrganise(); });
+document.getElementById('open-history-folder').addEventListener('click', ()=>{ openCrateId='__history__'; openHistorySessionId=null; renderOrganise(); });
 document.getElementById('organise-back-btn').addEventListener('click', ()=>{
-  openCrateId=null; manualFlowFrom=null; manualFlowTo=null; renderOrganise();
+  if(openCrateId==='__history__' && openHistorySessionId){
+    openHistorySessionId = null; // step back to the session list, not all the way out
+  } else {
+    openCrateId=null; manualFlowFrom=null; manualFlowTo=null; openHistorySessionId=null;
+  }
+  renderOrganise();
 });
+
+function renderHistoryFolder(){
+  const el = document.getElementById('organise-detail-content');
+  if(historySessions.length===0){
+    el.innerHTML = `<div class="section-lbl">History</div><div class="lib-empty">No saved sessions yet — save one from the bottom of the Play tab.</div>`;
+    return;
+  }
+  el.innerHTML = `<div class="section-lbl">History</div>` + historySessions.map(h=>`
+    <div class="crate-card" data-session="${h.id}">
+      <div class="crate-card-icon">🕘</div>
+      <div class="crate-card-info">
+        <div class="t">${escapeHtml(h.name)}</div>
+        <div class="a">${h.trackIds.length} track${h.trackIds.length===1?'':'s'} · ${new Date(h.savedAt).toLocaleDateString()}</div>
+      </div>
+      <button class="del-crate" data-del-session="${h.id}">✕</button>
+      <div class="chev">›</div>
+    </div>`).join('');
+  el.querySelectorAll('[data-session]').forEach(card=>{
+    card.addEventListener('click', e=>{
+      if(e.target.closest('[data-del-session]')) return;
+      openHistorySessionId = card.dataset.session;
+      renderOrganise();
+    });
+  });
+  el.querySelectorAll('[data-del-session]').forEach(btn=>{
+    btn.addEventListener('click', async e=>{
+      e.stopPropagation();
+      if(!confirm('Delete this saved session history?')) return;
+      historySessions = historySessions.filter(h=>h.id!==btn.dataset.delSession);
+      await saveHistorySessions();
+      renderHistoryFolder();
+    });
+  });
+}
+
+function renderHistorySessionDetail(){
+  const session = historySessions.find(h=>h.id===openHistorySessionId);
+  const el = document.getElementById('organise-detail-content');
+  if(!session){ openHistorySessionId=null; renderOrganise(); return; }
+  const tracks = session.trackIds.map(id=>library.find(t=>t.id===id)).filter(Boolean);
+  el.innerHTML = `<div class="section-lbl">${escapeHtml(session.name)}</div>` +
+    (tracks.length===0 ? `<div class="lib-empty">None of these tracks are in your library anymore.</div>` :
+     tracks.map((t,i)=>`
+      <div class="organise-row">
+        <span style="color:var(--dim);font-size:11px;width:16px;flex-shrink:0;">${i+1}</span>
+        <img src="${t.icon}">
+        <div><div class="t">${escapeHtml(t.name)}</div><div class="a">${escapeHtml(t.artist||'Unknown artist')}</div></div>
+      </div>`).join(''));
+}
+
 document.getElementById('new-crate-btn').addEventListener('click', async ()=>{
   const name = prompt('Name this crate:');
   if(!name || !name.trim()) return;
@@ -2382,6 +2504,21 @@ loadLibrary();
 loadPresets();
 loadFlows();
 loadCrates();
+loadHistorySessions();
+
+/* Landscape-only clock next to the play-history strip — CSS handles when
+   it's actually visible, this just keeps its text current. */
+function tickClock(){
+  const el = document.getElementById('play-clock');
+  if(!el) return;
+  const now = new Date();
+  const hh = String(now.getHours()).padStart(2,'0');
+  const mm = String(now.getMinutes()).padStart(2,'0');
+  const ss = String(now.getSeconds()).padStart(2,'0');
+  el.innerHTML = `${hh}:${mm}<span class="secs">:${ss}</span>`;
+}
+tickClock();
+setInterval(tickClock, 1000);
 populateManualKeySelect();
 loadDarkMode();
 </script>
