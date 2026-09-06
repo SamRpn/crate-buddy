@@ -216,9 +216,9 @@
   .ss-clock{display:flex;align-items:center;gap:10px;position:relative;z-index:1;}
   .ss-secs{display:inline-flex;align-items:center;opacity:0.5;}
   .ss-ms{display:inline-flex;align-items:center;opacity:0.22;}
-  .ss-grain, .clock-grain{position:absolute;inset:-20%;pointer-events:none;opacity:0.68;mix-blend-mode:overlay;z-index:2;
-    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.15' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-    animation:grain-shift 0.3s steps(3) infinite;}
+  .ss-grain, .clock-grain{position:absolute;inset:-20%;pointer-events:none;opacity:0.95;mix-blend-mode:overlay;z-index:2;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.4' numOctaves='5' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    animation:grain-shift 0.25s steps(3) infinite;}
   @keyframes grain-shift{0%,100%{transform:translate(0,0);}33%{transform:translate(-3%,2%);}66%{transform:translate(2%,-3%);}}
 
   /* Each lit segment breathes slowly between dim and bright — a smooth single
@@ -230,13 +230,13 @@
   }
   .seg-digit rect.lit{animation-name:seg-breathe;animation-timing-function:ease-in-out;animation-iteration-count:infinite;}
 
-  /* Whole digit drifts a fraction of a pixel and softens in and out of focus —
-     slow and subtle, independent of the per-segment breathing above. */
+  /* Whole digit drifts further from its resting point now (still slow and
+     smooth) and softens in and out of focus. */
   @keyframes digit-float{
     0%{transform:translate(0,0) scale(1);filter:blur(0px);}
-    25%{transform:translate(0.5px,-0.6px) scale(1.003);filter:blur(0.25px);}
-    50%{transform:translate(-0.4px,0.45px) scale(0.998);filter:blur(0.1px);}
-    75%{transform:translate(0.35px,0.55px) scale(1.0015);filter:blur(0.28px);}
+    25%{transform:translate(1.6px,-1.9px) scale(1.008);filter:blur(0.3px);}
+    50%{transform:translate(-1.3px,1.4px) scale(0.994);filter:blur(0.12px);}
+    75%{transform:translate(1.1px,1.7px) scale(1.004);filter:blur(0.34px);}
     100%{transform:translate(0,0) scale(1);filter:blur(0px);}
   }
   .seg-digit{position:relative;z-index:1;animation-name:digit-float;animation-timing-function:ease-in-out;animation-iteration-count:infinite;}
@@ -275,6 +275,17 @@
   .match-row.flow-match{border:2px solid #3b82f6;
     background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='16'%3E%3Cpath d='M0,8 Q10,0 20,8 T40,8' stroke='%233b82f6' stroke-width='1.5' fill='none' opacity='0.16'/%3E%3C/svg%3E");
     background-repeat:repeat;}
+  .chain-badge{display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:700;
+    color:#b45309;background:#fef3c7;border-radius:6px;padding:2px 7px;margin-bottom:5px;}
+  html.dark .chain-badge{background:#3f2d0a;color:#fbbf24;}
+  .chain-start-icon{display:inline-flex;align-items:center;justify-content:center;width:15px;height:15px;
+    background:#fde68a;color:#92400e;border-radius:4px;font-size:9px;margin-left:2px;vertical-align:middle;}
+  html.dark .chain-start-icon{background:#78350f;color:#fbbf24;}
+  .match-row.chain-match{border:2px solid #eab308;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='44' height='24'%3E%3Cg transform='rotate(30 22 12)' stroke='%23eab308' stroke-width='1.6' fill='none' opacity='0.2'%3E%3Cellipse cx='11' cy='12' rx='6' ry='3.4'/%3E%3Cellipse cx='24' cy='12' rx='6' ry='3.4'/%3E%3C/g%3E%3C/svg%3E");
+    background-repeat:repeat;}
+  .graffiti-label{height:19px;width:auto;display:block;}
+  .graffiti-label text{font-family:'Rubik Wet Paint', cursive;fill:#fff;stroke:#111;stroke-width:2.6;}
 
   .now-card{display:flex;align-items:center;gap:12px;background:var(--card);border-radius:14px;
     padding:12px 14px;margin-bottom:12px;box-shadow:0 1px 2px rgba(0,0,0,0.04);}
@@ -308,6 +319,11 @@
     background-repeat:repeat;}
   .crate-card.flow-crate .crate-card-icon{background:#dbeafe;color:#2563eb;font-weight:800;}
   html.dark .crate-card.flow-crate .crate-card-icon{background:#1e2b4d;color:#93c5fd;}
+  .crate-card.chain-crate{border:2px solid #eab308;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='48' height='48'%3E%3Cg transform='rotate(45 24 24)' stroke='%23eab308' stroke-width='2' fill='none' opacity='0.2'%3E%3Cellipse cx='15' cy='24' rx='8' ry='5'/%3E%3Cellipse cx='33' cy='24' rx='8' ry='5'/%3E%3C/g%3E%3C/svg%3E");
+    background-repeat:repeat;}
+  .crate-card.chain-crate .crate-card-icon{background:#fef3c7;color:#b45309;font-weight:800;}
+  html.dark .crate-card.chain-crate .crate-card-icon{background:#3f2d0a;color:#fbbf24;}
   .crate-card-info{flex:1;min-width:0;}
   .crate-card-info .t{font-weight:700;font-size:14.5px;}
   .crate-card-info .a{font-size:12px;color:var(--dim);margin-top:1px;}
@@ -399,6 +415,10 @@
           <span id="screensaver-delay-val" style="font-size:12px;color:var(--dim);min-width:34px;text-align:right;">20s</span>
         </div>
       </div>
+      <div class="modal-row">
+        <span>Show Flow &amp; Chain suggestions</span>
+        <label class="switch"><input type="checkbox" id="flowchain-toggle" checked><span class="switch-slider"></span></label>
+      </div>
     </div>
   </div>
 
@@ -464,8 +484,20 @@
       <div class="crate-card flow-crate" id="open-flow-crate">
         <div class="crate-card-icon">〜</div>
         <div class="crate-card-info">
-          <div class="t">Flow</div>
+          <svg class="graffiti-label" viewBox="0 0 78 26" xmlns="http://www.w3.org/2000/svg">
+            <text x="2" y="20" font-size="19" stroke-linejoin="round" paint-order="stroke fill" letter-spacing="-0.5">Flow</text>
+          </svg>
           <div class="a" id="flow-crate-count"></div>
+        </div>
+        <div class="chev">›</div>
+      </div>
+      <div class="crate-card chain-crate" id="open-chain-crate">
+        <div class="crate-card-icon">⛓️</div>
+        <div class="crate-card-info">
+          <svg class="graffiti-label" viewBox="0 0 118 26" xmlns="http://www.w3.org/2000/svg">
+            <text x="2" y="20" font-size="19" stroke-linejoin="round" paint-order="stroke fill" letter-spacing="-0.5">Chains</text>
+          </svg>
+          <div class="a" id="chain-crate-count"></div>
         </div>
         <div class="chev">›</div>
       </div>
@@ -1626,6 +1658,24 @@ function renderNowPlayingSelect(){
   if(t) input.value = t.name + (t.artist ? ' — '+t.artist : '');
 }
 
+let currentChainId = null, currentChainIndex = -1;
+function updateChainProgress(id){
+  // Prefer continuing the chain already in progress if this track is its
+  // actual next step; otherwise check whether this track starts (or sits
+  // somewhere inside) any saved chain at all.
+  if(currentChainId){
+    const chain = chains.find(c=>c.id===currentChainId);
+    if(chain && chain.trackIds[currentChainIndex+1]===id){
+      currentChainIndex++;
+      return;
+    }
+  }
+  for(const c of chains){
+    const idx = c.trackIds.indexOf(id);
+    if(idx!==-1){ currentChainId=c.id; currentChainIndex=idx; return; }
+  }
+  currentChainId=null; currentChainIndex=-1;
+}
 function selectNowPlaying(id){
   // The track you're moving away from just got played — keep it out of
   // future suggestions until you hit Reset.
@@ -1636,6 +1686,7 @@ function selectNowPlaying(id){
   }
   nowPlayingId = id;
   pendingFlowAnchorId = null;
+  updateChainProgress(id);
   renderNowPlayingSelect();
   document.getElementById('now-suggestions').classList.remove('show');
   selectedMatchId = null;
@@ -1665,6 +1716,90 @@ async function saveFlows(){
     if(hasArtifactStorage) await window.storage.set(FLOWS_KEY, JSON.stringify(flows), false);
     else localStorage.setItem(FLOWS_KEY, JSON.stringify(flows));
   }catch(e){ console.error('flow save failed', e); }
+}
+
+const CHAINS_KEY = 'cratebuddy:chains';
+let chains = []; // {id, name, trackIds:[10 ids], savedAt}
+async function loadChains(){
+  try{
+    if(hasArtifactStorage){
+      const r = await window.storage.get(CHAINS_KEY, false).catch(()=>null);
+      chains = r && r.value ? JSON.parse(r.value) : [];
+    } else {
+      const raw = localStorage.getItem(CHAINS_KEY);
+      chains = raw ? JSON.parse(raw) : [];
+    }
+  }catch(e){ chains = []; }
+}
+async function saveChains(){
+  try{
+    if(hasArtifactStorage) await window.storage.set(CHAINS_KEY, JSON.stringify(chains), false);
+    else localStorage.setItem(CHAINS_KEY, JSON.stringify(chains));
+  }catch(e){ console.error('chain save failed', e); }
+}
+// Scores how well two tracks would sit back-to-back, using the same
+// BPM/key/bands/loudness math as the main matching engine, but with fixed
+// default weights (independent of the live sliders) so chain generation is
+// consistent regardless of what the user has their weights set to.
+function scoreJoint(a, b){
+  const bm = bpmMatchInfo(a.bpm, b.bpm);
+  const bs = Math.round(bm.score);
+  const kd = camelotDistance(a.key.camelot, b.key.camelot);
+  const bandS = bandsScore(a.bands, b.bands);
+  const loudS = loudnessScore(a.loudness, b.loudness);
+  const parts = [{score:bs,weight:35},{score:kd.score,weight:30}];
+  if(bandS!=null) parts.push({score:bandS,weight:20});
+  if(loudS!=null) parts.push({score:loudS,weight:15});
+  const total = parts.reduce((s,p)=>s+p.weight,0)||1;
+  return Math.round(parts.reduce((s,p)=>s+p.score*p.weight,0)/total);
+}
+// Greedily stitches 5 non-overlapping saved Flows into one 10-track chain —
+// each new Flow is picked because its "from" track scores best against the
+// chain's current last track, so the joints between flows are algorithmically
+// validated even though only the flows themselves were manually proven.
+function tryBuildChain(availablePairs){
+  const pairs = [...availablePairs];
+  for(let i=pairs.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [pairs[i],pairs[j]]=[pairs[j],pairs[i]]; }
+  const used = new Set();
+  const seedIdx = pairs.findIndex(p=>!used.has(p.from)&&!used.has(p.to));
+  if(seedIdx===-1) return null;
+  const chainPairs = [pairs[seedIdx]];
+  used.add(pairs[seedIdx].from); used.add(pairs[seedIdx].to);
+  let lastTrack = library.find(t=>t.id===pairs[seedIdx].to);
+  // Try to extend up to 5 flows (10 tracks), but a chain of at least 3 flows
+  // (6 tracks) is still a valid, saveable result — chains can now run
+  // anywhere from 6 to 10 tracks rather than requiring the full 10.
+  for(let step=1; step<5; step++){
+    let best=null, bestScore=-1;
+    for(const p of pairs){
+      if(used.has(p.from) || used.has(p.to)) continue;
+      const fromTrack = library.find(t=>t.id===p.from);
+      if(!fromTrack || !lastTrack) continue;
+      const score = scoreJoint(lastTrack, fromTrack);
+      if(score>bestScore){ bestScore=score; best=p; }
+    }
+    if(!best) break; // stop extending, but keep whatever we've already built
+    chainPairs.push(best); used.add(best.from); used.add(best.to);
+    lastTrack = library.find(t=>t.id===best.to);
+  }
+  if(chainPairs.length<3) return null; // shorter than 6 tracks isn't a real "chain"
+  const trackIds = [];
+  chainPairs.forEach(p=>{ trackIds.push(p.from, p.to); });
+  return trackIds;
+}
+function generateChainCandidates(){
+  const validFlows = flows.filter(f=>library.some(t=>t.id===f.from) && library.some(t=>t.id===f.to));
+  const candidates = [];
+  let attempts=0;
+  while(candidates.length<5 && attempts<200){
+    attempts++;
+    const result = tryBuildChain(validFlows);
+    if(result){
+      const key = result.join(',');
+      if(!candidates.some(c=>c.key===key)) candidates.push({key, trackIds:result});
+    }
+  }
+  return candidates;
 }
 
 function isAdjacentToPending(globalIndex){
@@ -1964,12 +2099,30 @@ function renderMatches(){
   }
 
   const eligible = library.filter(t=>t.id!==now.id && !playedTrackIds.has(t.id));
+
+  // If we're mid-chain, the chain's next step gets pinned above even the
+  // Flow matches — it's not just one proven transition, it's a whole
+  // pre-validated run you already chose to save. All of this is skippable
+  // via Settings if the special styling isn't wanted.
+  let chainNextId = null, chainIsLast = false;
+  if(showFlowChainSuggestions && currentChainId){
+    const chain = chains.find(c=>c.id===currentChainId);
+    if(chain && currentChainIndex < chain.trackIds.length-1){
+      chainNextId = chain.trackIds[currentChainIndex+1];
+      chainIsLast = (currentChainIndex+1 === chain.trackIds.length-1);
+    }
+  }
+  const chainPick = chainNextId ? eligible.find(t=>t.id===chainNextId) : null;
+  const restEligible = chainPick ? eligible.filter(t=>t.id!==chainPick.id) : eligible;
+
   // A saved Flow (from=now playing) means "last time, going into this track
   // worked great" — those get pinned above the algorithmic ranking.
-  const flowToIds = new Set(flows.filter(f=>f.from===now.id).map(f=>f.to));
-  const flowResults = eligible.filter(t=>flowToIds.has(t.id)).map(scoreTrack).sort((a,b)=>b.overall-a.overall);
-  const regularResults = eligible.filter(t=>!flowToIds.has(t.id)).map(scoreTrack).sort((a,b)=>b.overall-a.overall);
-  const results = [...flowResults, ...regularResults].slice(0,10);
+  const flowToIds = showFlowChainSuggestions ? new Set(flows.filter(f=>f.from===now.id).map(f=>f.to)) : new Set();
+  const flowResults = restEligible.filter(t=>flowToIds.has(t.id)).map(scoreTrack).sort((a,b)=>b.overall-a.overall);
+  const regularResults = restEligible.filter(t=>!flowToIds.has(t.id)).map(scoreTrack).sort((a,b)=>b.overall-a.overall);
+  let results = [...flowResults, ...regularResults].slice(0, chainPick?9:10);
+  if(chainPick) results = [scoreTrack(chainPick), ...results];
+  const chainPickId = chainPick ? chainPick.id : null;
 
   if(!results.some(r=>r.t.id===selectedMatchId)) selectedMatchId=null;
 
@@ -2000,15 +2153,18 @@ function renderMatches(){
       const loudText = r.loudDiff<0.3 ? 'Exact loudness' : `${loudArrow} ${r.loudDiff.toFixed(1)} dB ${r.t.loudness<now.loudness?'quieter':'louder'}`;
       loudRow = `<span class="bd-text" style="color:${loudnessDiffColor(r.loudDiff)}">${loudText} (${r.loudS}%)</span>`;
     }
-    const isFlow = flowToIds.has(r.t.id);
-    const flowBadge = isFlow ? `<div class="flow-badge">〜 Flow match</div>` : '';
+    const isChain = r.t.id===chainPickId;
+    const isFlow = !isChain && flowToIds.has(r.t.id);
+    const startsChain = showFlowChainSuggestions && !isChain && chains.some(c=>c.trackIds[0]===r.t.id);
+    const chainBadge = isChain ? `<div class="chain-badge">⛓️ ${chainIsLast?'Final chain track':'Chain suggestion'}</div>` : '';
+    const flowBadge = isFlow ? `<div class="flow-badge">〜 Flow match${startsChain?' <span class="chain-start-icon" title="Starts a saved chain">⛓️</span>':''}</div>` : '';
     return `
-    <div class="match-row${r.t.id===selectedMatchId?' open':''}${isFlow?' flow-match':''}" data-id="${r.t.id}">
+    <div class="match-row${r.t.id===selectedMatchId?' open':''}${isChain?' chain-match':(isFlow?' flow-match':'')}" data-id="${r.t.id}">
       <div class="match-main">
         <div class="rank">${i+1}</div>
         <img class="art" src="${r.t.icon}" style="width:56px;height:56px;border-radius:7px;">
         <div class="match-info">
-          ${flowBadge}
+          ${chainBadge}${flowBadge}
           <div class="t">${escapeHtml(r.t.name)}</div>
           <div class="a">${escapeHtml(r.t.artist||'Unknown artist')}</div>
         </div>
@@ -2321,13 +2477,37 @@ document.getElementById('screensaver-delay').addEventListener('input', e=>{
   resetIdleTimer();
 });
 
+const FLOWCHAIN_SHOW_KEY = 'cratebuddy:flowchain-show';
+let showFlowChainSuggestions = true;
+async function loadFlowChainSetting(){
+  try{
+    if(hasArtifactStorage){
+      const r = await window.storage.get(FLOWCHAIN_SHOW_KEY,false).catch(()=>null);
+      if(r && r.value!=null) showFlowChainSuggestions = r.value==='1';
+    } else {
+      const s = localStorage.getItem(FLOWCHAIN_SHOW_KEY);
+      if(s!=null) showFlowChainSuggestions = s==='1';
+    }
+  }catch(e){}
+  document.getElementById('flowchain-toggle').checked = showFlowChainSuggestions;
+}
+document.getElementById('flowchain-toggle').addEventListener('change', async e=>{
+  showFlowChainSuggestions = e.target.checked;
+  try{
+    if(hasArtifactStorage) await window.storage.set(FLOWCHAIN_SHOW_KEY, showFlowChainSuggestions?'1':'0', false);
+    else localStorage.setItem(FLOWCHAIN_SHOW_KEY, showFlowChainSuggestions?'1':'0');
+  }catch(err){ console.error('flow/chain setting save failed', err); }
+  renderMatches();
+});
+
 /* ---- Play Reset: clear played-track history for a clean-slate session ---- */
 document.getElementById('play-reset-btn').addEventListener('click', ()=>{
   if(playedTrackIds.size===0 && !nowPlayingId && playHistory.length===0) return;
-  if(!confirm("Reset your DJ session? This clears played-track history, your recent-tracks strip, and the current Now Playing track — every track in your crate becomes eligible for suggestions again. Your saved Flows are kept.")) return;
+  if(!confirm("Reset your DJ session? This clears played-track history, your recent-tracks strip, and the current Now Playing track — every track in your crate becomes eligible for suggestions again. Your saved Flows and Chains are kept.")) return;
   playedTrackIds.clear();
   playHistory = [];
   pendingFlowAnchorId = null;
+  currentChainId = null; currentChainIndex = -1;
   nowPlayingId='';
   selectedMatchId=null;
   document.getElementById('now-playing-input').value='';
@@ -2444,9 +2624,10 @@ function wireTrackPicker(idPrefix, excludeIds, onPick, singleSelect){
   input.addEventListener('blur', ()=>setTimeout(()=>box.classList.remove('show'),150));
 }
 
-let openCrateId = null; // null = list view, '__flow__' = Flow crate, '__history__' = History folder, or a crate id
+let openCrateId = null; // null = list view, '__flow__' = Flow crate, '__chain__' = Chains folder, '__history__' = History folder, or a crate id
 let manualFlowFrom = null, manualFlowTo = null;
 let openHistorySessionId = null; // only relevant when openCrateId === '__history__'
+let generatedChainCandidates = [];
 
 function renderOrganise(){
   const listView = document.getElementById('organise-list-view');
@@ -2457,6 +2638,7 @@ function renderOrganise(){
   } else {
     listView.style.display='none'; detailView.style.display='block';
     if(openCrateId==='__flow__') renderFlowDetail();
+    else if(openCrateId==='__chain__') renderChainDetail();
     else if(openCrateId==='__history__'){
       if(openHistorySessionId) renderHistorySessionDetail();
       else renderHistoryFolder();
@@ -2468,6 +2650,8 @@ function renderOrganise(){
 function renderOrganiseList(){
   document.getElementById('flow-crate-count').textContent =
     flows.length + (flows.length===1 ? ' saved transition' : ' saved transitions');
+  document.getElementById('chain-crate-count').textContent =
+    chains.length + (chains.length===1 ? ' saved chain' : ' saved chains');
   document.getElementById('history-folder-count').textContent =
     historySessions.length + (historySessions.length===1 ? ' saved session' : ' saved sessions');
   const el = document.getElementById('crates-list');
@@ -2502,6 +2686,7 @@ function renderOrganiseList(){
     });
   }
 }
+document.getElementById('open-chain-crate').addEventListener('click', ()=>{ openCrateId='__chain__'; renderOrganise(); });
 document.getElementById('open-flow-crate').addEventListener('click', ()=>{ openCrateId='__flow__'; renderOrganise(); });
 document.getElementById('open-history-folder').addEventListener('click', ()=>{ openCrateId='__history__'; openHistorySessionId=null; renderOrganise(); });
 document.getElementById('organise-back-btn').addEventListener('click', ()=>{
@@ -2509,9 +2694,70 @@ document.getElementById('organise-back-btn').addEventListener('click', ()=>{
     openHistorySessionId = null; // step back to the session list, not all the way out
   } else {
     openCrateId=null; manualFlowFrom=null; manualFlowTo=null; openHistorySessionId=null;
+    generatedChainCandidates=[];
   }
   renderOrganise();
 });
+
+function renderChainDetail(){
+  const el = document.getElementById('organise-detail-content');
+  let html = `<div class="section-lbl">Chains — 5 saved Flows stitched into one sequence</div>
+    <button class="new-crate-btn" id="generate-chains-btn">🔀 Generate 5 chains</button>`;
+  if(generatedChainCandidates.length>0){
+    html += `<div class="section-lbl" style="margin-top:14px;">New candidates — tap Save to keep one</div>`;
+    html += generatedChainCandidates.map((c,i)=>{
+      const tracks = c.trackIds.map(id=>library.find(t=>t.id===id)).filter(Boolean);
+      return `<div class="organise-row" style="align-items:center;">
+        <div style="display:flex;flex:1;overflow-x:auto;">
+          ${tracks.map(t=>`<img src="${t.icon}" style="width:32px;height:32px;border-radius:6px;object-fit:cover;margin-right:-10px;border:2px solid var(--card);flex-shrink:0;">`).join('')}
+        </div>
+        <button class="edit-save" data-save-chain="${i}" style="flex-shrink:0;width:auto;padding:8px 14px;margin-left:10px;">Save</button>
+      </div>`;
+    }).join('');
+  }
+  html += `<div class="section-lbl" style="margin-top:16px;">Saved Chains</div>`;
+  html += chains.length===0
+    ? `<div class="lib-empty">No chains saved yet.</div>`
+    : chains.map(c=>{
+        const tracks = c.trackIds.map(id=>library.find(t=>t.id===id)).filter(Boolean);
+        return `<div class="organise-row" style="align-items:center;">
+          <div style="display:flex;flex:1;overflow-x:auto;">
+            ${tracks.map(t=>`<img src="${t.icon}" style="width:28px;height:28px;border-radius:5px;object-fit:cover;margin-right:-8px;border:2px solid var(--card);flex-shrink:0;">`).join('')}
+          </div>
+          <button class="remove-btn" data-remove-chain="${c.id}">✕</button>
+        </div>`;
+      }).join('');
+  el.innerHTML = html;
+
+  document.getElementById('generate-chains-btn').addEventListener('click', ()=>{
+    generatedChainCandidates = generateChainCandidates();
+    if(generatedChainCandidates.length===0){
+      showInfoToast("Not enough saved Flows yet — you need at least 5 that don't share a track", true);
+    }
+    renderChainDetail();
+  });
+  el.querySelectorAll('[data-save-chain]').forEach(btn=>{
+    btn.addEventListener('click', async ()=>{
+      const idx = +btn.dataset.saveChain;
+      const cand = generatedChainCandidates[idx];
+      if(!cand) return;
+      chains.push({id:'ch_'+Date.now()+'_'+Math.random().toString(36).slice(2,7),
+        name:'Chain '+(chains.length+1), trackIds:cand.trackIds, savedAt:Date.now()});
+      await saveChains();
+      generatedChainCandidates.splice(idx,1);
+      showInfoToast('Chain saved', false);
+      renderChainDetail();
+    });
+  });
+  el.querySelectorAll('[data-remove-chain]').forEach(btn=>{
+    btn.addEventListener('click', async ()=>{
+      if(!confirm('Delete this chain?')) return;
+      chains = chains.filter(c=>c.id!==btn.dataset.removeChain);
+      await saveChains();
+      renderChainDetail();
+    });
+  });
+}
 
 function renderHistoryFolder(){
   const el = document.getElementById('organise-detail-content');
@@ -2648,7 +2894,9 @@ function renderFlowDetail(){
 loadLibrary();
 loadPresets();
 loadFlows();
+loadChains();
 loadCrates();
+loadFlowChainSetting();
 loadHistorySessions();
 
 /* Landscape-only clock next to the play-history strip — CSS handles when
