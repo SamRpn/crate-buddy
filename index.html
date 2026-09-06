@@ -35,6 +35,18 @@
     -webkit-font-smoothing:antialiased;-webkit-text-size-adjust:100%;text-size-adjust:100%;
     touch-action:manipulation;overscroll-behavior-y:none;}
   .app{max-width:640px;margin:0 auto;padding:0 0 70px;}
+  button{transition:transform 0.1s ease;}
+  button:active{transform:scale(0.97);}
+  .removing{transition:max-height 0.24s ease, opacity 0.22s ease, margin 0.24s ease, padding 0.24s ease, transform 0.22s ease;
+    overflow:hidden;}
+  .removing.go{opacity:0;max-height:0!important;margin:0!important;padding-top:0!important;padding-bottom:0!important;transform:scale(0.97);}
+  @keyframes shimmer-sweep{0%{background-position:-120% 0;}100%{background-position:120% 0;}}
+  .shimmer{background:linear-gradient(90deg, var(--bg) 25%, var(--line) 50%, var(--bg) 75%);
+    background-size:200% 100%;animation:shimmer-sweep 1.3s ease-in-out infinite;}
+  @keyframes tab-fade-in{from{opacity:0;transform:translateY(4px);}to{opacity:1;transform:translateY(0);}}
+  .tab-fade{animation:tab-fade-in 0.22s ease both;}
+  @keyframes organise-slide{from{opacity:0;transform:translateX(var(--slide-from, 18px));}to{opacity:1;transform:translateX(0);}}
+  .organise-slide-in{animation:organise-slide 0.26s ease both;}
 
   /* ---- header / logo ---- */
   header.top{position:sticky;top:0;z-index:70;padding:22px 20px 10px;display:flex;align-items:center;
@@ -85,7 +97,8 @@
   .toast .tbar i{display:block;height:100%;width:0%;background:linear-gradient(90deg,var(--accent),var(--accent2));border-radius:2px;transition:width .15s;}
   .toast .tbody{flex:1;min-width:0;}
   .toast.success .tbar{display:none;}
-  .toast-check{width:20px;height:20px;flex-shrink:0;}
+  @keyframes toast-check-pop{0%{transform:scale(0);opacity:0;}60%{transform:scale(1.25);opacity:1;}100%{transform:scale(1);opacity:1;}}
+  .toast-check{width:15px;height:15px;flex-shrink:0;animation:toast-check-pop 0.35s ease both;}
   .toast.error .tname{color:#ff8a93;}
 
   /* ---- segmented tabs ---- */
@@ -234,6 +247,8 @@
 
   .history-strip{display:flex;gap:10px;overflow-x:auto;padding:2px 2px 8px;margin-bottom:6px;}
   .history-card{display:flex;flex-direction:column;align-items:center;gap:4px;flex-shrink:0;width:58px;}
+  @keyframes history-card-slide{from{transform:translateX(14px);}to{transform:translateX(0);}}
+  .history-card-new{animation:history-card-slide 0.28s ease both;}
   .history-card img{width:46px;height:46px;border-radius:9px;object-fit:cover;box-shadow:0 1px 3px rgba(0,0,0,0.15);}
   .history-card .hc-name{font-size:9px;color:var(--dim);text-align:center;max-width:58px;
     overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
@@ -394,7 +409,7 @@
 
   .match-row{background:var(--card);border-radius:14px;margin-bottom:8px;box-shadow:0 1px 2px rgba(0,0,0,0.04);overflow:hidden;}
   @keyframes row-fresh-in{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:translateY(0);}}
-  .match-row.row-fresh{animation:row-fresh-in 0.32s ease both;}
+  .row-fresh{animation:row-fresh-in 0.32s ease both;}
   .match-main{display:flex;align-items:center;gap:9px;padding:10px 12px;cursor:pointer;}
   .rank{width:16px;font-size:11px;color:#c2c2c8;font-weight:700;flex-shrink:0;}
   .match-info{flex:1;min-width:0;}
@@ -793,7 +808,9 @@ document.querySelectorAll('.tabs button').forEach(btn=>{
     const idx = TAB_ORDER.indexOf(currentTab);
     document.getElementById('tab-indicator').style.transform = `translateX(${idx*100}%)`;
     TAB_ORDER.forEach(t=>{
-      document.getElementById('tab-'+t).style.display = (t===currentTab)?'block':'none';
+      const sec = document.getElementById('tab-'+t);
+      sec.style.display = (t===currentTab)?'block':'none';
+      if(t===currentTab){ sec.classList.remove('tab-fade'); void sec.offsetWidth; sec.classList.add('tab-fade'); }
     });
     document.getElementById('footnote').style.display = (currentTab==='import') ? 'block':'none';
     if(currentTab==='organise') renderOrganise();
@@ -908,6 +925,7 @@ document.getElementById('manual-save').addEventListener('click', async ()=>{
     manual: true
   };
   library.unshift(track);
+  freshlyAddedIds.add(track.id);
   await persistTrackAdd(track);
   renderLibrary(); renderNowPlayingSelect(); updateCount();
   resetManualForm();
@@ -966,13 +984,20 @@ function updateBatchToast(current, total, filename, fileFrac){
   const t = ensureBatchToast();
   const overallPct = Math.round(((current-1+fileFrac)/total)*100);
   t.classList.remove('success','error');
-  t.innerHTML = `<div class="tbody">
-      <div style="display:flex;justify-content:space-between;gap:8px;">
-        <div class="tname">${escapeHtml(filename)}</div>
-        <div class="tstate">${current} of ${total}</div>
-      </div>
-      <div class="tbar"><i style="width:${overallPct}%"></i></div>
-    </div>`;
+  let bar = t.querySelector('.tbar i');
+  if(!bar){
+    t.innerHTML = `<div class="tbody">
+        <div style="display:flex;justify-content:space-between;gap:8px;">
+          <div class="tname"></div>
+          <div class="tstate"></div>
+        </div>
+        <div class="tbar"><i style="width:0%"></i></div>
+      </div>`;
+    bar = t.querySelector('.tbar i');
+  }
+  t.querySelector('.tname').textContent = filename;
+  t.querySelector('.tstate').textContent = `${current} of ${total}`;
+  bar.style.width = overallPct+'%';
 }
 function finishBatchToast(done, fail){
   if(!batchToast) return;
@@ -1002,6 +1027,7 @@ async function processBatch(){
     try{
       const track = await analyzeFile(file, p=>updateBatchToast(current, total, file.name, p));
       library.unshift(track);
+      freshlyAddedIds.add(track.id);
       await persistTrackAdd(track);
       done++;
     }catch(err){
@@ -1014,6 +1040,16 @@ async function processBatch(){
   isProcessingBatch = false;
 }
 function escapeHtml(s){ const d=document.createElement('div'); d.textContent=s||''; return d.innerHTML; }
+// Shrinks and fades a row/card before it actually leaves the DOM, so
+// deletions read as intentional rather than an abrupt pop.
+function animateRemoveEl(el, cb){
+  if(!el){ cb(); return; }
+  el.classList.add('removing');
+  el.style.maxHeight = el.offsetHeight + 'px';
+  void el.offsetWidth;
+  el.classList.add('go');
+  setTimeout(cb, 260);
+}
 
 /* =========================================================
    ID3 PARSE (title / artist / embedded cover art)
@@ -1655,7 +1691,7 @@ function trackRowHtml(t){
       </div>
     </div>`;
   }
-  return `<div class="track-row" data-id="${t.id}">
+  return `<div class="track-row${freshlyAddedIds.has(t.id)?' row-fresh':''}" data-id="${t.id}">
     <div class="head">
       <img class="art" src="${t.icon}">
       <div class="track-title">
@@ -1693,6 +1729,7 @@ function trackRowHtml(t){
 
 let selectionMode = false;
 let selectedTrackIds = new Set();
+let freshlyAddedIds = new Set(); // consumed once by renderLibrary to animate newly-added rows in
 
 function renderLibToolbar(){
   const el = document.getElementById('lib-toolbar');
@@ -1760,6 +1797,7 @@ function renderLibrary(){
   renderLibToolbar();
   if(library.length===0){ el.innerHTML = `<div class="lib-empty">No tracks yet — add some from Import.</div>`; return; }
   el.innerHTML = library.map(trackRowHtml).join('');
+  freshlyAddedIds.clear();
 
   if(selectionMode){
     el.querySelectorAll('.track-row').forEach(row=>{
@@ -1773,12 +1811,15 @@ function renderLibrary(){
   }
 
   el.querySelectorAll('[data-del]').forEach(btn=>{
-    btn.addEventListener('click', async ()=>{
+    btn.addEventListener('click', ()=>{
       const id = btn.dataset.del;
-      library = library.filter(t=>t.id!==id);
-      await persistTrackDelete(id);
-      await cleanupReferencesToTrack(id);
-      renderLibrary(); renderNowPlayingSelect(); renderMatches(); updateCount();
+      const row = btn.closest('.track-row');
+      animateRemoveEl(row, async ()=>{
+        library = library.filter(t=>t.id!==id);
+        await persistTrackDelete(id);
+        await cleanupReferencesToTrack(id);
+        renderLibrary(); renderNowPlayingSelect(); renderMatches(); updateCount();
+      });
     });
   });
 
@@ -1883,6 +1924,7 @@ function updateChainProgress(id){
   currentChainId=null; currentChainIndex=-1;
 }
 let previousNowPlayingId = null;
+let historyJustGrew = false;
 let selectLock = false;
 function hapticTap(ms){
   if(navigator.vibrate) navigator.vibrate(ms||15); // no-op where unsupported (notably iOS Safari)
@@ -1894,6 +1936,7 @@ function selectNowPlaying(id){
   if(nowPlayingId !== id){
     previousNowPlayingId = nowPlayingId || null;
     playHistory.push(id);
+    historyJustGrew = true;
     if(playHistory.length>50) playHistory.shift(); // only the last 5 are ever shown; this just bounds memory
   }
   nowPlayingId = id;
@@ -2138,7 +2181,8 @@ function renderPlayHistory(){
     const isAnchor = pendingFlowAnchorId===id;
     const isNeighbor = !!pendingFlowAnchorId && !isAnchor && isAdjacentToPending(globalIndex);
     const cls = isAnchor ? 'wavy-anchor' : (isNeighbor ? 'wavy-neighbor' : '');
-    return `<div class="history-card" style="opacity:${opacity}">
+    const freshCls = (i===items.length-1 && historyJustGrew) ? ' history-card-new' : '';
+    return `<div class="history-card${freshCls}" style="opacity:${opacity}">
       <img src="${t.icon}">
       <div class="hc-name">${escapeHtml(t.name)}</div>
       <button class="wavy-btn ${cls}" data-flow-id="${id}" title="Mark a great transition">
@@ -2146,6 +2190,7 @@ function renderPlayHistory(){
       </button>
     </div>`;
   }).join('');
+  historyJustGrew = false;
   el.innerHTML = `<div class="history-strip">${cards}</div>` +
     `<div class="history-hint">${pendingFlowAnchorId ? 'Tap the light-blue track it flowed into or out of' : 'Tap the wavy icon on a track to save a great transition'}</div>`;
   el.querySelectorAll('[data-flow-id]').forEach(btn=>{
@@ -2508,7 +2553,7 @@ function showInfoToast(message, isError){
   const stack = document.getElementById('toast-stack');
   const t = document.createElement('div');
   t.className = 'toast' + (isError?' error':' success');
-  t.innerHTML = `<div class="tbody"><div class="tname">${escapeHtml(message)}</div></div>`;
+  t.innerHTML = `${isError?'':CHECK_SVG}<div class="tbody"><div class="tname">${escapeHtml(message)}</div></div>`;
   stack.appendChild(t);
   requestAnimationFrame(()=>t.classList.add('show'));
   setTimeout(()=>{ t.classList.remove('show'); setTimeout(()=>t.remove(),250); }, 2600);
@@ -2548,6 +2593,7 @@ function importLibraryFile(file){
       const dupe = library.some(existing => norm(existing.name)===norm(t.name) && norm(existing.artist)===norm(t.artist));
       if(dupe){ skipped++; continue; }
       library.unshift(t);
+      freshlyAddedIds.add(t.id);
       await persistTrackAdd(t);
       added++;
     }
@@ -2876,11 +2922,11 @@ let generatedChainCandidates = [];
 function renderOrganise(){
   const listView = document.getElementById('organise-list-view');
   const detailView = document.getElementById('organise-detail-view');
-  if(openCrateId===null){
-    listView.style.display='block'; detailView.style.display='none';
-    renderOrganiseList();
-  } else {
-    listView.style.display='none'; detailView.style.display='block';
+  const goingToDetail = openCrateId !== null;
+  const showEl = goingToDetail ? detailView : listView;
+  const hideEl = goingToDetail ? listView : detailView;
+  hideEl.style.display = 'none';
+  if(goingToDetail){
     if(openCrateId==='__flow__') renderFlowDetail();
     else if(openCrateId==='__chain__') renderChainDetail();
     else if(openCrateId==='__fav__') renderFavDetail();
@@ -2889,7 +2935,14 @@ function renderOrganise(){
       else renderHistoryFolder();
     }
     else renderCrateDetail();
+  } else {
+    renderOrganiseList();
   }
+  showEl.style.display = 'block';
+  showEl.style.setProperty('--slide-from', goingToDetail ? '18px' : '-18px');
+  showEl.classList.remove('organise-slide-in');
+  void showEl.offsetWidth;
+  showEl.classList.add('organise-slide-in');
 }
 
 function renderOrganiseList(){
@@ -2923,12 +2976,15 @@ function renderOrganiseList(){
       });
     });
     el.querySelectorAll('[data-del-crate]').forEach(btn=>{
-      btn.addEventListener('click', async e=>{
+      btn.addEventListener('click', e=>{
         e.stopPropagation();
         if(!confirm('Delete this crate? The tracks themselves stay in your library.')) return;
-        crates = crates.filter(c=>c.id!==btn.dataset.delCrate);
-        await saveCrates();
-        renderOrganiseList();
+        const card = btn.closest('.crate-card');
+        animateRemoveEl(card, async ()=>{
+          crates = crates.filter(c=>c.id!==btn.dataset.delCrate);
+          await saveCrates();
+          renderOrganiseList();
+        });
       });
     });
   }
@@ -2959,10 +3015,13 @@ function renderFavDetail(){
         <button class="remove-btn" data-remove-fav="${t.id}">✕</button>
       </div>`).join(''));
   el.querySelectorAll('[data-remove-fav]').forEach(btn=>{
-    btn.addEventListener('click', async ()=>{
-      favourites = favourites.filter(id=>id!==btn.dataset.removeFav);
-      await saveFavourites();
-      renderFavDetail();
+    btn.addEventListener('click', ()=>{
+      const row = btn.closest('.organise-row');
+      animateRemoveEl(row, async ()=>{
+        favourites = favourites.filter(id=>id!==btn.dataset.removeFav);
+        await saveFavourites();
+        renderFavDetail();
+      });
     });
   });
 }
@@ -3018,11 +3077,14 @@ function renderChainDetail(){
     });
   });
   el.querySelectorAll('[data-remove-chain]').forEach(btn=>{
-    btn.addEventListener('click', async ()=>{
+    btn.addEventListener('click', ()=>{
       if(!confirm('Delete this chain?')) return;
-      chains = chains.filter(c=>c.id!==btn.dataset.removeChain);
-      await saveChains();
-      renderChainDetail();
+      const row = btn.closest('.organise-row');
+      animateRemoveEl(row, async ()=>{
+        chains = chains.filter(c=>c.id!==btn.dataset.removeChain);
+        await saveChains();
+        renderChainDetail();
+      });
     });
   });
 }
@@ -3051,12 +3113,15 @@ function renderHistoryFolder(){
     });
   });
   el.querySelectorAll('[data-del-session]').forEach(btn=>{
-    btn.addEventListener('click', async e=>{
+    btn.addEventListener('click', e=>{
       e.stopPropagation();
       if(!confirm('Delete this saved session history?')) return;
-      historySessions = historySessions.filter(h=>h.id!==btn.dataset.delSession);
-      await saveHistorySessions();
-      renderHistoryFolder();
+      const card = btn.closest('.crate-card');
+      animateRemoveEl(card, async ()=>{
+        historySessions = historySessions.filter(h=>h.id!==btn.dataset.delSession);
+        await saveHistorySessions();
+        renderHistoryFolder();
+      });
     });
   });
 }
@@ -3148,10 +3213,13 @@ function renderFlowDetail(){
     renderFlowDetail();
   });
   el.querySelectorAll('[data-remove-flow]').forEach(btn=>{
-    btn.addEventListener('click', async ()=>{
-      flows.splice(+btn.dataset.removeFlow, 1);
-      await saveFlows();
-      renderFlowDetail();
+    btn.addEventListener('click', ()=>{
+      const row = btn.closest('.flow-pair-row');
+      animateRemoveEl(row, async ()=>{
+        flows.splice(+btn.dataset.removeFlow, 1);
+        await saveFlows();
+        renderFlowDetail();
+      });
     });
   });
 }
