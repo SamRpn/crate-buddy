@@ -2,7 +2,7 @@
 <html lang="en" ondragover="event.preventDefault();event.stopPropagation();" ondrop="event.preventDefault();event.stopPropagation();">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, viewport-fit=cover">
 <title>Crate Buddy</title>
 <link rel="apple-touch-icon" href="crate-buddy-icon-1080.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -32,7 +32,8 @@
   *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
   html,body{margin:0;padding:0;background:var(--bg);color:var(--text);
     font-family:-apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, sans-serif;
-    -webkit-font-smoothing:antialiased;}
+    -webkit-font-smoothing:antialiased;-webkit-text-size-adjust:100%;text-size-adjust:100%;
+    touch-action:manipulation;overscroll-behavior-y:none;}
   .app{max-width:640px;margin:0 auto;padding:0 0 70px;}
 
   /* ---- header / logo ---- */
@@ -164,7 +165,7 @@
   .edit-pic-preview{width:44px;height:44px;border-radius:7px;object-fit:cover;flex-shrink:0;}
   .edit-pic-btn{background:var(--bg);border:1px solid var(--line);border-radius:9px;padding:8px 10px;
     font-size:12px;font-weight:600;color:var(--dim);cursor:pointer;}
-  .edit-input{background:var(--bg);border:1px solid var(--line);border-radius:9px;padding:9px 10px;font-size:13px;color:var(--text);}
+  .edit-input{background:var(--bg);border:1px solid var(--line);border-radius:9px;padding:9px 10px;font-size:16px;color:var(--text);}
   .edit-actions{display:flex;gap:8px;}
   .edit-save{flex:1;background:var(--accent);color:#fff;border:none;border-radius:9px;padding:9px;font-weight:700;font-size:12.5px;cursor:pointer;}
   .edit-cancel{background:var(--bg);border:1px solid var(--line);border-radius:9px;padding:9px 14px;font-size:12.5px;color:var(--dim);cursor:pointer;}
@@ -193,20 +194,10 @@
   .wrow span.lbl{width:96px;flex-shrink:0;}
   .wrow span.val{width:34px;text-align:right;color:var(--text);font-weight:600;}
   input[type=range]{flex:1;accent-color:var(--accent);}
-  .preset-row{display:flex;flex-direction:column;gap:7px;margin-top:12px;padding-top:12px;border-top:1px solid var(--line);}
-  .preset-slot{display:flex;gap:6px;align-items:center;}
-  .preset-name{flex:1;min-width:0;background:var(--bg);border:1px solid var(--line);border-radius:8px;
-    padding:8px 9px;font-size:12px;color:var(--text);font-weight:600;}
-  .preset-name:disabled{color:var(--dim);font-weight:500;}
-  .preset-load{background:var(--bg);border:1px solid var(--line);border-radius:8px;
-    padding:8px 10px;font-size:11.5px;color:var(--dim);cursor:pointer;font-weight:600;flex-shrink:0;}
-  .preset-load:disabled{opacity:0.4;cursor:default;}
-  .preset-save{background:var(--bg);border:1px solid var(--line);border-radius:8px;
-    padding:8px 9px;font-size:12px;cursor:pointer;flex-shrink:0;}
 
   .now-search{position:relative;margin-bottom:14px;}
   .now-search input{width:100%;background:var(--card);color:var(--text);border:none;border-radius:12px;
-    padding:13px 12px;font-size:14.5px;box-shadow:0 1px 2px rgba(0,0,0,0.04);}
+    padding:13px 12px;font-size:16px;box-shadow:0 1px 2px rgba(0,0,0,0.04);}
   .now-suggestions{position:absolute;left:0;right:0;top:calc(100% + 6px);background:var(--card);
     border-radius:12px;box-shadow:0 6px 20px rgba(0,0,0,0.14);z-index:50;max-height:280px;
     overflow-y:auto;display:none;}
@@ -397,17 +388,17 @@
   .match-info .t{font-weight:600;font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:flex;align-items:center;gap:4px;}
   .match-info .a{font-size:11.5px;color:var(--dim);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
   .fav-mark{display:inline-flex;flex-shrink:0;}
-  .match-donut{flex-shrink:0;line-height:0;}
+  .match-score{font-size:15px;font-weight:800;flex-shrink:0;min-width:38px;text-align:right;}
   .match-play-btn{flex-shrink:0;width:34px;height:34px;border-radius:50%;background:#16a34a;border:none;
     display:flex;align-items:center;justify-content:center;cursor:pointer;}
   .match-play-btn:active{background:#15803d;}
   .chev{width:14px;text-align:center;color:#c2c2c8;font-size:11px;transition:transform .15s;flex-shrink:0;}
   .match-row.open .chev{transform:rotate(180deg);}
   .breakdown{max-height:0;overflow:hidden;transition:max-height .2s ease;}
-  .match-row.open .breakdown{max-height:280px;}
+  .match-row.open .breakdown{max-height:260px;}
   .breakdown-inner{padding:2px 14px 14px;}
   .bd-cols{display:flex;gap:14px;align-items:flex-start;}
-  .bd-col-left{flex:1;min-width:0;display:flex;flex-direction:column;gap:8px;}
+  .bd-col-left{flex:1;min-width:0;display:flex;flex-direction:column;gap:10px;justify-content:center;}
   .bd-col-right{flex-shrink:0;}
   .bd-row{display:flex;align-items:center;gap:10px;}
   .bd-row .bl{font-size:11.5px;color:var(--dim);width:44px;flex-shrink:0;}
@@ -416,10 +407,6 @@
   .bd-row .bv{font-size:11.5px;font-weight:700;width:32px;text-align:right;flex-shrink:0;}
   .bd-row .bd-text{font-size:12px;font-weight:600;}
   .bd-detail-lbl{font-size:11px;color:var(--dim);margin-bottom:4px;line-height:1.3;}
-  .now-playing-btn{display:flex;align-items:center;gap:7px;justify-content:center;
-    background:#16a34a;color:#fff;border:none;border-radius:10px;padding:9px 12px;
-    font-weight:700;font-size:12.5px;cursor:pointer;margin-top:4px;}
-  .now-playing-btn:active{background:#15803d;}
 
   .note{color:var(--dim);font-size:11.5px;line-height:1.6;margin:18px 20px 0;padding:13px 15px;
     background:var(--card);border-radius:12px;}
@@ -592,13 +579,13 @@
     <details class="weights">
       <summary><svg class="weights-tri" viewBox="0 0 10 10" width="9" height="9"><path d="M1,2 L9,2 L5,8 Z" fill="currentColor"/></svg> Optimise Personal Suggestions</summary>
       <div class="content">
-        <p class="weights-hint">Split 100% across what matters most when picking your next track — in steps of 10%. Nothing changes until you hit Save.</p>
+        <p class="weights-hint">Split 100% across what matters most, in steps of 10% — each category needs at least 10%, so no single one can go above 70%. Nothing changes until you hit Save.</p>
         <div class="weights-layout">
           <div class="wrow-group">
-            <div class="wrow"><span class="lbl">BPM</span><input type="range" id="w-bpm" min="0" max="100" step="10" value="35"><span class="val" id="w-bpm-val">35%</span></div>
-            <div class="wrow"><span class="lbl">Key</span><input type="range" id="w-key" min="0" max="100" step="10" value="30"><span class="val" id="w-key-val">30%</span></div>
-            <div class="wrow"><span class="lbl">Loudness</span><input type="range" id="w-loud" min="0" max="100" step="10" value="15"><span class="val" id="w-loud-val">15%</span></div>
-            <div class="wrow"><span class="lbl">Multiband Loudness</span><input type="range" id="w-bands" min="0" max="100" step="10" value="20"><span class="val" id="w-bands-val">20%</span></div>
+            <div class="wrow"><span class="lbl">BPM</span><input type="range" id="w-bpm" min="10" max="100" step="10" value="40"><span class="val" id="w-bpm-val">40%</span></div>
+            <div class="wrow"><span class="lbl">Key</span><input type="range" id="w-key" min="10" max="100" step="10" value="30"><span class="val" id="w-key-val">30%</span></div>
+            <div class="wrow"><span class="lbl">Loudness</span><input type="range" id="w-loud" min="10" max="100" step="10" value="10"><span class="val" id="w-loud-val">10%</span></div>
+            <div class="wrow"><span class="lbl">Multiband Loudness</span><input type="range" id="w-bands" min="10" max="100" step="10" value="20"><span class="val" id="w-bands-val">20%</span></div>
           </div>
           <div class="weight-donut-holder" id="weight-donut-holder"></div>
         </div>
@@ -607,7 +594,6 @@
           <button class="weights-save-btn" id="weights-save-btn">Save</button>
         </div>
         <p class="weights-hint" style="margin-top:8px;">The grey shape shows your saved split. On each suggestion below, the same shape fills in with color — green where that category matches well, orange-to-red where it doesn't.</p>
-        <div class="preset-row" id="preset-row"></div>
       </div>
     </details>
     <div class="now-search">
@@ -1559,7 +1545,7 @@ function estimateKey(mono, sampleRate){
 ========================================================= */
 function pctColorParts(p){
   p = Math.max(0, Math.min(100, p));
-  const stops = [{p:0,h:0,s:70,l:32},{p:80,h:32,s:85,l:58},{p:100,h:120,s:60,l:40}];
+  const stops = [{p:0,h:0,s:70,l:32},{p:80,h:32,s:85,l:58},{p:100,h:120,s:72,l:46}];
   const a = p<80 ? stops[0] : stops[1];
   const b = p<80 ? stops[1] : stops[2];
   const t = (p-a.p)/((b.p-a.p)||1);
@@ -1575,26 +1561,27 @@ function pctColorSoft(p){
   return dark ? `hsl(${c.h.toFixed(1)}, ${(c.s*0.6).toFixed(1)}%, 18%)` : `hsl(${c.h.toFixed(1)}, ${c.s.toFixed(1)}%, 94%)`;
 }
 
-// Each category gets its own fixed direction (N/E/S/W) and grows outward from
-// the center as an independent spike — not a connected polygon, so one weak
-// category never distorts the others' shape. Used both for the grey
-// "importance" shape (how you've weighted BPM/Key/Loudness/Multiband) and the
-// per-track shape (same spike lengths — your saved weights — but colored by
-// how well that category matches this particular track).
-const RADAR_ANGLES = [-90, 0, 90, 180]; // BPM(N), Key(E), Loudness(S), Multiband(W)
-function radarSvg(items, size){
+// A Nightingale Rose (coxcomb) chart: 4 equal 90° wedges — one per category,
+// always the same angular width — but each wedge's RADIUS grows with its
+// value. Used both for the grey "importance" rose (how you've weighted
+// BPM/Key/Loudness/Multiband) and the per-track rose (same radii — your
+// saved weights — but colored by how well that category matches this track).
+const ROSE_ORDER = ['BPM','Key','Loudness','Multiband']; // top, clockwise
+function roseSvg(items, size){
   size = size||64;
-  const cx=size/2, cy=size/2, maxR=size/2-3, baseR=3, halfWidth=26;
+  const cx=size/2, cy=size/2, maxR=size/2-2;
+  const step = 360/items.length;
+  let angle = -90 - step/2; // center the first wedge on top
   let shapes='';
-  items.forEach((it,i)=>{
-    const len = Math.max(baseR+1, it.value/100*maxR);
-    const aC=RADAR_ANGLES[i]*Math.PI/180, a0=(RADAR_ANGLES[i]-halfWidth)*Math.PI/180, a1=(RADAR_ANGLES[i]+halfWidth)*Math.PI/180;
-    const x0=cx+baseR*Math.cos(a0), y0=cy+baseR*Math.sin(a0);
-    const x1=cx+baseR*Math.cos(a1), y1=cy+baseR*Math.sin(a1);
-    const xt=cx+len*Math.cos(aC), yt=cy+len*Math.sin(aC);
-    shapes += `<path d="M${x0.toFixed(1)},${y0.toFixed(1)} L${xt.toFixed(1)},${yt.toFixed(1)} L${x1.toFixed(1)},${y1.toFixed(1)} Z" fill="${it.color}"/>`;
+  items.forEach(it=>{
+    const r = Math.max(2, it.value/100*maxR);
+    const a0=angle*Math.PI/180, a1=(angle+step)*Math.PI/180;
+    const x0=cx+r*Math.cos(a0), y0=cy+r*Math.sin(a0);
+    const x1=cx+r*Math.cos(a1), y1=cy+r*Math.sin(a1);
+    const largeArc = step>180?1:0;
+    shapes += `<path d="M${cx},${cy} L${x0.toFixed(1)},${y0.toFixed(1)} A${r.toFixed(1)},${r.toFixed(1)} 0 ${largeArc} 1 ${x1.toFixed(1)},${y1.toFixed(1)} Z" fill="${it.color}" stroke="var(--card)" stroke-width="1"/>`;
+    angle += step;
   });
-  shapes += `<circle cx="${cx}" cy="${cy}" r="2" fill="#d1d5db"/>`;
   return `<svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">${shapes}</svg>`;
 }
 // Neutral grey shades — one per weight category — so the "importance" shape
@@ -2191,7 +2178,7 @@ nowInput.addEventListener('keydown', e=>{
 
 const WEIGHT_IDS = ['w-bpm','w-key','w-loud','w-bands'];
 const WEIGHTS_KEY = 'cratebuddy:active-weights';
-let activeWeights = {'w-bpm':35, 'w-key':30, 'w-loud':15, 'w-bands':20}; // last-saved, actually-applied split
+let activeWeights = {'w-bpm':40, 'w-key':30, 'w-loud':10, 'w-bands':20}; // last-saved, actually-applied split
 
 function getDraftWeights(){
   const w={};
@@ -2207,7 +2194,7 @@ function setSliders(w){
 function renderWeightShape(){
   const holder = document.getElementById('weight-donut-holder');
   if(!holder) return;
-  holder.innerHTML = radarSvg([
+  holder.innerHTML = roseSvg([
     {value:activeWeights['w-bpm'], color:WEIGHT_GREYS.bpm},
     {value:activeWeights['w-key'], color:WEIGHT_GREYS.key},
     {value:activeWeights['w-loud'], color:WEIGHT_GREYS.loud},
@@ -2434,16 +2421,6 @@ function renderMatches(){
     const favBadge = isFav ? `<span class="fav-mark" title="Favourite">
       <svg viewBox="0 0 24 24" width="12" height="12"><path d="M12 2 L14.9 8.6 L22 9.3 L16.7 14.1 L18.2 21 L12 17.4 L5.8 21 L7.3 14.1 L2 9.3 L9.1 8.6 Z" fill="#eab308"/></svg>
     </span>` : '';
-    // Same spike lengths as the grey "importance" shape (your saved weight
-    // split); color per spike is that category's own match score for this
-    // track. A category with no data (manual entries lack bands/loudness)
-    // gets a flat neutral grey spike rather than a misleading red or green.
-    const rowDonut = radarSvg([
-      {value:wBpm, color:pctColor(r.bs)},
-      {value:wKey, color:pctColor(r.kd.score)},
-      {value:wLoud, color:r.loudS==null?'#9ca3af':pctColor(r.loudS)},
-      {value:wBands, color:r.bandS==null?'#9ca3af':pctColor(r.bandS)}
-    ], 40);
     const detailChart = r.bandS==null
       ? `<span style="font-size:11.5px;color:var(--dim);">No spectrum data for this track</span>`
       : bandCompareChartSvg(now.bands, r.t.bands, true);
@@ -2457,7 +2434,7 @@ function renderMatches(){
           <div class="t">${favBadge}${escapeHtml(r.t.name)}</div>
           <div class="a">${escapeHtml(r.t.artist||'Unknown artist')}</div>
         </div>
-        <div class="match-donut" title="Overall match, split by your weights">${rowDonut}</div>
+        <div class="match-score" style="color:${pctColor(r.overall)}">${r.overall}%</div>
         <button class="match-play-btn" data-setnow="${r.t.id}" title="Play this now">
           <svg viewBox="0 0 20 20" width="12" height="12"><path d="M5 3.5 L16 10 L5 16.5 Z" fill="#fff"/></svg>
         </button>
@@ -2469,10 +2446,6 @@ function renderMatches(){
             <div class="bd-row"><span class="bl">BPM</span><span class="bd-text" style="color:${bpmDiffColor(r.bm.absDiff)}">${bpmText}</span></div>
             <div class="bd-row"><span class="bl">Key</span><span class="bd-text" style="color:${keyColor(r.kd.score)};font-weight:700;">${keyText}</span></div>
             <div class="bd-row"><span class="bl">Loudness</span>${loudRow}</div>
-            <button class="now-playing-btn" data-setnow="${r.t.id}">
-              <svg viewBox="0 0 20 20" width="14" height="14"><path d="M5 3.5 L16 10 L5 16.5 Z" fill="#fff"/></svg>
-              Now Playing
-            </button>
           </div>
           <div class="bd-col-right">
             <div class="bd-detail-lbl">Multiband loudness<br>grey = Now Playing, color = this track</div>
@@ -2504,89 +2477,6 @@ function renderMatches(){
 function fmtLoudness(v){ return v==null ? 'no loudness data' : v+' LUFS'; }
 
 /* =========================================================
-   MATCHING WEIGHT PRESETS — 3 saveable slots
-========================================================= */
-const PRESETS_KEY = 'cratebuddy:presets';
-let weightPresets = [null,null,null];
-
-async function loadPresets(){
-  try{
-    if(hasArtifactStorage){
-      const r = await window.storage.get(PRESETS_KEY, false).catch(()=>null);
-      weightPresets = r && r.value ? JSON.parse(r.value) : [null,null,null];
-    } else {
-      const raw = localStorage.getItem(PRESETS_KEY);
-      weightPresets = raw ? JSON.parse(raw) : [null,null,null];
-    }
-  }catch(e){ weightPresets=[null,null,null]; }
-  renderPresetRow();
-}
-async function savePresetsStorage(){
-  try{
-    if(hasArtifactStorage) await window.storage.set(PRESETS_KEY, JSON.stringify(weightPresets), false);
-    else localStorage.setItem(PRESETS_KEY, JSON.stringify(weightPresets));
-  }catch(e){ console.error('preset save failed', e); }
-}
-function currentWeights(){
-  return {
-    bpm:activeWeights['w-bpm'],
-    key:activeWeights['w-key'],
-    bands:activeWeights['w-bands'],
-    loud:activeWeights['w-loud'],
-  };
-}
-function applyWeights(w){
-  const total = (w.bpm+w.key+w.bands+w.loud) || 1;
-  const norm = {bpm:w.bpm/total*100, key:w.key/total*100, bands:w.bands/total*100, loud:w.loud/total*100};
-  // Round each to the nearest 10 (matching the slider step), then fix the
-  // last one so the total is always exactly 100.
-  const keys = ['bpm','key','bands','loud'];
-  let sum=0;
-  keys.slice(0,-1).forEach(k=>{ norm[k]=Math.round(norm[k]/10)*10; sum+=norm[k]; });
-  norm[keys[keys.length-1]] = 100-sum;
-  activeWeights = {'w-bpm':norm.bpm, 'w-key':norm.key, 'w-bands':norm.bands, 'w-loud':norm.loud};
-  setSliders(activeWeights);
-  updateWeightsSaveState();
-  saveActiveWeights();
-  renderWeightShape();
-  renderMatches();
-}
-function renderPresetRow(){
-  const el = document.getElementById('preset-row');
-  if(!el) return;
-  el.innerHTML = weightPresets.map((p,i)=>`
-    <div class="preset-slot">
-      <input class="preset-name" data-slot="${i}" ${p?'':'disabled'}
-        placeholder="Preset ${i+1}" value="${escapeHtml(p&&p.name ? p.name : '')}">
-      <button class="preset-load" data-slot="${i}" ${p?'':'disabled'}>Load</button>
-      <button class="preset-save" data-slot="${i}" title="Save current weights to this slot">💾</button>
-    </div>`).join('');
-  el.querySelectorAll('.preset-load').forEach(btn=>{
-    btn.addEventListener('click', ()=>{
-      const idx=+btn.dataset.slot;
-      if(weightPresets[idx]) applyWeights(weightPresets[idx]);
-    });
-  });
-  el.querySelectorAll('.preset-save').forEach(btn=>{
-    btn.addEventListener('click', ()=>{
-      const idx=+btn.dataset.slot;
-      const existingName = weightPresets[idx]&&weightPresets[idx].name;
-      weightPresets[idx]={...currentWeights(), name: existingName || `Preset ${idx+1}`};
-      savePresetsStorage();
-      renderPresetRow();
-    });
-  });
-  el.querySelectorAll('.preset-name').forEach(input=>{
-    input.addEventListener('change', ()=>{
-      const idx=+input.dataset.slot;
-      if(!weightPresets[idx]) return;
-      weightPresets[idx].name = input.value.trim() || `Preset ${idx+1}`;
-      savePresetsStorage();
-    });
-  });
-}
-
-/* =========================================================
    EXPORT / IMPORT — manual backup for moving your crate between
    devices when not syncing through a Claude account.
 ========================================================= */
@@ -2601,7 +2491,7 @@ function showInfoToast(message, isError){
 }
 
 function exportLibrary(){
-  const payload = { app:'cratebuddy', version:1, exportedAt:Date.now(), library, weightPresets, flows };
+  const payload = { app:'cratebuddy', version:1, exportedAt:Date.now(), library, flows };
   const blob = new Blob([JSON.stringify(payload)], {type:'application/json'});
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
@@ -2620,7 +2510,7 @@ function importLibraryFile(file){
     catch(e){ showInfoToast("Couldn't read that file — is it a Crate Buddy backup?", true); return; }
 
     const importedTracks = Array.isArray(payload.library) ? payload.library : [];
-    if(importedTracks.length===0 && !Array.isArray(payload.weightPresets) && !Array.isArray(payload.flows)){
+    if(importedTracks.length===0 && !Array.isArray(payload.flows)){
       showInfoToast("That file doesn't look like a Crate Buddy backup", true);
       return;
     }
@@ -2636,16 +2526,6 @@ function importLibraryFile(file){
       library.unshift(t);
       await persistTrackAdd(t);
       added++;
-    }
-
-    // Only fill preset slots that are empty on this device — never overwrite
-    // a preset you've already saved locally.
-    if(Array.isArray(payload.weightPresets)){
-      let presetsChanged=false;
-      for(let i=0;i<3;i++){
-        if(!weightPresets[i] && payload.weightPresets[i]){ weightPresets[i]=payload.weightPresets[i]; presetsChanged=true; }
-      }
-      if(presetsChanged){ await savePresetsStorage(); renderPresetRow(); }
     }
 
     // Merge in any Flows not already saved here (matched by the from/to pair,
@@ -3256,7 +3136,6 @@ function renderFlowDetail(){
    INIT
 ========================================================= */
 loadLibrary();
-loadPresets();
 loadFlows();
 loadChains();
 loadCrates();
