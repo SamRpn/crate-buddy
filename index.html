@@ -210,21 +210,34 @@
 
   .screensaver{position:fixed;inset:0;background:#000;z-index:900;
     display:flex;align-items:center;justify-content:center;overflow:hidden;
-    opacity:0;visibility:hidden;transition:opacity 1.3s ease;}
-  .screensaver.show{opacity:1;visibility:visible;}
+    opacity:0;pointer-events:none;transition:opacity 1.3s ease;}
+  .screensaver.show{opacity:1;pointer-events:auto;}
   .ss-clock{display:flex;align-items:center;gap:10px;position:relative;z-index:1;}
-  .ss-grain{position:absolute;inset:-20%;pointer-events:none;opacity:0.05;mix-blend-mode:overlay;
-    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-    animation:grain-shift 0.6s steps(3) infinite;}
-  @keyframes grain-shift{0%,100%{transform:translate(0,0);}33%{transform:translate(-2%,1%);}66%{transform:translate(1%,-2%);}}
+  .ss-secs{display:inline-flex;align-items:center;opacity:0.5;}
+  .ss-ms{display:inline-flex;align-items:center;opacity:0.22;}
+  .ss-grain{position:absolute;inset:-20%;pointer-events:none;opacity:0.22;mix-blend-mode:overlay;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    animation:grain-shift 0.35s steps(3) infinite;}
+  @keyframes grain-shift{0%,100%{transform:translate(0,0);}33%{transform:translate(-3%,2%);}66%{transform:translate(2%,-3%);}}
   @keyframes seg-flicker{
-    0%{filter:brightness(1) saturate(1);}
-    22%{filter:brightness(1.1) saturate(0.92);}
-    48%{filter:brightness(0.9) saturate(1.08);}
-    74%{filter:brightness(1.05) saturate(0.95);}
-    100%{filter:brightness(1) saturate(1);}
+    0%{filter:brightness(1) saturate(1) drop-shadow(0 0 4px rgba(255,40,40,0.55)) drop-shadow(0 0 11px rgba(255,40,40,0.3));}
+    14%{filter:brightness(1.22) saturate(0.85) drop-shadow(0 0 2px rgba(255,40,40,0.35)) drop-shadow(0 0 6px rgba(255,40,40,0.15));}
+    30%{filter:brightness(0.78) saturate(1.15) drop-shadow(0 0 7px rgba(255,40,40,0.7)) drop-shadow(0 0 15px rgba(255,40,40,0.4));}
+    47%{filter:brightness(1.15) saturate(0.9) drop-shadow(0 0 3px rgba(255,40,40,0.4)) drop-shadow(0 0 8px rgba(255,40,40,0.2));}
+    63%{filter:brightness(0.85) saturate(1.1) drop-shadow(0 0 6px rgba(255,40,40,0.65)) drop-shadow(0 0 13px rgba(255,40,40,0.35));}
+    80%{filter:brightness(1.18) saturate(0.88) drop-shadow(0 0 2px rgba(255,40,40,0.38)) drop-shadow(0 0 7px rgba(255,40,40,0.18));}
+    100%{filter:brightness(1) saturate(1) drop-shadow(0 0 4px rgba(255,40,40,0.55)) drop-shadow(0 0 11px rgba(255,40,40,0.3));}
   }
   .seg-digit rect.lit{animation-name:seg-flicker;animation-timing-function:ease-in-out;animation-iteration-count:infinite;}
+  @keyframes digit-float{
+    0%{transform:translate(0,0) scale(1);filter:blur(0px);}
+    25%{transform:translate(0.9px,-1.1px) scale(1.006);filter:blur(0.45px);}
+    50%{transform:translate(-0.7px,0.8px) scale(0.995);filter:blur(0.2px);}
+    75%{transform:translate(0.6px,1px) scale(1.003);filter:blur(0.5px);}
+    100%{transform:translate(0,0) scale(1);filter:blur(0px);}
+  }
+  #ss-clock .seg-digit, #ss-secs .seg-digit, #ss-ms .seg-digit{
+    animation-name:digit-float;animation-timing-function:ease-in-out;animation-iteration-count:infinite;}
 
   .flow-badge{display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:700;
     color:#2563eb;background:#dbeafe;border-radius:6px;padding:2px 7px;margin-bottom:5px;}
@@ -466,7 +479,11 @@
 <div id="toast-stack"></div>
 
 <div class="screensaver" id="screensaver">
-  <div class="ss-clock" id="ss-clock"></div>
+  <div class="ss-clock" id="ss-clock">
+    <span id="ss-main"></span>
+    <span class="ss-secs" id="ss-secs"></span>
+    <span class="ss-ms" id="ss-ms"></span>
+  </div>
   <div class="ss-grain"></div>
 </div>
 
@@ -2558,10 +2575,11 @@ function digitSvg(value, w, h){
   for(const key of ['a','b','c','d','e','f','g']){
     const r = SEG_RECTS[key];
     const on = lit.includes(key);
-    const flicker = on ? `animation-delay:-${(Math.random()*4).toFixed(2)}s;animation-duration:${(3.2+Math.random()*1.6).toFixed(2)}s;` : '';
+    const flicker = on ? `animation-delay:-${(Math.random()*4).toFixed(2)}s;animation-duration:${(2.2+Math.random()*1.6).toFixed(2)}s;` : '';
     rects += `<rect x="${r.x}" y="${r.y}" width="${r.w}" height="${r.h}" rx="2" class="${on?'lit':''}" style="${flicker}" fill="${on?'#ff2222':'#3a0a0a'}"/>`;
   }
-  return `<svg class="seg-digit" viewBox="0 0 34 60" width="${w}" height="${h}">${rects}</svg>`;
+  const floatStyle = `animation-delay:-${(Math.random()*6).toFixed(2)}s;animation-duration:${(5+Math.random()*3).toFixed(2)}s;`;
+  return `<svg class="seg-digit" viewBox="0 0 34 60" width="${w}" height="${h}" style="${floatStyle}">${rects}</svg>`;
 }
 function colonSvg(w, h){
   w = w||6; h = h||32;
@@ -2580,32 +2598,63 @@ function clockMarkup(w, h){
 function tickClock(){
   const el = document.getElementById('play-clock');
   if(el) el.innerHTML = clockMarkup();
-  const ssEl = document.getElementById('ss-clock');
-  if(ssEl && document.getElementById('screensaver').classList.contains('show')){
-    ssEl.innerHTML = clockMarkup(46, 84);
-  }
 }
 tickClock();
 setInterval(tickClock, 1000);
 populateManualKeySelect();
 loadDarkMode();
 
-/* ---- Screensaver: fades in after 20s of no interaction anywhere in the app ---- */
+/* ---- Screensaver: fades in after 20s of no interaction anywhere in the app ----
+   Main (H:MM) + seconds update once a second; milliseconds update fast on their
+   own timer so they visibly count, without tearing down (and re-flickering) the
+   slower digits 12x more often than necessary. */
 let idleTimer = null;
+let ssFastTimer = null;
+function updateScreensaverSlow(){
+  const now = new Date();
+  const hh=now.getHours(), mm=now.getMinutes(), ss=now.getSeconds();
+  const hTens=Math.floor(hh/10), hOnes=hh%10, mTens=Math.floor(mm/10), mOnes=mm%10;
+  const sTens=Math.floor(ss/10), sOnes=ss%10;
+  document.getElementById('ss-main').innerHTML =
+    digitSvg(hTens===0?null:hTens,46,84)+digitSvg(hOnes,46,84)+colonSvg(15,84)+digitSvg(mTens,46,84)+digitSvg(mOnes,46,84);
+  document.getElementById('ss-secs').innerHTML =
+    colonSvg(10,54)+digitSvg(sTens,30,54)+digitSvg(sOnes,30,54);
+}
+function updateScreensaverFast(){
+  const ms = new Date().getMilliseconds();
+  const tenths = Math.floor(ms/100), hundredths = Math.floor((ms%100)/10);
+  document.getElementById('ss-ms').innerHTML =
+    colonSvg(6,32)+digitSvg(tenths,18,32)+digitSvg(hundredths,18,32);
+}
 function showScreensaver(){
-  document.getElementById('ss-clock').innerHTML = clockMarkup(46, 84);
+  updateScreensaverSlow();
+  updateScreensaverFast();
   document.getElementById('screensaver').classList.add('show');
+  if(!ssFastTimer) ssFastTimer = setInterval(updateScreensaverFast, 80);
 }
 function hideScreensaver(){
   document.getElementById('screensaver').classList.remove('show');
+  clearInterval(ssFastTimer); ssFastTimer = null;
 }
-function resetIdleTimer(){
-  hideScreensaver();
+// Keep the screensaver's H:MM:SS in sync with the app's main 1s tick, so it
+// never drifts even while showScreensaver's own timers are separate.
+setInterval(()=>{ if(document.getElementById('screensaver').classList.contains('show')) updateScreensaverSlow(); }, 1000);
+
+function resetIdleTimer(e){
+  const ss = document.getElementById('screensaver');
+  if(ss.classList.contains('show')){
+    // This is the tap that wakes the app back up — swallow it completely so
+    // it can only dismiss the screensaver, never also land on a button
+    // underneath (a DJ mid-set shouldn't be able to accidentally delete or
+    // select a track with the same tap that turns the screen back on).
+    if(e){ e.preventDefault(); e.stopPropagation(); }
+    hideScreensaver();
+  }
   clearTimeout(idleTimer);
   idleTimer = setTimeout(showScreensaver, 20000);
 }
 ['touchstart','mousedown','keydown','scroll'].forEach(ev=>{
-  window.addEventListener(ev, resetIdleTimer, {passive:true});
+  window.addEventListener(ev, resetIdleTimer, {passive:false, capture:true});
 });
 resetIdleTimer();
 </script>
