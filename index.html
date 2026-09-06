@@ -145,11 +145,9 @@
   .crate-picker-item:active{background:var(--bg);}
   .art{width:64px;height:64px;border-radius:8px;object-fit:cover;flex-shrink:0;background:#eee;
     box-shadow:0 1px 4px rgba(0,0,0,0.15);}
-  .art-wrap{display:inline-flex;flex-shrink:0;}
-  .art.fav-glow{transition:box-shadow 0.45s ease;box-shadow:0 1px 4px rgba(0,0,0,0.15), 0 0 0 0 rgba(234,179,8,0);}
-  .art.fav-glow.active{box-shadow:0 1px 4px rgba(0,0,0,0.15), 0 0 0 3px #eab308;}
-  .fav-star{background:none;border:none;font-size:17px;color:#c9c9ce;cursor:pointer;padding:4px;
-    transition:opacity 0.3s ease, color 0.3s ease;}
+  .fav-star{background:none;border:none;cursor:pointer;padding:4px;color:#9ca3af;
+    display:flex;align-items:center;justify-content:center;}
+  .fav-star .star-fill{transition:opacity 0.3s ease;}
   .fav-star.is-fav{color:#eab308;}
   .track-title{flex:1;min-width:0;}
   .track-title .t{font-weight:600;font-size:14.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
@@ -227,6 +225,17 @@
   }
   .pc-secs{display:inline-flex;align-items:center;opacity:0.5;}
 
+  .now-chip{position:fixed;left:0;right:0;bottom:0;z-index:80;
+    background:var(--card);box-shadow:0 -2px 10px rgba(0,0,0,0.1);
+    padding:10px 16px calc(10px + env(safe-area-inset-bottom));
+    display:flex;align-items:center;gap:10px;}
+  .now-chip img{width:38px;height:38px;border-radius:7px;object-fit:cover;flex-shrink:0;}
+  .now-chip-info{flex:1;min-width:0;}
+  .now-chip-name{font-size:13px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .now-chip-artist{font-size:11px;color:var(--dim);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .now-chip-undo{background:var(--bg);border:none;border-radius:9px;width:36px;height:36px;
+    font-size:16px;color:var(--text);cursor:pointer;flex-shrink:0;}
+
   .screensaver{position:fixed;inset:0;background:#000;z-index:900;
     display:flex;align-items:center;justify-content:center;overflow:hidden;
     opacity:0;pointer-events:none;transition:opacity 1.3s ease;}
@@ -290,19 +299,19 @@
   }
 
   .flow-badge{display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:700;
-    color:#2563eb;background:#dbeafe;border-radius:6px;padding:2px 7px;margin-bottom:5px;}
-  html.dark .flow-badge{background:#1e2b4d;color:#93c5fd;}
-  .match-row.flow-match{border:2px solid #3b82f6;
-    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='16'%3E%3Cpath d='M0,8 Q10,0 20,8 T40,8' stroke='%233b82f6' stroke-width='1.5' fill='none' opacity='0.16'/%3E%3C/svg%3E");
+    color:#374151;background:#e5e7eb;border-radius:6px;padding:2px 7px;margin-bottom:5px;}
+  html.dark .flow-badge{background:#374151;color:#d1d5db;}
+  .match-row.flow-match{border:2px solid #6b7280;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='9'%3E%3Cpath d='M0,4.5 Q5,0.5 10,4.5 T20,4.5' stroke='%236b7280' stroke-width='1.4' fill='none' opacity='0.36'/%3E%3C/svg%3E");
     background-repeat:repeat;}
   .chain-badge{display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:700;
-    color:#7c3aed;background:#ede9fe;border-radius:6px;padding:2px 7px;margin-bottom:5px;}
-  html.dark .chain-badge{background:#3b2e6b;color:#c4b5fd;}
+    color:#374151;background:#e5e7eb;border-radius:6px;padding:2px 7px;margin-bottom:5px;}
+  html.dark .chain-badge{background:#374151;color:#d1d5db;}
   .chain-start-icon{display:inline-flex;align-items:center;justify-content:center;width:15px;height:15px;
-    background:#ddd6fe;color:#5b21b6;border-radius:4px;font-size:9px;margin-left:2px;vertical-align:middle;}
-  html.dark .chain-start-icon{background:#4c3a99;color:#c4b5fd;}
-  .match-row.chain-match{border:2px solid #8b5cf6;
-    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='48' height='24'%3E%3Cg transform='rotate(28 24 12)' stroke='%238b5cf6' stroke-width='1.3' fill='none' opacity='0.2'%3E%3Cellipse cx='10' cy='12' rx='7' ry='4'/%3E%3Cellipse cx='22' cy='12' rx='7' ry='4'/%3E%3Cellipse cx='34' cy='12' rx='7' ry='4'/%3E%3C/g%3E%3C/svg%3E");
+    background:#e5e7eb;color:#374151;border-radius:4px;font-size:9px;margin-left:2px;vertical-align:middle;}
+  html.dark .chain-start-icon{background:#4b5563;color:#e5e7eb;}
+  .match-row.chain-match{border:2px solid #6b7280;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='26' height='13'%3E%3Cg transform='rotate(28 13 6.5)' stroke='%236b7280' stroke-width='1.1' fill='none' opacity='0.38'%3E%3Cellipse cx='5.5' cy='6.5' rx='4' ry='2.4'/%3E%3Cellipse cx='13' cy='6.5' rx='4' ry='2.4'/%3E%3Cellipse cx='20.5' cy='6.5' rx='4' ry='2.4'/%3E%3C/g%3E%3C/svg%3E");
     background-repeat:repeat;}
   .graffiti-label{height:21px;width:auto;display:block;}
   .graffiti-label text{font-family:'Rubik Wet Paint', cursive;fill:#fff;stroke:#111;stroke-width:2.6;}
@@ -332,13 +341,15 @@
 
   .crate-card{display:flex;align-items:center;gap:12px;background:var(--card);border-radius:14px;
     padding:14px;margin-bottom:10px;box-shadow:0 1px 2px rgba(0,0,0,0.04);cursor:pointer;}
-  .crate-card.flow-crate{border:2px solid #3b82f6;
-    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='16'%3E%3Cpath d='M0,8 Q10,0 20,8 T40,8' stroke='%233b82f6' stroke-width='1.5' fill='none' opacity='0.16'/%3E%3C/svg%3E");
+  .crate-card.flow-crate{border:2px solid #6b7280;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='9'%3E%3Cpath d='M0,4.5 Q5,0.5 10,4.5 T20,4.5' stroke='%236b7280' stroke-width='1.4' fill='none' opacity='0.36'/%3E%3C/svg%3E");
     background-repeat:repeat;}
-  .crate-card.chain-crate{border:2px solid #8b5cf6;
-    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='48' height='24'%3E%3Cg transform='rotate(28 24 12)' stroke='%238b5cf6' stroke-width='1.3' fill='none' opacity='0.2'%3E%3Cellipse cx='10' cy='12' rx='7' ry='4'/%3E%3Cellipse cx='22' cy='12' rx='7' ry='4'/%3E%3Cellipse cx='34' cy='12' rx='7' ry='4'/%3E%3C/g%3E%3C/svg%3E");
+  .crate-card.chain-crate{border:2px solid #6b7280;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='26' height='13'%3E%3Cg transform='rotate(28 13 6.5)' stroke='%236b7280' stroke-width='1.1' fill='none' opacity='0.38'%3E%3Cellipse cx='5.5' cy='6.5' rx='4' ry='2.4'/%3E%3Cellipse cx='13' cy='6.5' rx='4' ry='2.4'/%3E%3Cellipse cx='20.5' cy='6.5' rx='4' ry='2.4'/%3E%3C/g%3E%3C/svg%3E");
     background-repeat:repeat;}
-  .crate-card.fav-crate{border:2px solid #eab308;}
+  .crate-card.fav-crate{border:2px solid #6b7280;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='19' height='19'%3E%3Cpath d='M9.5,2 L11.3,7.1 L16.5,7.5 L12.5,10.8 L13.8,16 L9.5,12.9 L5.2,16 L6.5,10.8 L2.5,7.5 L7.7,7.1 Z' fill='%236b7280' opacity='0.3'/%3E%3C/svg%3E");
+    background-repeat:repeat;}
   .crate-card-info{flex:1;min-width:0;}
   .crate-card-info .t{font-weight:700;font-size:14.5px;}
   .crate-card-info .a{font-size:12px;color:var(--dim);margin-top:1px;}
@@ -370,9 +381,10 @@
   .match-main{display:flex;align-items:center;gap:11px;padding:10px 12px;cursor:pointer;}
   .rank{width:16px;font-size:11px;color:#c2c2c8;font-weight:700;flex-shrink:0;}
   .match-info{flex:1;min-width:0;}
-  .match-info .t{font-weight:600;font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .match-info .t{font-weight:600;font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:flex;align-items:center;gap:4px;}
   .match-info .a{font-size:11.5px;color:var(--dim);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-  .pct-pill{font-weight:800;font-size:13px;padding:6px 11px;border-radius:20px;flex-shrink:0;min-width:48px;text-align:center;}
+  .fav-mark{display:inline-flex;flex-shrink:0;}
+  .match-band-chart{flex-shrink:0;line-height:0;}
   .chev{width:16px;text-align:center;color:#c2c2c8;font-size:11px;transition:transform .15s;flex-shrink:0;}
   .match-row.open .chev{transform:rotate(180deg);}
   .breakdown{max-height:0;overflow:hidden;transition:max-height .18s ease;}
@@ -588,6 +600,15 @@
 </div>
 <div id="toast-stack"></div>
 
+<div class="now-chip" id="now-chip" style="display:none;">
+  <img id="now-chip-art">
+  <div class="now-chip-info">
+    <div class="now-chip-name" id="now-chip-name"></div>
+    <div class="now-chip-artist" id="now-chip-artist"></div>
+  </div>
+  <button class="now-chip-undo" id="now-chip-undo" title="Undo last selection">↩</button>
+</div>
+
 <div class="screensaver" id="screensaver">
   <div class="ss-clock" id="ss-clock">
     <span id="ss-main"></span>
@@ -716,6 +737,18 @@ function updateCount(){
 ========================================================= */
 let currentTab = 'import';
 const TAB_ORDER = ['import','organise','match'];
+let wakeLock = null;
+async function requestWakeLock(){
+  if(!('wakeLock' in navigator)) return;
+  try{ wakeLock = await navigator.wakeLock.request('screen'); }
+  catch(e){ console.error('wake lock request failed', e); }
+}
+function releaseWakeLock(){
+  if(wakeLock){ wakeLock.release().catch(()=>{}); wakeLock=null; }
+}
+document.addEventListener('visibilitychange', ()=>{
+  if(document.visibilityState==='visible' && currentTab==='match') requestWakeLock();
+});
 document.querySelectorAll('.tabs button').forEach(btn=>{
   btn.addEventListener('click', ()=>{
     document.querySelectorAll('.tabs button').forEach(b=>b.classList.remove('active'));
@@ -729,6 +762,8 @@ document.querySelectorAll('.tabs button').forEach(btn=>{
     document.getElementById('footnote').style.display = (currentTab==='import') ? 'block':'none';
     document.getElementById('track-count').style.display = (currentTab==='import') ? 'none':'block';
     if(currentTab==='organise') renderOrganise();
+    if(currentTab==='match'){ requestWakeLock(); renderNowChip(); }
+    else{ releaseWakeLock(); document.getElementById('now-chip').style.display='none'; }
   });
 });
 document.getElementById('footnote').innerHTML =
@@ -1496,7 +1531,8 @@ function pctColor(p){
 }
 function pctColorSoft(p){
   const hue = Math.max(0, Math.min(120, p*1.2));
-  return `hsl(${hue}, 75%, 94%)`;
+  const dark = document.documentElement.classList.contains('dark');
+  return dark ? `hsl(${hue}, 42%, 18%)` : `hsl(${hue}, 75%, 94%)`;
 }
 
 /* =========================================================
@@ -1520,6 +1556,28 @@ function miniLineChartSvg(bands){
   }).join('');
   return `<svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}">${dividers}${lines}</svg>`;
 }
+// A tiny at-a-glance comparison: the Now Playing track's bands in flat grey,
+// the suggestion's bands colored per-band by how close they sit (same
+// green-to-red scale, same 12dB-to-red tolerance as the big chart).
+function bandCompareChartSvg(nowBands, suggBands){
+  const w=50, h=26, colW=w/4;
+  if(!nowBands || !suggBands){
+    return `<svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}">
+      <line x1="3" y1="${h/2}" x2="${w-3}" y2="${h/2}" stroke="#e2e2e8" stroke-width="2" stroke-dasharray="2,3"/>
+    </svg>`;
+  }
+  const yFor = db => h - Math.max(0,Math.min(1,(db-CHART_DB_MIN)/(CHART_DB_MAX-CHART_DB_MIN)))*h;
+  let marks='';
+  BAND_KEYS.forEach((k,i)=>{
+    const x0=i*colW+2, x1=(i+1)*colW-2;
+    const yNow = yFor(nowBands[k]);
+    marks += `<line x1="${x0}" y1="${yNow}" x2="${x1}" y2="${yNow}" stroke="#adadb5" stroke-width="2" stroke-linecap="round"/>`;
+    const ySugg = yFor(suggBands[k]);
+    const color = pctColor(bandCloseness(nowBands[k], suggBands[k]));
+    marks += `<line x1="${x0}" y1="${ySugg}" x2="${x1}" y2="${ySugg}" stroke="${color}" stroke-width="2.4" stroke-linecap="round"/>`;
+  });
+  return `<svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}">${marks}</svg>`;
+}
 
 function trackRowHtml(t){
   const selected = selectedTrackIds.has(t.id);
@@ -1539,14 +1597,19 @@ function trackRowHtml(t){
   }
   return `<div class="track-row" data-id="${t.id}">
     <div class="head">
-      <span class="art-wrap"><img class="art fav-glow${favourites.includes(t.id)?' active':''}" src="${t.icon}"></span>
+      <img class="art" src="${t.icon}">
       <div class="track-title">
         <div class="t">${escapeHtml(t.name)}</div>
         <div class="a">${escapeHtml(t.artist||'Unknown artist')}</div>
       </div>
       <div class="mini-chart">${miniLineChartSvg(t.bands)}</div>
       <div class="meta"><b>${t.bpm}</b> bpm<br>${t.key.camelot} ${t.key.name}</div>
-      <button class="fav-star${favourites.includes(t.id)?' is-fav':''}" data-fav="${t.id}" title="Add to Favourites">${favourites.includes(t.id)?'★':'☆'}</button>
+      <button class="fav-star${favourites.includes(t.id)?' is-fav':''}" data-fav="${t.id}" title="Add to Favourites">
+        <svg viewBox="0 0 24 24" width="17" height="17">
+          <path d="M12 2 L14.9 8.6 L22 9.3 L16.7 14.1 L18.2 21 L12 17.4 L5.8 21 L7.3 14.1 L2 9.3 L9.1 8.6 Z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
+          <path class="star-fill" d="M12 2 L14.9 8.6 L22 9.3 L16.7 14.1 L18.2 21 L12 17.4 L5.8 21 L7.3 14.1 L2 9.3 L9.1 8.6 Z" fill="#eab308" opacity="${favourites.includes(t.id)?'1':'0'}"/>
+        </svg>
+      </button>
       <button class="edit-toggle" data-edit="${t.id}">✎</button>
       <button class="del" data-del="${t.id}">✕</button>
     </div>
@@ -1660,26 +1723,22 @@ function renderLibrary(){
   });
 
   el.querySelectorAll('[data-fav]').forEach(btn=>{
-    btn.addEventListener('click', ()=>{
+    btn.addEventListener('click', async ()=>{
       const id = btn.dataset.fav;
-      const artEl = btn.closest('.head').querySelector('.art');
+      const fillEl = btn.querySelector('.star-fill');
+      hapticTap(12);
       if(favourites.includes(id)){
-        // un-favourite: simple, no need for the reveal animation in reverse
         favourites = favourites.filter(fid=>fid!==id);
-        saveFavourites();
-        btn.textContent = '☆'; btn.classList.remove('is-fav');
-        artEl.classList.remove('active');
+        await saveFavourites();
+        btn.classList.remove('is-fav');
+        fillEl.style.opacity = '0';
         return;
       }
-      btn.style.opacity = '0';
-      setTimeout(async ()=>{
-        favourites.push(id);
-        await saveFavourites();
-        btn.textContent = '★';
-        btn.classList.add('is-fav');
-        btn.style.opacity = '1';
-        artEl.classList.add('active'); // CSS transition fades the yellow border in
-      }, 1000);
+      favourites.push(id);
+      await saveFavourites();
+      btn.classList.add('is-fav');
+      fillEl.style.opacity = '1'; // CSS transition fills the star in
+      hapticTap(20);
     });
   });
   el.querySelectorAll('[data-edit]').forEach(btn=>{
@@ -1763,11 +1822,17 @@ function updateChainProgress(id){
   }
   currentChainId=null; currentChainIndex=-1;
 }
+let previousNowPlayingId = null;
+let selectLock = false;
+function hapticTap(ms){
+  if(navigator.vibrate) navigator.vibrate(ms||15); // no-op where unsupported (notably iOS Safari)
+}
 function selectNowPlaying(id){
   // The track you're moving away from just got played — keep it out of
   // future suggestions until you hit Reset.
   if(nowPlayingId && nowPlayingId!==id) playedTrackIds.add(nowPlayingId);
   if(nowPlayingId !== id){
+    previousNowPlayingId = nowPlayingId || null;
     playHistory.push(id);
     if(playHistory.length>50) playHistory.shift(); // only the last 5 are ever shown; this just bounds memory
   }
@@ -1779,6 +1844,32 @@ function selectNowPlaying(id){
   selectedMatchId = null;
   renderPlayHistory();
   renderMatches();
+  renderNowChip();
+  hapticTap();
+}
+// A brief cooldown after selecting, so a double-tap (easy with fast or sweaty
+// fingers) can't fire the selection twice in a row.
+function selectNowPlayingDebounced(id){
+  if(selectLock) return;
+  selectLock = true;
+  selectNowPlaying(id);
+  setTimeout(()=>{ selectLock=false; }, 500);
+}
+function undoLastSelection(){
+  if(!previousNowPlayingId || !library.some(t=>t.id===previousNowPlayingId)) return;
+  selectNowPlayingDebounced(previousNowPlayingId);
+}
+function renderNowChip(){
+  const chip = document.getElementById('now-chip');
+  if(!chip) return;
+  const t = library.find(x=>x.id===nowPlayingId);
+  if(!t || currentTab!=='match'){ chip.style.display='none'; return; }
+  chip.style.display='flex';
+  document.getElementById('now-chip-art').src = t.icon;
+  document.getElementById('now-chip-name').textContent = t.name;
+  document.getElementById('now-chip-artist').textContent = t.artist || 'Unknown artist';
+  document.getElementById('now-chip-undo').style.visibility =
+    (previousNowPlayingId && library.some(x=>x.id===previousNowPlayingId)) ? 'visible' : 'hidden';
 }
 
 /* =========================================================
@@ -1997,7 +2088,7 @@ function renderNowSuggestions(query){
   box.querySelectorAll('[data-id]').forEach(row=>{
     // mousedown (not click) fires before the input's blur, so the tap
     // registers before the suggestion list gets hidden.
-    row.addEventListener('mousedown', e=>{ e.preventDefault(); selectNowPlaying(row.dataset.id); });
+    row.addEventListener('mousedown', e=>{ e.preventDefault(); selectNowPlayingDebounced(row.dataset.id); });
   });
 }
 const nowInput = document.getElementById('now-playing-input');
@@ -2266,17 +2357,21 @@ function renderMatches(){
     const startsChain = showFlowChainSuggestions && !isChain && chains.some(c=>c.trackIds[0]===r.t.id);
     const chainBadge = isChain ? `<div class="chain-badge">⛓️ ${chainIsLast?'Final chain track':'Chain suggestion'}</div>` : '';
     const flowBadge = isFlow ? `<div class="flow-badge">〜 Flow match${startsChain?' <span class="chain-start-icon" title="Starts a saved chain">⛓️</span>':''}</div>` : '';
+    const isFav = favourites.includes(r.t.id);
+    const favBadge = isFav ? `<span class="fav-mark" title="Favourite">
+      <svg viewBox="0 0 24 24" width="12" height="12"><path d="M12 2 L14.9 8.6 L22 9.3 L16.7 14.1 L18.2 21 L12 17.4 L5.8 21 L7.3 14.1 L2 9.3 L9.1 8.6 Z" fill="#eab308"/></svg>
+    </span>` : '';
     return `
-    <div class="match-row${r.t.id===selectedMatchId?' open':''}${isChain?' chain-match':(isFlow?' flow-match':'')}" data-id="${r.t.id}">
+    <div class="match-row${r.t.id===selectedMatchId?' open':''}${isChain?' chain-match':(isFlow?' flow-match':'')}" data-id="${r.t.id}" style="background-color:${pctColorSoft(r.overall)};">
       <div class="match-main">
         <div class="rank">${i+1}</div>
         <img class="art" src="${r.t.icon}" style="width:56px;height:56px;border-radius:7px;">
         <div class="match-info">
           ${chainBadge}${flowBadge}
-          <div class="t">${escapeHtml(r.t.name)}</div>
+          <div class="t">${favBadge}${escapeHtml(r.t.name)}</div>
           <div class="a">${escapeHtml(r.t.artist||'Unknown artist')}</div>
         </div>
-        <div class="pct-pill" style="background:${pctColorSoft(r.overall)};color:${pctColor(r.overall)}">${r.overall}%</div>
+        <div class="match-band-chart">${bandCompareChartSvg(now.bands, r.t.bands)}</div>
         <div class="chev">▾</div>
       </div>
       <div class="breakdown"><div class="breakdown-inner">
@@ -2294,7 +2389,7 @@ function renderMatches(){
   list.querySelectorAll('[data-setnow]').forEach(btn=>{
     btn.addEventListener('click', e=>{
       e.stopPropagation();
-      selectNowPlaying(btn.dataset.setnow);
+      selectNowPlayingDebounced(btn.dataset.setnow);
       document.querySelector('.app').scrollIntoView({behavior:'smooth', block:'start'});
     });
   });
@@ -2512,6 +2607,7 @@ function applyDarkMode(dark){
   document.documentElement.classList.toggle('dark', dark);
   const now = library.find(t=>t.id===nowPlayingId);
   if(now) drawSpectrumChart(now, selectedMatchId ? library.find(t=>t.id===selectedMatchId) : null);
+  if(currentTab==='match') renderMatches();
 }
 async function loadDarkMode(){
   let dark=true; // default on — only overridden below if the user already chose otherwise
@@ -3081,6 +3177,7 @@ loadFlows();
 loadChains();
 loadCrates();
 loadFavourites();
+document.getElementById('now-chip-undo').addEventListener('click', undoLastSelection);
 loadFlowChainSetting();
 loadClockSettings();
 loadHistorySessions();
