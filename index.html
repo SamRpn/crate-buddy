@@ -197,7 +197,7 @@
   .wrow span.val{width:34px;text-align:right;color:var(--text);font-weight:600;}
   input[type=range]{flex:1;accent-color:#ff1414;}
   .tick-row{display:flex;justify-content:space-between;margin:2px 0 10px;padding:0 8px;}
-  .tick-row span{width:2px;height:5px;border-radius:1px;background:var(--line);}
+  .tick-row span{width:2px;height:8px;border-radius:1px;background:#9ca3af;}
 
   .now-search{position:relative;margin-bottom:14px;}
   .now-search input{width:100%;background:var(--card);color:var(--text);border:none;border-radius:12px;
@@ -394,24 +394,27 @@
   .match-info .a{font-size:11.5px;color:var(--dim);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
   .fav-mark{display:inline-flex;flex-shrink:0;}
   .match-score{font-size:15px;font-weight:800;flex-shrink:0;min-width:38px;text-align:right;}
-  .match-play-btn{flex-shrink:0;width:34px;height:34px;border-radius:50%;background:#16a34a;border:none;
-    display:flex;align-items:center;justify-content:center;cursor:pointer;}
-  .match-play-btn:active{background:#15803d;}
+  .match-play-btn{flex-shrink:0;width:34px;height:34px;border-radius:50%;background:none;border:none;
+    display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0;}
+  .play-fill{transition:opacity 0.3s ease;}
+  .play-fill.filling{opacity:1;}
+  .play-tri{transition:fill 0.3s ease, stroke 0.3s ease;}
+  .play-tri.filling{fill:#fff;stroke:#fff;}
   .chev{width:14px;text-align:center;color:#c2c2c8;font-size:11px;transition:transform .15s;flex-shrink:0;}
   .match-row.open .chev{transform:rotate(180deg);}
   .breakdown{max-height:0;overflow:hidden;transition:max-height .2s ease;}
   .match-row.open .breakdown{max-height:260px;}
   .breakdown-inner{padding:2px 14px 14px;}
-  .bd-cols{display:flex;gap:14px;align-items:flex-start;}
-  .bd-col-left{flex:1;min-width:0;display:flex;flex-direction:column;gap:10px;justify-content:center;}
-  .bd-col-right{flex-shrink:0;}
+  .bd-cols{display:flex;gap:20px;align-items:flex-start;}
+  .bd-col-left{flex:0 0 118px;display:flex;flex-direction:column;gap:16px;justify-content:center;}
+  .bd-col-right{flex:1;min-width:0;}
+  .bl{font-size:11.5px;color:var(--dim);}
   .bd-row{display:flex;align-items:center;gap:10px;}
-  .bd-row .bl{font-size:11.5px;color:var(--dim);width:44px;flex-shrink:0;}
+  .bd-row .bl{width:44px;flex-shrink:0;}
   .bd-track{flex:1;height:5px;border-radius:3px;background:var(--line);overflow:hidden;}
   .bd-track i{display:block;height:100%;border-radius:3px;}
   .bd-row .bv{font-size:11.5px;font-weight:700;width:32px;text-align:right;flex-shrink:0;}
   .bd-row .bd-text{font-size:12px;font-weight:600;}
-  .bd-detail-lbl{font-size:11px;color:var(--dim);margin-bottom:4px;line-height:1.3;}
 
   .note{color:var(--dim);font-size:11.5px;line-height:1.6;margin:18px 20px 0;padding:13px 15px;
     background:var(--card);border-radius:12px;}
@@ -1593,7 +1596,7 @@ function miniLineChartSvg(bands){
 // detailed=true renders much bigger with a real dB axis and band-name labels,
 // for the row breakdown.
 function bandCompareChartSvg(nowBands, suggBands, detailed){
-  const w = detailed?230:50, h = detailed?150:26;
+  const w = detailed?250:50, h = detailed?150:26;
   const padL = detailed?26:0, padB = detailed?16:0;
   const plotW = w-padL, colW = plotW/4;
   if(!nowBands || !suggBands){
@@ -2389,7 +2392,7 @@ function renderMatches(){
     } else {
       const loudArrow = (now.loudness - r.t.loudness) > 0 ? '▼' : ((now.loudness - r.t.loudness) < 0 ? '▲' : '');
       const loudText = r.loudDiff<0.3 ? 'Exact loudness' : `${loudArrow} ${r.loudDiff.toFixed(1)} dB ${r.t.loudness<now.loudness?'quieter':'louder'}`;
-      loudRow = `<span class="bd-text" style="color:${loudnessDiffColor(r.loudDiff)}">${loudText} (${r.loudS}%)</span>`;
+      loudRow = `<span class="bd-text" style="color:${loudnessDiffColor(r.loudDiff)}">${loudText}</span>`;
     }
     const isChain = r.t.id===chainPickId;
     const isFlow = !isChain && flowToIds.has(r.t.id);
@@ -2415,7 +2418,11 @@ function renderMatches(){
         </div>
         <div class="match-score" style="color:${pctColor(r.overall)}">${r.overall}%</div>
         <button class="match-play-btn" data-setnow="${r.t.id}" title="Play this now">
-          <svg viewBox="0 0 20 20" width="12" height="12"><path d="M5 3.5 L16 10 L5 16.5 Z" fill="#fff"/></svg>
+          <svg viewBox="0 0 34 34" width="34" height="34">
+            <circle class="play-fill" cx="17" cy="17" r="16" fill="#16a34a" opacity="0"></circle>
+            <circle cx="17" cy="17" r="15" fill="none" stroke="#16a34a" stroke-width="2"></circle>
+            <path class="play-tri" d="M13.5 9.5 L24 17 L13.5 24.5 Z" fill="none" stroke="#16a34a" stroke-width="1.8" stroke-linejoin="round"></path>
+          </svg>
         </button>
         <div class="chev" title="Show details">▾</div>
       </div>
@@ -2427,7 +2434,7 @@ function renderMatches(){
             <div class="bd-row"><span class="bl">Loudness</span>${loudRow}</div>
           </div>
           <div class="bd-col-right">
-            <div class="bd-detail-lbl">Multiband loudness<br>grey = Now Playing, color = this track</div>
+            <div class="bl" style="margin-bottom:8px;">Tonal Balance</div>
             ${detailChart}
           </div>
         </div>
@@ -2438,8 +2445,13 @@ function renderMatches(){
   list.querySelectorAll('[data-setnow]').forEach(btn=>{
     btn.addEventListener('click', e=>{
       e.stopPropagation();
-      selectNowPlayingDebounced(btn.dataset.setnow);
-      document.querySelector('.app').scrollIntoView({behavior:'smooth', block:'start'});
+      hapticTap(12);
+      btn.querySelector('.play-fill').classList.add('filling');
+      btn.querySelector('.play-tri').classList.add('filling');
+      setTimeout(()=>{
+        selectNowPlayingDebounced(btn.dataset.setnow);
+        document.querySelector('.app').scrollIntoView({behavior:'smooth', block:'start'});
+      }, 260);
     });
   });
 
