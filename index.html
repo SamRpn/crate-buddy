@@ -37,9 +37,17 @@
   .app{max-width:640px;margin:0 auto;padding:0 0 70px;}
 
   /* ---- header / logo ---- */
-  header.top{padding:22px 20px 10px;display:flex;align-items:center;justify-content:space-between;}
+  header.top{position:sticky;top:0;z-index:70;padding:22px 20px 10px;display:flex;align-items:center;
+    gap:12px;background:rgba(255,255,255,0.86);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);}
+  html.dark header.top{background:rgba(16,17,20,0.82);}
   .logo{width:134px;height:52px;overflow:visible;flex-shrink:0;}
-  .header-right{display:flex;align-items:center;gap:12px;}
+  .header-divider{width:1px;align-self:stretch;background:var(--line);flex-shrink:0;}
+  .header-now{flex:1;min-width:0;display:flex;align-items:center;gap:8px;}
+  .header-now img{width:30px;height:30px;border-radius:6px;object-fit:cover;flex-shrink:0;}
+  .header-now-info{min-width:0;}
+  .header-now-label{font-size:9px;letter-spacing:0.3px;color:var(--dim);line-height:1;margin-bottom:2px;}
+  .header-now-name{font-size:12.5px;font-weight:600;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .header-right{display:flex;align-items:center;gap:12px;flex-shrink:0;margin-left:auto;}
   .settings-btn{background:none;border:none;padding:4px;color:var(--dim);cursor:pointer;display:flex;}
 
   .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.35);z-index:200;
@@ -172,30 +180,32 @@
 
 
   /* ---- now playing ---- */
-  details.weights{background:var(--card);border-radius:12px;margin-bottom:14px;box-shadow:0 1px 2px rgba(0,0,0,0.04);}
-  details.weights summary{padding:11px 14px;font-size:12.5px;color:var(--dim);cursor:pointer;list-style:none;font-weight:600;
+  .weights{background:var(--card);border-radius:12px;margin-bottom:14px;box-shadow:0 1px 2px rgba(0,0,0,0.04);}
+  .weights-summary{padding:11px 14px;font-size:12.5px;color:var(--dim);cursor:pointer;font-weight:600;
     display:flex;align-items:center;gap:7px;}
-  details.weights summary::-webkit-details-marker{display:none;}
   .weights-tri{transition:transform 0.18s ease;flex-shrink:0;}
-  details.weights[open] summary .weights-tri{transform:rotate(180deg);}
+  .weights.open .weights-summary .weights-tri{transform:rotate(180deg);}
   .weights-save-row{display:flex;align-items:center;justify-content:space-between;margin-top:10px;}
   .weights-total{font-size:13px;font-weight:800;color:#dc2626;}
   .weights-total.valid{color:#16a34a;}
   .weights-save-btn{position:relative;overflow:hidden;background:var(--line);border:1.5px solid transparent;
     border-radius:9px;padding:8px 18px;cursor:not-allowed;}
   .weights-save-btn.enabled{background:var(--card);border-color:#16a34a;cursor:pointer;}
-  .save-btn-fill{position:absolute;inset:0;background:#16a34a;transform:scaleX(0);transform-origin:left;
-    transition:transform 0.45s ease;}
-  .save-btn-fill.filling{transform:scaleX(1);}
+  .save-btn-fill{position:absolute;inset:0;background:#16a34a;opacity:0;transition:opacity 0.4s ease;}
+  .save-btn-fill.filling{opacity:1;}
   .save-btn-label{position:relative;z-index:1;font-size:12.5px;font-weight:700;color:var(--dim);}
   .weights-save-btn.enabled .save-btn-label{color:#16a34a;}
   .weights-save-btn .save-btn-fill.filling ~ .save-btn-label{color:#fff;}
-  details.weights .content{padding:0 14px 14px;}
+  .weights .content{max-height:0;overflow:hidden;opacity:0;
+    transition:max-height 0.32s ease, opacity 0.22s ease;}
+  .weights.open .content{max-height:520px;opacity:1;}
+  .weights .content-inner{padding:0 14px 14px;}
   .weights-hint{font-size:11.5px;color:var(--dim);line-height:1.4;margin:0 0 10px;}
   .wrow{display:flex;align-items:center;gap:10px;margin-bottom:2px;font-size:12px;color:var(--dim);}
   .wrow span.lbl{width:96px;flex-shrink:0;}
   .wrow span.val{width:34px;text-align:right;color:var(--text);font-weight:600;}
   input[type=range]{flex:1;accent-color:#ff1414;}
+  .wrow input[type=range]{accent-color:#8e8e93;}
   .tick-row{display:flex;justify-content:space-between;margin:2px 0 10px;padding:0 8px;}
   .tick-row span{width:2px;height:8px;border-radius:1px;background:#9ca3af;}
 
@@ -233,17 +243,6 @@
       box-shadow:0 0 0 1px rgba(0,0,0,0.85), 0 6px 18px rgba(0,0,0,0.16), 0 1px 3px rgba(0,0,0,0.1);}
   }
   .pc-secs{display:inline-flex;align-items:center;opacity:0.5;}
-
-  .now-chip{position:fixed;left:0;right:0;bottom:0;z-index:80;
-    background:var(--card);box-shadow:0 -2px 10px rgba(0,0,0,0.1);
-    padding:10px 16px calc(10px + env(safe-area-inset-bottom));
-    display:flex;align-items:center;gap:10px;}
-  .now-chip img{width:38px;height:38px;border-radius:7px;object-fit:cover;flex-shrink:0;}
-  .now-chip-info{flex:1;min-width:0;}
-  .now-chip-name{font-size:13px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-  .now-chip-artist{font-size:11px;color:var(--dim);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-  .now-chip-undo{background:var(--bg);border:none;border-radius:9px;width:36px;height:36px;
-    font-size:16px;color:var(--text);cursor:pointer;flex-shrink:0;}
 
   .screensaver{position:fixed;inset:0;background:#000;z-index:900;
     display:flex;align-items:center;justify-content:center;overflow:hidden;
@@ -307,9 +306,6 @@
     100%{opacity:0.22;}
   }
 
-  .flow-badge{display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:700;
-    color:#374151;background:#e5e7eb;border-radius:6px;padding:2px 7px;margin-bottom:5px;}
-  html.dark .flow-badge{background:#374151;color:#d1d5db;}
   .match-row.flow-match{border:2px solid #6b7280;
     background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='9'%3E%3Cpath d='M0,4.5 Q5,0.5 10,4.5 T20,4.5' stroke='%236b7280' stroke-width='1.4' fill='none' opacity='0.36'/%3E%3C/svg%3E");
     background-repeat:repeat;}
@@ -431,8 +427,20 @@
         stroke-linejoin="round" paint-order="stroke fill" letter-spacing="-0.5"
         rotate="4,-3,5,-4,3" transform="rotate(2 60 40)">BUDDY</text>
     </svg>
+    <div class="header-divider" id="header-now-divider-1" style="display:none;"></div>
+    <div class="header-now" id="header-now" style="display:none;">
+      <img id="header-now-art">
+      <div class="header-now-info">
+        <div class="header-now-label">NOW PLAYING</div>
+        <div class="header-now-name" id="header-now-name"></div>
+      </div>
+    </div>
+    <div class="header-divider" id="header-now-divider-2" style="display:none;"></div>
     <div class="header-right">
       <div class="count" id="track-count"></div>
+      <button class="settings-btn" id="header-undo-btn" title="Undo last selection" style="display:none;">
+        <svg viewBox="0 0 24 24" width="19" height="19"><path fill="currentColor" d="M12.5 8V4.5L6 10l6.5 5.5V12c3.3 0 6 2.7 6 6 0 .7-.1 1.4-.4 2 1.5-1.1 2.4-2.9 2.4-4.9 0-3.3-2.7-6-6-6Z"/></svg>
+      </button>
       <button class="settings-btn" id="settings-btn" aria-label="Settings">
         <svg viewBox="0 0 24 24" width="20" height="20"><path fill="currentColor" d="M19.4 13a7.4 7.4 0 0 0 .07-1 7.4 7.4 0 0 0-.07-1l2.1-1.6a.5.5 0 0 0 .12-.65l-2-3.4a.5.5 0 0 0-.6-.22l-2.5 1a7.6 7.6 0 0 0-1.7-1l-.38-2.6a.5.5 0 0 0-.5-.43h-4a.5.5 0 0 0-.5.43l-.38 2.6a7.6 7.6 0 0 0-1.7 1l-2.5-1a.5.5 0 0 0-.6.22l-2 3.4a.5.5 0 0 0 .12.65L4.5 11a7.4 7.4 0 0 0-.07 1 7.4 7.4 0 0 0 .07 1l-2.1 1.6a.5.5 0 0 0-.12.65l2 3.4a.5.5 0 0 0 .6.22l2.5-1a7.6 7.6 0 0 0 1.7 1l.38 2.6a.5.5 0 0 0 .5.43h4a.5.5 0 0 0 .5-.43l.38-2.6a7.6 7.6 0 0 0 1.7-1l2.5 1a.5.5 0 0 0 .6-.22l2-3.4a.5.5 0 0 0-.12-.65Zm-7.4 2.5a3.5 3.5 0 1 1 0-7 3.5 3.5 0 0 1 0 7Z"/></svg>
       </button>
@@ -584,9 +592,9 @@
   </section>
 
   <section id="tab-match" style="display:none;">
-    <details class="weights">
-      <summary><svg class="weights-tri" viewBox="0 0 10 10" width="9" height="9"><path d="M1,2 L9,2 L5,8 Z" fill="currentColor"/></svg> Suggestion Priorities</summary>
-      <div class="content">
+    <div class="weights" id="weights-panel">
+      <div class="weights-summary" id="weights-summary"><svg class="weights-tri" viewBox="0 0 10 10" width="9" height="9"><path d="M1,2 L9,2 L5,8 Z" fill="currentColor"/></svg> Suggestion Priorities</div>
+      <div class="content"><div class="content-inner">
         <p class="weights-hint">Every DJ weighs these differently — set your split below (10–70% each, in steps of 10%). Nothing changes until you hit Save.</p>
         <div class="wrow-group">
           <div class="wrow"><span class="lbl">BPM</span><input type="range" id="w-bpm" min="10" max="70" step="10" value="20"><span class="val" id="w-bpm-val">20%</span></div>
@@ -602,8 +610,8 @@
           <span class="weights-total" id="weights-total">100%</span>
           <button class="weights-save-btn" id="weights-save-btn"><span class="save-btn-fill"></span><span class="save-btn-label">Save</span></button>
         </div>
-      </div>
-    </details>
+      </div></div>
+    </div>
     <div class="now-search">
       <input type="text" id="now-playing-input" placeholder="Type a track title or artist…" autocomplete="off">
       <div class="now-suggestions" id="now-suggestions"></div>
@@ -624,14 +632,6 @@
 </div>
 <div id="toast-stack"></div>
 
-<div class="now-chip" id="now-chip" style="display:none;">
-  <img id="now-chip-art">
-  <div class="now-chip-info">
-    <div class="now-chip-name" id="now-chip-name"></div>
-    <div class="now-chip-artist" id="now-chip-artist"></div>
-  </div>
-  <button class="now-chip-undo" id="now-chip-undo" title="Undo last selection">↩</button>
-</div>
 
 <div class="screensaver" id="screensaver">
   <div class="ss-clock" id="ss-clock">
@@ -787,7 +787,7 @@ document.querySelectorAll('.tabs button').forEach(btn=>{
     document.getElementById('track-count').style.display = (currentTab==='import') ? 'none':'block';
     if(currentTab==='organise') renderOrganise();
     if(currentTab==='match'){ requestWakeLock(); renderNowChip(); }
-    else{ releaseWakeLock(); document.getElementById('now-chip').style.display='none'; }
+    else{ releaseWakeLock(); renderNowChip(); }
   });
 });
 document.getElementById('footnote').innerHTML =
@@ -1910,16 +1910,21 @@ function undoLastSelection(){
   selectNowPlayingDebounced(previousNowPlayingId);
 }
 function renderNowChip(){
-  const chip = document.getElementById('now-chip');
-  if(!chip) return;
+  const el = document.getElementById('header-now');
+  const div1 = document.getElementById('header-now-divider-1');
+  const div2 = document.getElementById('header-now-divider-2');
+  const undoBtn = document.getElementById('header-undo-btn');
+  if(!el) return;
   const t = library.find(x=>x.id===nowPlayingId);
-  if(!t || currentTab!=='match'){ chip.style.display='none'; return; }
-  chip.style.display='flex';
-  document.getElementById('now-chip-art').src = t.icon;
-  document.getElementById('now-chip-name').textContent = t.name;
-  document.getElementById('now-chip-artist').textContent = t.artist || 'Unknown artist';
-  document.getElementById('now-chip-undo').style.visibility =
-    (previousNowPlayingId && library.some(x=>x.id===previousNowPlayingId)) ? 'visible' : 'hidden';
+  const show = t && currentTab==='match';
+  el.style.display = show ? 'flex' : 'none';
+  div1.style.display = show ? 'block' : 'none';
+  div2.style.display = show ? 'block' : 'none';
+  if(!show){ undoBtn.style.display='none'; return; }
+  document.getElementById('header-now-art').src = t.icon;
+  document.getElementById('header-now-name').textContent = t.name;
+  undoBtn.style.display =
+    (previousNowPlayingId && library.some(x=>x.id===previousNowPlayingId)) ? 'flex' : 'none';
 }
 
 /* =========================================================
@@ -2219,13 +2224,17 @@ document.getElementById('weights-save-btn').addEventListener('click', async ()=>
   await saveActiveWeights();
   renderMatches();
   // Same fill-in feedback as the favourite star, then the panel tucks itself
-  // away once the save has visibly registered.
+  // away (smoothly, via the max-height/opacity transition) once the save
+  // has visibly registered.
   const fill = document.querySelector('#weights-save-btn .save-btn-fill');
   fill.classList.add('filling');
   setTimeout(()=>{
-    document.querySelector('details.weights').removeAttribute('open');
+    document.getElementById('weights-panel').classList.remove('open');
     fill.classList.remove('filling');
   }, 550);
+});
+document.getElementById('weights-summary').addEventListener('click', ()=>{
+  document.getElementById('weights-panel').classList.toggle('open');
 });
 
 function bpmMatchInfo(nowBpm, suggBpm){
@@ -2398,7 +2407,7 @@ function renderMatches(){
     const isFlow = !isChain && flowToIds.has(r.t.id);
     const startsChain = showFlowChainSuggestions && !isChain && chains.some(c=>c.trackIds[0]===r.t.id);
     const chainBadge = isChain ? `<div class="chain-badge">⛓️ ${chainIsLast?'Final chain track':'Chain suggestion'}</div>` : '';
-    const flowBadge = isFlow ? `<div class="flow-badge">〜 Flow match${startsChain?' <span class="chain-start-icon" title="Starts a saved chain">⛓️</span>':''}</div>` : '';
+    const flowBadge = (isFlow && startsChain) ? `<span class="chain-start-icon" title="Starts a saved chain">⛓️</span>` : '';
     const isFav = favourites.includes(r.t.id);
     const favBadge = isFav ? `<span class="fav-mark" title="Favourite">
       <svg viewBox="0 0 24 24" width="12" height="12"><path d="M12 2 L14.9 8.6 L22 9.3 L16.7 14.1 L18.2 21 L12 17.4 L5.8 21 L7.3 14.1 L2 9.3 L9.1 8.6 Z" fill="#eab308"/></svg>
@@ -3131,7 +3140,7 @@ loadFlows();
 loadChains();
 loadCrates();
 loadFavourites();
-document.getElementById('now-chip-undo').addEventListener('click', undoLastSelection);
+document.getElementById('header-undo-btn').addEventListener('click', undoLastSelection);
 loadFlowChainSetting();
 loadClockSettings();
 loadHistorySessions();
