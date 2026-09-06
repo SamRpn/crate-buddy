@@ -1,0 +1,53 @@
+<h2 class="sr-only">Live render of the Crate Buddy logo using the real font, with a download button for a high-resolution PNG</h2>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Rubik+Wet+Paint&display=swap');
+</style>
+<div style="display:flex;flex-direction:column;align-items:center;gap:1rem;padding:1rem 0;">
+  <canvas id="logoCanvas" width="1080" height="1080" style="width:100%;max-width:320px;height:auto;border-radius:12px;"></canvas>
+  <button id="dlBtn">Download 1080px PNG</button>
+  <p id="status" style="font-size:13px;color:var(--text-secondary);margin:0;">Loading the real font…</p>
+</div>
+<script>
+const canvas = document.getElementById('logoCanvas');
+const ctx = canvas.getContext('2d');
+const statusEl = document.getElementById('status');
+
+function draw(fontLoaded){
+  ctx.clearRect(0,0,1080,1080);
+  ctx.fillStyle = '#0a0a0a';
+  ctx.fillRect(0,0,1080,1080);
+  ctx.fillStyle = '#ffffff';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'alphabetic';
+  const fam = fontLoaded ? '"Rubik Wet Paint", cursive' : 'sans-serif';
+  ctx.font = '220px ' + fam;
+  ctx.save();
+  ctx.translate(540, 400);
+  ctx.rotate(-3 * Math.PI / 180);
+  ctx.fillText('CRATE', 0, 0);
+  ctx.restore();
+  ctx.save();
+  ctx.translate(540, 680);
+  ctx.rotate(2 * Math.PI / 180);
+  ctx.fillText('BUDDY', 0, 0);
+  ctx.restore();
+}
+
+draw(false);
+
+document.fonts.load('220px "Rubik Wet Paint"').then(function(){
+  return document.fonts.ready;
+}).then(function(){
+  draw(true);
+  statusEl.textContent = 'Real font loaded. This is the actual logo.';
+}).catch(function(){
+  statusEl.textContent = 'Could not reach the font from here — showing a fallback.';
+});
+
+document.getElementById('dlBtn').addEventListener('click', function(){
+  const a = document.createElement('a');
+  a.download = 'crate-buddy-logo-1080.png';
+  a.href = canvas.toDataURL('image/png');
+  a.click();
+});
+</script>
