@@ -80,7 +80,7 @@
   .tabs{position:relative;display:flex;gap:2px;margin:0 20px 18px;background:#ececf0;border-radius:12px;padding:4px;}
   .tab-indicator{position:absolute;top:4px;bottom:4px;left:4px;width:calc((100% - 8px)/3);
     background:var(--card);border-radius:9px;box-shadow:0 1px 3px rgba(0,0,0,0.08);
-    transition:transform 0.5s cubic-bezier(0.34,1.3,0.64,1);will-change:transform;z-index:0;}
+    transition:transform 0.5s cubic-bezier(0.32,1.1,0.44,1);will-change:transform;z-index:0;}
   html.dark .tab-indicator{background:#000;}
   .tabs button{position:relative;z-index:1;flex:1 1 0;min-width:0;padding:8px 6px;background:transparent;border:none;border-radius:9px;
     cursor:pointer;display:flex;align-items:center;justify-content:center;}
@@ -206,8 +206,7 @@
   .play-clock{display:none;}
   @media (orientation: landscape){
     .play-clock{display:flex;align-items:center;gap:3px;flex-shrink:0;
-      padding:6px 10px;border-radius:8px;margin-bottom:14px;}
-    html.dark .play-clock{background:#000;}
+      padding:6px 10px;border-radius:8px;margin-bottom:14px;background:#000;}
   }
 
   .screensaver{position:fixed;inset:0;background:#000;z-index:900;
@@ -221,14 +220,18 @@
     background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
     animation:grain-shift 0.35s steps(3) infinite;}
   @keyframes grain-shift{0%,100%{transform:translate(0,0);}33%{transform:translate(-3%,2%);}66%{transform:translate(2%,-3%);}}
-  @keyframes seg-flicker{
-    0%{filter:brightness(1) drop-shadow(0 0 5px rgba(255,60,60,0.5)) drop-shadow(0 0 12px rgba(255,30,30,0.28));}
-    25%{filter:brightness(1.07) drop-shadow(0 0 6px rgba(255,60,60,0.58)) drop-shadow(0 0 14px rgba(255,30,30,0.34));}
-    50%{filter:brightness(0.96) drop-shadow(0 0 4.5px rgba(255,60,60,0.44)) drop-shadow(0 0 10px rgba(255,30,30,0.24));}
-    75%{filter:brightness(1.05) drop-shadow(0 0 5.5px rgba(255,60,60,0.54)) drop-shadow(0 0 13px rgba(255,30,30,0.3));}
-    100%{filter:brightness(1) drop-shadow(0 0 5px rgba(255,60,60,0.5)) drop-shadow(0 0 12px rgba(255,30,30,0.28));}
+
+  /* Each lit segment breathes slowly between dim and bright — a smooth single
+     wave, not a multi-step flicker, so it reads as organic rather than jumpy. */
+  @keyframes seg-breathe{
+    0%{filter:brightness(1);}
+    50%{filter:brightness(0.87);}
+    100%{filter:brightness(1);}
   }
-  .seg-digit rect.lit{animation-name:seg-flicker;animation-timing-function:ease-in-out;animation-iteration-count:infinite;}
+  .seg-digit rect.lit{animation-name:seg-breathe;animation-timing-function:ease-in-out;animation-iteration-count:infinite;}
+
+  /* Whole digit drifts a fraction of a pixel and softens in and out of focus —
+     slow and subtle, independent of the per-segment breathing above. */
   @keyframes digit-float{
     0%{transform:translate(0,0) scale(1);filter:blur(0px);}
     25%{transform:translate(0.5px,-0.6px) scale(1.003);filter:blur(0.25px);}
@@ -236,14 +239,22 @@
     75%{transform:translate(0.35px,0.55px) scale(1.0015);filter:blur(0.28px);}
     100%{transform:translate(0,0) scale(1);filter:blur(0px);}
   }
-  .seg-digit{animation-name:digit-float;animation-timing-function:ease-in-out;animation-iteration-count:infinite;}
-  @keyframes beat-pulse-135{
-    0%{filter:brightness(1) drop-shadow(0 0 16px rgba(255,30,30,0.22));}
-    18%{filter:brightness(1.05) drop-shadow(0 0 26px rgba(255,30,30,0.38));}
-    45%{filter:brightness(0.99) drop-shadow(0 0 14px rgba(255,30,30,0.18));}
-    100%{filter:brightness(1) drop-shadow(0 0 16px rgba(255,30,30,0.22));}
+  .seg-digit{position:relative;z-index:1;animation-name:digit-float;animation-timing-function:ease-in-out;animation-iteration-count:infinite;}
+
+  /* 135bpm glow, on its own element sitting behind each digit (not the whole
+     clock face), so it never fights the digit's own float/blur animation on
+     the same "filter" property. */
+  .digit-wrap{position:relative;display:inline-flex;align-items:center;justify-content:center;}
+  .digit-glow{position:absolute;inset:-8px;border-radius:10px;pointer-events:none;z-index:0;
+    background:radial-gradient(circle, rgba(255,40,40,0.4) 0%, rgba(255,40,40,0) 72%);
+    filter:blur(5px);animation-name:digit-beat-glow;animation-duration:0.4444s;
+    animation-timing-function:ease-in-out;animation-iteration-count:infinite;}
+  @keyframes digit-beat-glow{
+    0%{opacity:0.5;transform:scale(1);}
+    18%{opacity:0.85;transform:scale(1.1);}
+    45%{opacity:0.38;transform:scale(0.95);}
+    100%{opacity:0.5;transform:scale(1);}
   }
-  .ss-clock, #play-clock{animation:beat-pulse-135 0.4444s ease-in-out infinite;}
 
   .flow-badge{display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:700;
     color:#2563eb;background:#dbeafe;border-radius:6px;padding:2px 7px;margin-bottom:5px;}
@@ -2650,17 +2661,18 @@ function digitSvg(value, w, h){
   for(const key of ['a','b','c','d','e','f','g']){
     const r = SEG_RECTS[key];
     const on = lit.includes(key);
-    const flicker = on ? `animation-delay:-${(Math.random()*4).toFixed(2)}s;animation-duration:${(3+Math.random()*1.6).toFixed(2)}s;` : '';
+    const breathe = on ? `animation-delay:-${(Math.random()*6).toFixed(2)}s;animation-duration:${(4+Math.random()*3).toFixed(2)}s;` : '';
     const fill = on ? `url(#${gid})` : '#3a0a0a';
-    rects += `<rect x="${r.x}" y="${r.y}" width="${r.w}" height="${r.h}" rx="2" class="${on?'lit':''}" style="${flicker}" fill="${fill}"/>`;
+    rects += `<rect x="${r.x}" y="${r.y}" width="${r.w}" height="${r.h}" rx="2" class="${on?'lit':''}" style="${breathe}" fill="${fill}"/>`;
   }
   const floatStyle = `animation-delay:-${(Math.random()*6).toFixed(2)}s;animation-duration:${(6+Math.random()*3).toFixed(2)}s;`;
-  return `<svg class="seg-digit" viewBox="0 0 34 60" width="${w}" height="${h}" style="${floatStyle}">
+  const glowDelay = (Math.random()*0.44).toFixed(2);
+  const svg = `<svg class="seg-digit" viewBox="0 0 34 60" width="${w}" height="${h}" style="${floatStyle}">
     <defs><linearGradient id="${gid}" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stop-color="#ff9a9a"/>
-      <stop offset="45%" stop-color="#ff2b2b"/>
-      <stop offset="100%" stop-color="#b40d0d"/>
+      <stop offset="0%" stop-color="#ff5252"/>
+      <stop offset="100%" stop-color="#ff1414"/>
     </linearGradient></defs>${rects}</svg>`;
+  return `<span class="digit-wrap"><span class="digit-glow" style="animation-delay:-${glowDelay}s;"></span>${svg}</span>`;
 }
 function colonSvg(w, h){
   w = w||6; h = h||32;
