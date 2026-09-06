@@ -85,7 +85,7 @@
   .tabs button{position:relative;z-index:1;flex:1 1 0;min-width:0;padding:8px 6px;background:transparent;border:none;border-radius:9px;
     cursor:pointer;display:flex;align-items:center;justify-content:center;}
   html.dark .tabs{background:#26262b;}
-  .tab-logo{height:19px;width:auto;max-width:100%;display:block;}
+  .tab-logo{height:22px;width:auto;max-width:100%;display:block;}
   .tab-logo text{font-family:'Rubik Wet Paint', cursive;fill:#fff;stroke:#111;stroke-width:2.6;}
 
   section{padding:0 20px;}
@@ -100,6 +100,9 @@
   .backup-row{display:flex;gap:8px;margin:10px 0 16px;}
   .backup-row button{flex:1;background:var(--card);border:1px solid var(--line);border-radius:10px;
     padding:9px 8px;font-size:12px;font-weight:600;color:var(--dim);cursor:pointer;}
+  .collection-heading{display:flex;justify-content:space-between;align-items:baseline;
+    margin:4px 2px 10px;font-size:13px;font-weight:600;color:var(--text);}
+  .collection-heading span:last-child{color:var(--dim);font-weight:600;}
 
   .manual-add{margin-top:10px;border:1.5px dashed #d5d5db;border-radius:12px;padding:14px 16px;
     text-align:center;color:var(--dim);cursor:pointer;background:var(--card);font-size:12.5px;line-height:1.5;}
@@ -134,8 +137,20 @@
   .lib-toolbar button:disabled{opacity:0.4;cursor:default;}
   .lib-toolbar .sel-count{flex:1;font-size:12px;color:var(--dim);text-align:center;}
   #delete-selected-btn{background:#dc2626;color:#fff;border-color:#dc2626;}
+  .crate-picker{position:absolute;right:20px;margin-top:44px;background:var(--card);border-radius:12px;
+    box-shadow:0 6px 20px rgba(0,0,0,0.14);z-index:60;flex-direction:column;overflow:hidden;min-width:160px;}
+  .crate-picker-item{background:none;border:none;text-align:left;padding:10px 14px;font-size:13px;
+    color:var(--text);cursor:pointer;border-bottom:1px solid var(--line);}
+  .crate-picker-item:last-child{border-bottom:none;}
+  .crate-picker-item:active{background:var(--bg);}
   .art{width:64px;height:64px;border-radius:8px;object-fit:cover;flex-shrink:0;background:#eee;
     box-shadow:0 1px 4px rgba(0,0,0,0.15);}
+  .art-wrap{display:inline-flex;flex-shrink:0;}
+  .art.fav-glow{transition:box-shadow 0.45s ease;box-shadow:0 1px 4px rgba(0,0,0,0.15), 0 0 0 0 rgba(234,179,8,0);}
+  .art.fav-glow.active{box-shadow:0 1px 4px rgba(0,0,0,0.15), 0 0 0 3px #eab308;}
+  .fav-star{background:none;border:none;font-size:17px;color:#c9c9ce;cursor:pointer;padding:4px;
+    transition:opacity 0.3s ease, color 0.3s ease;}
+  .fav-star.is-fav{color:#eab308;}
   .track-title{flex:1;min-width:0;}
   .track-title .t{font-weight:600;font-size:14.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
   .track-title .a{color:var(--dim);font-size:12px;margin-top:1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
@@ -204,10 +219,13 @@
   .history-and-clock{display:flex;align-items:center;gap:14px;}
   .history-and-clock #play-history{flex:1;min-width:0;}
   .play-clock{display:none;}
+  html.clock-hidden .play-clock{display:none !important;}
   @media (orientation: landscape){
     .play-clock{display:flex;align-items:center;gap:3px;flex-shrink:0;position:relative;overflow:hidden;
       padding:6px 10px;border-radius:8px;margin-bottom:14px;background:#000;}
+    html:not(.dark) .play-clock{background:rgba(10,10,10,0.82);box-shadow:0 6px 18px rgba(0,0,0,0.16), 0 1px 3px rgba(0,0,0,0.1);}
   }
+  .pc-secs{display:inline-flex;align-items:center;opacity:0.5;}
 
   .screensaver{position:fixed;inset:0;background:#000;z-index:900;
     display:flex;align-items:center;justify-content:center;overflow:hidden;
@@ -230,13 +248,15 @@
   }
   .seg-digit rect.lit{animation-name:seg-breathe;animation-timing-function:ease-in-out;animation-iteration-count:infinite;}
 
-  /* Whole digit drifts further from its resting point now (still slow and
-     smooth) and softens in and out of focus. */
+  /* Whole digit drifts from its resting point (distance controlled by the
+     --drift custom property, set from the Settings slider) and softens in
+     and out of focus. */
+  :root{--drift:1;}
   @keyframes digit-float{
     0%{transform:translate(0,0) scale(1);filter:blur(0px);}
-    25%{transform:translate(1.6px,-1.9px) scale(1.008);filter:blur(0.3px);}
-    50%{transform:translate(-1.3px,1.4px) scale(0.994);filter:blur(0.12px);}
-    75%{transform:translate(1.1px,1.7px) scale(1.004);filter:blur(0.34px);}
+    25%{transform:translate(calc(1.6px*var(--drift)),calc(-1.9px*var(--drift))) scale(calc(1 + 0.008*var(--drift)));filter:blur(calc(0.3px*var(--drift)));}
+    50%{transform:translate(calc(-1.3px*var(--drift)),calc(1.4px*var(--drift))) scale(calc(1 - 0.006*var(--drift)));filter:blur(calc(0.12px*var(--drift)));}
+    75%{transform:translate(calc(1.1px*var(--drift)),calc(1.7px*var(--drift))) scale(calc(1 + 0.004*var(--drift)));filter:blur(calc(0.34px*var(--drift)));}
     100%{transform:translate(0,0) scale(1);filter:blur(0px);}
   }
   .seg-digit{position:relative;z-index:1;animation-name:digit-float;animation-timing-function:ease-in-out;animation-iteration-count:infinite;}
@@ -276,15 +296,15 @@
     background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='16'%3E%3Cpath d='M0,8 Q10,0 20,8 T40,8' stroke='%233b82f6' stroke-width='1.5' fill='none' opacity='0.16'/%3E%3C/svg%3E");
     background-repeat:repeat;}
   .chain-badge{display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:700;
-    color:#b45309;background:#fef3c7;border-radius:6px;padding:2px 7px;margin-bottom:5px;}
-  html.dark .chain-badge{background:#3f2d0a;color:#fbbf24;}
+    color:#7c3aed;background:#ede9fe;border-radius:6px;padding:2px 7px;margin-bottom:5px;}
+  html.dark .chain-badge{background:#3b2e6b;color:#c4b5fd;}
   .chain-start-icon{display:inline-flex;align-items:center;justify-content:center;width:15px;height:15px;
-    background:#fde68a;color:#92400e;border-radius:4px;font-size:9px;margin-left:2px;vertical-align:middle;}
-  html.dark .chain-start-icon{background:#78350f;color:#fbbf24;}
-  .match-row.chain-match{border:2px solid #eab308;
-    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='44' height='24'%3E%3Cg transform='rotate(30 22 12)' stroke='%23eab308' stroke-width='1.6' fill='none' opacity='0.2'%3E%3Cellipse cx='11' cy='12' rx='6' ry='3.4'/%3E%3Cellipse cx='24' cy='12' rx='6' ry='3.4'/%3E%3C/g%3E%3C/svg%3E");
+    background:#ddd6fe;color:#5b21b6;border-radius:4px;font-size:9px;margin-left:2px;vertical-align:middle;}
+  html.dark .chain-start-icon{background:#4c3a99;color:#c4b5fd;}
+  .match-row.chain-match{border:2px solid #8b5cf6;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='48' height='24'%3E%3Cg transform='rotate(28 24 12)' stroke='%238b5cf6' stroke-width='1.3' fill='none' opacity='0.2'%3E%3Cellipse cx='10' cy='12' rx='7' ry='4'/%3E%3Cellipse cx='22' cy='12' rx='7' ry='4'/%3E%3Cellipse cx='34' cy='12' rx='7' ry='4'/%3E%3C/g%3E%3C/svg%3E");
     background-repeat:repeat;}
-  .graffiti-label{height:19px;width:auto;display:block;}
+  .graffiti-label{height:21px;width:auto;display:block;}
   .graffiti-label text{font-family:'Rubik Wet Paint', cursive;fill:#fff;stroke:#111;stroke-width:2.6;}
 
   .now-card{display:flex;align-items:center;gap:12px;background:var(--card);border-radius:14px;
@@ -311,19 +331,14 @@
   .play-reset-btn:active{background:var(--bg);}
 
   .crate-card{display:flex;align-items:center;gap:12px;background:var(--card);border-radius:14px;
-    padding:12px 14px;margin-bottom:10px;box-shadow:0 1px 2px rgba(0,0,0,0.04);cursor:pointer;}
-  .crate-card-icon{width:44px;height:44px;border-radius:10px;background:var(--bg);
-    display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;color:var(--text);}
+    padding:14px;margin-bottom:10px;box-shadow:0 1px 2px rgba(0,0,0,0.04);cursor:pointer;}
   .crate-card.flow-crate{border:2px solid #3b82f6;
     background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='16'%3E%3Cpath d='M0,8 Q10,0 20,8 T40,8' stroke='%233b82f6' stroke-width='1.5' fill='none' opacity='0.16'/%3E%3C/svg%3E");
     background-repeat:repeat;}
-  .crate-card.flow-crate .crate-card-icon{background:#dbeafe;color:#2563eb;font-weight:800;}
-  html.dark .crate-card.flow-crate .crate-card-icon{background:#1e2b4d;color:#93c5fd;}
-  .crate-card.chain-crate{border:2px solid #eab308;
-    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='48' height='48'%3E%3Cg transform='rotate(45 24 24)' stroke='%23eab308' stroke-width='2' fill='none' opacity='0.2'%3E%3Cellipse cx='15' cy='24' rx='8' ry='5'/%3E%3Cellipse cx='33' cy='24' rx='8' ry='5'/%3E%3C/g%3E%3C/svg%3E");
+  .crate-card.chain-crate{border:2px solid #8b5cf6;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='48' height='24'%3E%3Cg transform='rotate(28 24 12)' stroke='%238b5cf6' stroke-width='1.3' fill='none' opacity='0.2'%3E%3Cellipse cx='10' cy='12' rx='7' ry='4'/%3E%3Cellipse cx='22' cy='12' rx='7' ry='4'/%3E%3Cellipse cx='34' cy='12' rx='7' ry='4'/%3E%3C/g%3E%3C/svg%3E");
     background-repeat:repeat;}
-  .crate-card.chain-crate .crate-card-icon{background:#fef3c7;color:#b45309;font-weight:800;}
-  html.dark .crate-card.chain-crate .crate-card-icon{background:#3f2d0a;color:#fbbf24;}
+  .crate-card.fav-crate{border:2px solid #eab308;}
   .crate-card-info{flex:1;min-width:0;}
   .crate-card-info .t{font-weight:700;font-size:14.5px;}
   .crate-card-info .a{font-size:12px;color:var(--dim);margin-top:1px;}
@@ -419,6 +434,17 @@
         <span>Show Flow &amp; Chain suggestions</span>
         <label class="switch"><input type="checkbox" id="flowchain-toggle" checked><span class="switch-slider"></span></label>
       </div>
+      <div class="modal-row">
+        <span>Show clock in Play</span>
+        <label class="switch"><input type="checkbox" id="clock-toggle" checked><span class="switch-slider"></span></label>
+      </div>
+      <div class="modal-row" id="clock-drift-row">
+        <span>Clock drift</span>
+        <div style="display:flex;align-items:center;gap:8px;flex:1;margin-left:16px;">
+          <input type="range" id="clock-drift" min="0" max="100" value="50" style="flex:1;">
+          <span id="clock-drift-val" style="font-size:12px;color:var(--dim);min-width:30px;text-align:right;">50%</span>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -471,18 +497,21 @@
       </div>
     </div>
     <div class="backup-row">
-      <button id="export-btn">⭳ Export library</button>
-      <button id="import-btn">⭱ Import library</button>
+      <button id="import-btn">⭱ Import library and preferences</button>
+      <button id="export-btn">⭳ Export library and preferences</button>
       <input type="file" id="import-file-input" accept="application/json" style="display:none;">
     </div>
     <div class="lib-toolbar" id="lib-toolbar"></div>
+    <div class="collection-heading">
+      <span>Total Music Collection:</span>
+      <span id="import-track-count"></span>
+    </div>
     <div id="library-list"></div>
   </section>
 
   <section id="tab-organise" style="display:none;">
     <div id="organise-list-view">
       <div class="crate-card flow-crate" id="open-flow-crate">
-        <div class="crate-card-icon">〜</div>
         <div class="crate-card-info">
           <svg class="graffiti-label" viewBox="0 0 78 26" xmlns="http://www.w3.org/2000/svg">
             <text x="2" y="20" font-size="19" stroke-linejoin="round" paint-order="stroke fill" letter-spacing="-0.5">Flow</text>
@@ -492,7 +521,6 @@
         <div class="chev">›</div>
       </div>
       <div class="crate-card chain-crate" id="open-chain-crate">
-        <div class="crate-card-icon">⛓️</div>
         <div class="crate-card-info">
           <svg class="graffiti-label" viewBox="0 0 118 26" xmlns="http://www.w3.org/2000/svg">
             <text x="2" y="20" font-size="19" stroke-linejoin="round" paint-order="stroke fill" letter-spacing="-0.5">Chains</text>
@@ -501,8 +529,16 @@
         </div>
         <div class="chev">›</div>
       </div>
+      <div class="crate-card fav-crate" id="open-fav-folder">
+        <div class="crate-card-info">
+          <svg class="graffiti-label" viewBox="0 0 150 26" xmlns="http://www.w3.org/2000/svg">
+            <text x="2" y="20" font-size="19" stroke-linejoin="round" paint-order="stroke fill" letter-spacing="-0.5">Favourites</text>
+          </svg>
+          <div class="a" id="fav-folder-count"></div>
+        </div>
+        <div class="chev">›</div>
+      </div>
       <div class="crate-card" id="open-history-folder">
-        <div class="crate-card-icon">🕘</div>
         <div class="crate-card-info">
           <div class="t">History</div>
           <div class="a" id="history-folder-count"></div>
@@ -669,8 +705,10 @@ async function persistTrackDelete(id){
   }catch(e){ console.error('delete track failed', e); }
 }
 function updateCount(){
-  const el = document.getElementById('track-count');
-  el.textContent = library.length ? library.length + (library.length===1?' track':' tracks') : '';
+  const text = library.length ? library.length + (library.length===1?' track':' tracks') : '0 tracks';
+  document.getElementById('track-count').textContent = library.length ? text : '';
+  const importCount = document.getElementById('import-track-count');
+  if(importCount) importCount.textContent = text;
 }
 
 /* =========================================================
@@ -689,6 +727,7 @@ document.querySelectorAll('.tabs button').forEach(btn=>{
       document.getElementById('tab-'+t).style.display = (t===currentTab)?'block':'none';
     });
     document.getElementById('footnote').style.display = (currentTab==='import') ? 'block':'none';
+    document.getElementById('track-count').style.display = (currentTab==='import') ? 'none':'block';
     if(currentTab==='organise') renderOrganise();
   });
 });
@@ -697,6 +736,7 @@ document.getElementById('footnote').innerHTML =
   ? "Analysis runs right here in your browser. BPM and key are estimates — good for sorting compatible tracks, not lab-grade precision. Your library is saved to your account, so it'll be here on your phone or iPad too."
   : "Analysis runs locally in this browser tab. BPM and key are estimates — good for sorting compatible tracks, not lab-grade precision. Your library is saved in this browser's storage — use the same browser each time to keep it.";
 document.getElementById('footnote').style.display='block';
+document.getElementById('track-count').style.display='none';
 
 /* =========================================================
    FILE HANDLING — sequential batch queue with one combined toast
@@ -1499,13 +1539,14 @@ function trackRowHtml(t){
   }
   return `<div class="track-row" data-id="${t.id}">
     <div class="head">
-      <img class="art" src="${t.icon}">
+      <span class="art-wrap"><img class="art fav-glow${favourites.includes(t.id)?' active':''}" src="${t.icon}"></span>
       <div class="track-title">
         <div class="t">${escapeHtml(t.name)}</div>
         <div class="a">${escapeHtml(t.artist||'Unknown artist')}</div>
       </div>
       <div class="mini-chart">${miniLineChartSvg(t.bands)}</div>
       <div class="meta"><b>${t.bpm}</b> bpm<br>${t.key.camelot} ${t.key.name}</div>
+      <button class="fav-star${favourites.includes(t.id)?' is-fav':''}" data-fav="${t.id}" title="Add to Favourites">${favourites.includes(t.id)?'★':'☆'}</button>
       <button class="edit-toggle" data-edit="${t.id}">✎</button>
       <button class="del" data-del="${t.id}">✕</button>
     </div>
@@ -1546,12 +1587,35 @@ function renderLibToolbar(){
   el.innerHTML = `
     <button id="select-all-btn">${allSelected?'Deselect All':'Select All'}</button>
     <span class="sel-count">${selectedTrackIds.size} selected</span>
+    <button id="add-to-crate-btn" ${selectedTrackIds.size?'':'disabled'}>Add to Crate</button>
     <button id="delete-selected-btn" ${selectedTrackIds.size?'':'disabled'}>Delete</button>
-    <button id="cancel-select-btn">Cancel</button>`;
+    <button id="cancel-select-btn">Cancel</button>
+    <div class="crate-picker" id="crate-picker" style="display:none;"></div>`;
   document.getElementById('select-all-btn').addEventListener('click', ()=>{
     if(allSelected) selectedTrackIds.clear();
     else library.forEach(t=>selectedTrackIds.add(t.id));
     renderLibToolbar(); renderLibrary();
+  });
+  document.getElementById('add-to-crate-btn').addEventListener('click', ()=>{
+    const picker = document.getElementById('crate-picker');
+    if(crates.length===0){ showInfoToast('No crates yet — create one in Organise first', true); return; }
+    picker.innerHTML = crates.map(c=>`<button class="crate-picker-item" data-target-crate="${c.id}">${escapeHtml(c.name)}</button>`).join('');
+    picker.style.display = picker.style.display==='none' ? 'flex' : 'none';
+    picker.querySelectorAll('[data-target-crate]').forEach(btn=>{
+      btn.addEventListener('click', async ()=>{
+        const crate = crates.find(c=>c.id===btn.dataset.targetCrate);
+        if(!crate) return;
+        let added=0, skipped=0;
+        selectedTrackIds.forEach(id=>{
+          if(crate.trackIds.includes(id)) skipped++;
+          else { crate.trackIds.push(id); added++; }
+        });
+        await saveCrates();
+        showInfoToast(`Added ${added} track${added===1?'':'s'} to "${crate.name}"${skipped?`, ${skipped} already there`:''}`, false);
+        selectionMode=false; selectedTrackIds.clear();
+        renderLibToolbar(); renderLibrary();
+      });
+    });
   });
   document.getElementById('delete-selected-btn').addEventListener('click', async ()=>{
     if(selectedTrackIds.size===0) return;
@@ -1595,6 +1659,29 @@ function renderLibrary(){
     });
   });
 
+  el.querySelectorAll('[data-fav]').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const id = btn.dataset.fav;
+      const artEl = btn.closest('.head').querySelector('.art');
+      if(favourites.includes(id)){
+        // un-favourite: simple, no need for the reveal animation in reverse
+        favourites = favourites.filter(fid=>fid!==id);
+        saveFavourites();
+        btn.textContent = '☆'; btn.classList.remove('is-fav');
+        artEl.classList.remove('active');
+        return;
+      }
+      btn.style.opacity = '0';
+      setTimeout(async ()=>{
+        favourites.push(id);
+        await saveFavourites();
+        btn.textContent = '★';
+        btn.classList.add('is-fav');
+        btn.style.opacity = '1';
+        artEl.classList.add('active'); // CSS transition fades the yellow border in
+      }, 1000);
+    });
+  });
   el.querySelectorAll('[data-edit]').forEach(btn=>{
     btn.addEventListener('click', ()=>{
       const panel = document.getElementById('edit-'+btn.dataset.edit);
@@ -1737,6 +1824,27 @@ async function saveChains(){
     else localStorage.setItem(CHAINS_KEY, JSON.stringify(chains));
   }catch(e){ console.error('chain save failed', e); }
 }
+
+const FAVOURITES_KEY = 'cratebuddy:favourites';
+let favourites = []; // array of track ids
+async function loadFavourites(){
+  try{
+    if(hasArtifactStorage){
+      const r = await window.storage.get(FAVOURITES_KEY, false).catch(()=>null);
+      favourites = r && r.value ? JSON.parse(r.value) : [];
+    } else {
+      const raw = localStorage.getItem(FAVOURITES_KEY);
+      favourites = raw ? JSON.parse(raw) : [];
+    }
+  }catch(e){ favourites = []; }
+}
+async function saveFavourites(){
+  try{
+    if(hasArtifactStorage) await window.storage.set(FAVOURITES_KEY, JSON.stringify(favourites), false);
+    else localStorage.setItem(FAVOURITES_KEY, JSON.stringify(favourites));
+  }catch(e){ console.error('favourites save failed', e); }
+}
+
 // Scores how well two tracks would sit back-to-back, using the same
 // BPM/key/bands/loudness math as the main matching engine, but with fixed
 // default weights (independent of the live sliders) so chain generation is
@@ -2500,6 +2608,58 @@ document.getElementById('flowchain-toggle').addEventListener('change', async e=>
   renderMatches();
 });
 
+const CLOCK_SHOW_KEY = 'cratebuddy:clock-show';
+const CLOCK_DRIFT_KEY = 'cratebuddy:clock-drift';
+let clockShowEnabled = true;
+let clockDriftPct = 50;
+function applyClockVisibility(){
+  document.documentElement.classList.toggle('clock-hidden', !clockShowEnabled);
+}
+function applyClockDrift(){
+  // Slider 0-100 maps to a 0x-2x multiplier on the base drift amplitude
+  // (50 = the original default amount).
+  document.documentElement.style.setProperty('--drift', (clockDriftPct/50).toFixed(2));
+}
+async function loadClockSettings(){
+  try{
+    if(hasArtifactStorage){
+      const r1 = await window.storage.get(CLOCK_SHOW_KEY,false).catch(()=>null);
+      if(r1 && r1.value!=null) clockShowEnabled = r1.value==='1';
+      const r2 = await window.storage.get(CLOCK_DRIFT_KEY,false).catch(()=>null);
+      if(r2 && r2.value!=null) clockDriftPct = +r2.value;
+    } else {
+      const s1 = localStorage.getItem(CLOCK_SHOW_KEY);
+      if(s1!=null) clockShowEnabled = s1==='1';
+      const s2 = localStorage.getItem(CLOCK_DRIFT_KEY);
+      if(s2!=null) clockDriftPct = +s2;
+    }
+  }catch(e){}
+  document.getElementById('clock-toggle').checked = clockShowEnabled;
+  document.getElementById('clock-drift').value = clockDriftPct;
+  document.getElementById('clock-drift-val').textContent = clockDriftPct+'%';
+  document.getElementById('clock-drift-row').style.display = clockShowEnabled ? 'flex' : 'none';
+  applyClockVisibility();
+  applyClockDrift();
+}
+document.getElementById('clock-toggle').addEventListener('change', async e=>{
+  clockShowEnabled = e.target.checked;
+  document.getElementById('clock-drift-row').style.display = clockShowEnabled ? 'flex' : 'none';
+  applyClockVisibility();
+  try{
+    if(hasArtifactStorage) await window.storage.set(CLOCK_SHOW_KEY, clockShowEnabled?'1':'0', false);
+    else localStorage.setItem(CLOCK_SHOW_KEY, clockShowEnabled?'1':'0');
+  }catch(err){ console.error('clock show save failed', err); }
+});
+document.getElementById('clock-drift').addEventListener('input', async e=>{
+  clockDriftPct = +e.target.value;
+  document.getElementById('clock-drift-val').textContent = clockDriftPct+'%';
+  applyClockDrift();
+  try{
+    if(hasArtifactStorage) await window.storage.set(CLOCK_DRIFT_KEY, String(clockDriftPct), false);
+    else localStorage.setItem(CLOCK_DRIFT_KEY, String(clockDriftPct));
+  }catch(err){ console.error('clock drift save failed', err); }
+});
+
 /* ---- Play Reset: clear played-track history for a clean-slate session ---- */
 document.getElementById('play-reset-btn').addEventListener('click', ()=>{
   if(playedTrackIds.size===0 && !nowPlayingId && playHistory.length===0) return;
@@ -2639,6 +2799,7 @@ function renderOrganise(){
     listView.style.display='none'; detailView.style.display='block';
     if(openCrateId==='__flow__') renderFlowDetail();
     else if(openCrateId==='__chain__') renderChainDetail();
+    else if(openCrateId==='__fav__') renderFavDetail();
     else if(openCrateId==='__history__'){
       if(openHistorySessionId) renderHistorySessionDetail();
       else renderHistoryFolder();
@@ -2652,6 +2813,8 @@ function renderOrganiseList(){
     flows.length + (flows.length===1 ? ' saved transition' : ' saved transitions');
   document.getElementById('chain-crate-count').textContent =
     chains.length + (chains.length===1 ? ' saved chain' : ' saved chains');
+  document.getElementById('fav-folder-count').textContent =
+    favourites.length + (favourites.length===1 ? ' favourite' : ' favourites');
   document.getElementById('history-folder-count').textContent =
     historySessions.length + (historySessions.length===1 ? ' saved session' : ' saved sessions');
   const el = document.getElementById('crates-list');
@@ -2688,6 +2851,7 @@ function renderOrganiseList(){
 }
 document.getElementById('open-chain-crate').addEventListener('click', ()=>{ openCrateId='__chain__'; renderOrganise(); });
 document.getElementById('open-flow-crate').addEventListener('click', ()=>{ openCrateId='__flow__'; renderOrganise(); });
+document.getElementById('open-fav-folder').addEventListener('click', ()=>{ openCrateId='__fav__'; renderOrganise(); });
 document.getElementById('open-history-folder').addEventListener('click', ()=>{ openCrateId='__history__'; openHistorySessionId=null; renderOrganise(); });
 document.getElementById('organise-back-btn').addEventListener('click', ()=>{
   if(openCrateId==='__history__' && openHistorySessionId){
@@ -2698,6 +2862,26 @@ document.getElementById('organise-back-btn').addEventListener('click', ()=>{
   }
   renderOrganise();
 });
+
+function renderFavDetail(){
+  const el = document.getElementById('organise-detail-content');
+  const tracks = favourites.map(id=>library.find(t=>t.id===id)).filter(Boolean);
+  el.innerHTML = `<div class="section-lbl">Favourites</div>` +
+    (tracks.length===0 ? `<div class="lib-empty">No favourites yet — tap the ☆ on any track in Import.</div>` :
+     tracks.map(t=>`
+      <div class="organise-row">
+        <img src="${t.icon}">
+        <div><div class="t">${escapeHtml(t.name)}</div><div class="a">${escapeHtml(t.artist||'Unknown artist')}</div></div>
+        <button class="remove-btn" data-remove-fav="${t.id}">✕</button>
+      </div>`).join(''));
+  el.querySelectorAll('[data-remove-fav]').forEach(btn=>{
+    btn.addEventListener('click', async ()=>{
+      favourites = favourites.filter(id=>id!==btn.dataset.removeFav);
+      await saveFavourites();
+      renderFavDetail();
+    });
+  });
+}
 
 function renderChainDetail(){
   const el = document.getElementById('organise-detail-content');
@@ -2896,7 +3080,9 @@ loadPresets();
 loadFlows();
 loadChains();
 loadCrates();
+loadFavourites();
 loadFlowChainSetting();
+loadClockSettings();
 loadHistorySessions();
 
 /* Landscape-only clock next to the play-history strip — CSS handles when
@@ -3011,8 +3197,11 @@ function ensurePlayClockSlots(){
   el.appendChild(s.hTens.el); el.appendChild(s.hOnes.el);
   el.appendChild(buildColon(6,32));
   el.appendChild(s.mTens.el); el.appendChild(s.mOnes.el);
-  el.appendChild(buildColon(6,32));
-  el.appendChild(s.sTens.el); el.appendChild(s.sOnes.el);
+  const secsWrap = document.createElement('span');
+  secsWrap.className = 'pc-secs';
+  secsWrap.appendChild(buildColon(6,32));
+  secsWrap.appendChild(s.sTens.el); secsWrap.appendChild(s.sOnes.el);
+  el.appendChild(secsWrap);
   const grain = document.createElement('div');
   grain.className = 'clock-grain';
   el.appendChild(grain);
