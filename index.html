@@ -205,7 +205,7 @@
   .history-and-clock #play-history{flex:1;min-width:0;}
   .play-clock{display:none;}
   @media (orientation: landscape){
-    .play-clock{display:flex;align-items:center;gap:3px;flex-shrink:0;
+    .play-clock{display:flex;align-items:center;gap:3px;flex-shrink:0;position:relative;overflow:hidden;
       padding:6px 10px;border-radius:8px;margin-bottom:14px;background:#000;}
   }
 
@@ -216,9 +216,9 @@
   .ss-clock{display:flex;align-items:center;gap:10px;position:relative;z-index:1;}
   .ss-secs{display:inline-flex;align-items:center;opacity:0.5;}
   .ss-ms{display:inline-flex;align-items:center;opacity:0.22;}
-  .ss-grain{position:absolute;inset:-20%;pointer-events:none;opacity:0.22;mix-blend-mode:overlay;
-    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-    animation:grain-shift 0.35s steps(3) infinite;}
+  .ss-grain, .clock-grain{position:absolute;inset:-20%;pointer-events:none;opacity:0.68;mix-blend-mode:overlay;z-index:2;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.15' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    animation:grain-shift 0.3s steps(3) infinite;}
   @keyframes grain-shift{0%,100%{transform:translate(0,0);}33%{transform:translate(-3%,2%);}66%{transform:translate(2%,-3%);}}
 
   /* Each lit segment breathes slowly between dim and bright — a smooth single
@@ -243,17 +243,30 @@
 
   /* 135bpm glow, on its own element sitting behind each digit (not the whole
      clock face), so it never fights the digit's own float/blur animation on
-     the same "filter" property. */
+     the same "filter" property. Opacity halved from the previous version. */
   .digit-wrap{position:relative;display:inline-flex;align-items:center;justify-content:center;}
   .digit-glow{position:absolute;inset:-8px;border-radius:10px;pointer-events:none;z-index:0;
     background:radial-gradient(circle, rgba(255,40,40,0.4) 0%, rgba(255,40,40,0) 72%);
     filter:blur(5px);animation-name:digit-beat-glow;animation-duration:0.4444s;
     animation-timing-function:ease-in-out;animation-iteration-count:infinite;}
   @keyframes digit-beat-glow{
-    0%{opacity:0.5;transform:scale(1);}
-    18%{opacity:0.85;transform:scale(1.1);}
-    45%{opacity:0.38;transform:scale(0.95);}
-    100%{opacity:0.5;transform:scale(1);}
+    0%{opacity:0.25;transform:scale(1);}
+    18%{opacity:0.425;transform:scale(1.1);}
+    45%{opacity:0.19;transform:scale(0.95);}
+    100%{opacity:0.25;transform:scale(1);}
+  }
+  /* A second, same-rhythm pulse — this one cast FROM the lit hour/minute
+     segments themselves as a soft shadow, on opacity only (a different
+     element and property from the segment's own brightness breathe, so
+     they never conflict). */
+  .seg-shadow{opacity:0;pointer-events:none;}
+  .seg-shadow.lit{animation-name:shadow-beat-pulse;animation-duration:0.4444s;
+    animation-timing-function:ease-in-out;animation-iteration-count:infinite;}
+  @keyframes shadow-beat-pulse{
+    0%{opacity:0.22;}
+    18%{opacity:0.38;}
+    45%{opacity:0.14;}
+    100%{opacity:0.22;}
   }
 
   .flow-badge{display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:700;
@@ -2652,45 +2665,123 @@ const SEG_RECTS = {
   d:{x:6,y:52,w:22,h:6}, e:{x:2,y:32,w:6,h:24}, f:{x:2,y:4,w:6,h:24}, g:{x:6,y:27,w:22,h:6}
 };
 let gradCounter = 0;
-function digitSvg(value, w, h){
-  w = w||18; h = h||32;
+function buildDigitSlot(w, h, isHourMin){
+  const wrap = document.createElement('span');
+  wrap.className = 'digit-wrap';
+  const glowDelay = (Math.random()*0.44).toFixed(2);
+  const glow = document.createElement('span');
+  glow.className = 'digit-glow';
+  glow.style.animationDelay = `-${glowDelay}s`;
+  wrap.appendChild(glow);
+
+  const svgNS = 'http://www.w3.org/2000/svg';
+  const svg = document.createElementNS(svgNS,'svg');
+  svg.setAttribute('class','seg-digit');
+  svg.setAttribute('viewBox','0 0 34 60');
+  svg.setAttribute('width', w); svg.setAttribute('height', h);
+  svg.style.animationDelay = `-${(Math.random()*6).toFixed(2)}s`;
+  svg.style.animationDuration = `${(6+Math.random()*3).toFixed(2)}s`;
+
   gradCounter++;
   const gid = 'segGrad'+gradCounter+Math.random().toString(36).slice(2,6);
-  const lit = (value===null || value===undefined) ? [] : SEVEN_SEG[value];
-  let rects='';
+  const defs = document.createElementNS(svgNS,'defs');
+  const grad = document.createElementNS(svgNS,'linearGradient');
+  grad.setAttribute('id',gid); grad.setAttribute('x1','0'); grad.setAttribute('y1','0'); grad.setAttribute('x2','0'); grad.setAttribute('y2','1');
+  const stop1 = document.createElementNS(svgNS,'stop'); stop1.setAttribute('offset','0%'); stop1.setAttribute('stop-color','#ff5252');
+  const stop2 = document.createElementNS(svgNS,'stop'); stop2.setAttribute('offset','100%'); stop2.setAttribute('stop-color','#ff1414');
+  grad.appendChild(stop1); grad.appendChild(stop2); defs.appendChild(grad); svg.appendChild(defs);
+
+  const rects = {}, shadows = {};
   for(const key of ['a','b','c','d','e','f','g']){
     const r = SEG_RECTS[key];
-    const on = lit.includes(key);
-    const breathe = on ? `animation-delay:-${(Math.random()*6).toFixed(2)}s;animation-duration:${(4+Math.random()*3).toFixed(2)}s;` : '';
-    const fill = on ? `url(#${gid})` : '#3a0a0a';
-    rects += `<rect x="${r.x}" y="${r.y}" width="${r.w}" height="${r.h}" rx="2" class="${on?'lit':''}" style="${breathe}" fill="${fill}"/>`;
+    if(isHourMin){
+      // A soft "cast shadow" duplicate, slightly offset, pulsing on the beat —
+      // opacity-only so it never fights the main rect's own filter animation.
+      const sh = document.createElementNS(svgNS,'rect');
+      sh.setAttribute('x', r.x+1.4); sh.setAttribute('y', r.y+2.2);
+      sh.setAttribute('width', r.w); sh.setAttribute('height', r.h); sh.setAttribute('rx','2');
+      sh.setAttribute('class','seg-shadow');
+      sh.setAttribute('fill','#8a0000');
+      svg.appendChild(sh);
+      shadows[key] = sh;
+    }
+    const rect = document.createElementNS(svgNS,'rect');
+    rect.setAttribute('x',r.x); rect.setAttribute('y',r.y); rect.setAttribute('width',r.w); rect.setAttribute('height',r.h); rect.setAttribute('rx','2');
+    rect.setAttribute('fill','#3a0a0a');
+    rect.dataset.gid = gid;
+    svg.appendChild(rect);
+    rects[key] = rect;
   }
-  const floatStyle = `animation-delay:-${(Math.random()*6).toFixed(2)}s;animation-duration:${(6+Math.random()*3).toFixed(2)}s;`;
-  const glowDelay = (Math.random()*0.44).toFixed(2);
-  const svg = `<svg class="seg-digit" viewBox="0 0 34 60" width="${w}" height="${h}" style="${floatStyle}">
-    <defs><linearGradient id="${gid}" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stop-color="#ff5252"/>
-      <stop offset="100%" stop-color="#ff1414"/>
-    </linearGradient></defs>${rects}</svg>`;
-  return `<span class="digit-wrap"><span class="digit-glow" style="animation-delay:-${glowDelay}s;"></span>${svg}</span>`;
+  wrap.appendChild(svg);
+  return {el: wrap, rects, shadows, value: undefined};
 }
-function colonSvg(w, h){
-  w = w||6; h = h||32;
-  return `<svg viewBox="0 0 10 60" width="${w}" height="${h}"><circle cx="5" cy="20" r="4" fill="#ff2222"/><circle cx="5" cy="40" r="4" fill="#ff2222"/></svg>`;
+function updateDigitSlot(slot, value){
+  if(!slot || slot.value === value) return; // unchanged — leave the DOM alone so its animations keep running uninterrupted
+  slot.value = value;
+  const lit = (value===null||value===undefined) ? [] : SEVEN_SEG[value];
+  for(const key of ['a','b','c','d','e','f','g']){
+    const rect = slot.rects[key];
+    const on = lit.includes(key);
+    const wasLit = rect.classList.contains('lit');
+    if(on){
+      rect.setAttribute('fill', `url(#${rect.dataset.gid})`);
+      if(!wasLit){
+        rect.style.animationDelay = `-${(Math.random()*6).toFixed(2)}s`;
+        rect.style.animationDuration = `${(4+Math.random()*3).toFixed(2)}s`;
+        rect.classList.add('lit');
+      }
+    } else {
+      rect.setAttribute('fill', '#3a0a0a');
+      rect.classList.remove('lit');
+    }
+    if(slot.shadows[key]) slot.shadows[key].classList.toggle('lit', on);
+  }
 }
-function clockMarkup(w, h){
-  const now = new Date();
-  const hh = now.getHours(), mm = now.getMinutes(), ss = now.getSeconds();
-  const hTens = Math.floor(hh/10), hOnes = hh%10;
-  const mTens = Math.floor(mm/10), mOnes = mm%10;
-  const sTens = Math.floor(ss/10), sOnes = ss%10;
-  return digitSvg(hTens===0 ? null : hTens, w, h) + digitSvg(hOnes, w, h) + colonSvg(w?Math.round(w/3):undefined, h) +
-    digitSvg(mTens, w, h) + digitSvg(mOnes, w, h) + colonSvg(w?Math.round(w/3):undefined, h) +
-    digitSvg(sTens, w, h) + digitSvg(sOnes, w, h);
+function buildColon(w, h){
+  const svgNS = 'http://www.w3.org/2000/svg';
+  const svg = document.createElementNS(svgNS,'svg');
+  svg.setAttribute('viewBox','0 0 10 60'); svg.setAttribute('width', w); svg.setAttribute('height', h);
+  [20,40].forEach(cy=>{
+    const c = document.createElementNS(svgNS,'circle');
+    c.setAttribute('cx','5'); c.setAttribute('cy',cy); c.setAttribute('r','4'); c.setAttribute('fill','#ff2222');
+    svg.appendChild(c);
+  });
+  return svg;
+}
+
+let playClockSlots = null;
+function ensurePlayClockSlots(){
+  if(playClockSlots) return playClockSlots;
+  const el = document.getElementById('play-clock');
+  if(!el) return null;
+  el.innerHTML = '';
+  const s = {
+    hTens: buildDigitSlot(18,32,true), hOnes: buildDigitSlot(18,32,true),
+    mTens: buildDigitSlot(18,32,true), mOnes: buildDigitSlot(18,32,true),
+    sTens: buildDigitSlot(18,32,false), sOnes: buildDigitSlot(18,32,false)
+  };
+  el.appendChild(s.hTens.el); el.appendChild(s.hOnes.el);
+  el.appendChild(buildColon(6,32));
+  el.appendChild(s.mTens.el); el.appendChild(s.mOnes.el);
+  el.appendChild(buildColon(6,32));
+  el.appendChild(s.sTens.el); el.appendChild(s.sOnes.el);
+  const grain = document.createElement('div');
+  grain.className = 'clock-grain';
+  el.appendChild(grain);
+  playClockSlots = s;
+  return s;
 }
 function tickClock(){
-  const el = document.getElementById('play-clock');
-  if(el) el.innerHTML = clockMarkup();
+  const s = ensurePlayClockSlots();
+  if(!s) return;
+  const now = new Date();
+  const hh=now.getHours(), mm=now.getMinutes(), ss=now.getSeconds();
+  updateDigitSlot(s.hTens, Math.floor(hh/10)===0 ? null : Math.floor(hh/10));
+  updateDigitSlot(s.hOnes, hh%10);
+  updateDigitSlot(s.mTens, Math.floor(mm/10));
+  updateDigitSlot(s.mOnes, mm%10);
+  updateDigitSlot(s.sTens, Math.floor(ss/10));
+  updateDigitSlot(s.sOnes, ss%10);
 }
 tickClock();
 setInterval(tickClock, 1000);
@@ -2698,28 +2789,56 @@ populateManualKeySelect();
 loadDarkMode();
 
 /* ---- Screensaver: fades in after 20s of no interaction anywhere in the app ----
-   Main (H:MM) + seconds update once a second; milliseconds update fast on their
-   own timer so they visibly count, without tearing down (and re-flickering) the
-   slower digits 12x more often than necessary. */
+   Persistent digit slots here too — only milliseconds actually need constant
+   updates; hours/minutes/seconds now stay untouched between real value
+   changes, so their slow breathing/float animations finally play through
+   uninterrupted instead of resetting every tick. */
 let idleTimer = null;
 let ssFastTimer = null;
+let ssSlots = null;
+function ensureSsSlots(){
+  if(ssSlots) return ssSlots;
+  const main = document.getElementById('ss-main');
+  const secs = document.getElementById('ss-secs');
+  const msEl = document.getElementById('ss-ms');
+  if(!main) return null;
+  const s = {
+    hTens: buildDigitSlot(46,84,true), hOnes: buildDigitSlot(46,84,true),
+    mTens: buildDigitSlot(46,84,true), mOnes: buildDigitSlot(46,84,true),
+    sTens: buildDigitSlot(30,54,false), sOnes: buildDigitSlot(30,54,false),
+    msTens: buildDigitSlot(18,32,false), msOnes: buildDigitSlot(18,32,false)
+  };
+  main.appendChild(s.hTens.el); main.appendChild(s.hOnes.el);
+  main.appendChild(buildColon(15,84));
+  main.appendChild(s.mTens.el); main.appendChild(s.mOnes.el);
+  secs.appendChild(buildColon(10,54));
+  secs.appendChild(s.sTens.el); secs.appendChild(s.sOnes.el);
+  msEl.appendChild(buildColon(6,32));
+  msEl.appendChild(s.msTens.el); msEl.appendChild(s.msOnes.el);
+  ssSlots = s;
+  return s;
+}
 function updateScreensaverSlow(){
+  const s = ensureSsSlots();
+  if(!s) return;
   const now = new Date();
   const hh=now.getHours(), mm=now.getMinutes(), ss=now.getSeconds();
-  const hTens=Math.floor(hh/10), hOnes=hh%10, mTens=Math.floor(mm/10), mOnes=mm%10;
-  const sTens=Math.floor(ss/10), sOnes=ss%10;
-  document.getElementById('ss-main').innerHTML =
-    digitSvg(hTens===0?null:hTens,46,84)+digitSvg(hOnes,46,84)+colonSvg(15,84)+digitSvg(mTens,46,84)+digitSvg(mOnes,46,84);
-  document.getElementById('ss-secs').innerHTML =
-    colonSvg(10,54)+digitSvg(sTens,30,54)+digitSvg(sOnes,30,54);
+  updateDigitSlot(s.hTens, Math.floor(hh/10)===0 ? null : Math.floor(hh/10));
+  updateDigitSlot(s.hOnes, hh%10);
+  updateDigitSlot(s.mTens, Math.floor(mm/10));
+  updateDigitSlot(s.mOnes, mm%10);
+  updateDigitSlot(s.sTens, Math.floor(ss/10));
+  updateDigitSlot(s.sOnes, ss%10);
 }
 function updateScreensaverFast(){
+  const s = ensureSsSlots();
+  if(!s) return;
   const ms = new Date().getMilliseconds();
-  const tenths = Math.floor(ms/100), hundredths = Math.floor((ms%100)/10);
-  document.getElementById('ss-ms').innerHTML =
-    colonSvg(6,32)+digitSvg(tenths,18,32)+digitSvg(hundredths,18,32);
+  updateDigitSlot(s.msTens, Math.floor(ms/100));
+  updateDigitSlot(s.msOnes, Math.floor((ms%100)/10));
 }
 function showScreensaver(){
+  ensureSsSlots();
   updateScreensaverSlow();
   updateScreensaverFast();
   document.getElementById('screensaver').classList.add('show');
