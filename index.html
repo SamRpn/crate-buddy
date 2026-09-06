@@ -208,6 +208,24 @@
     html.dark .play-clock{background:#000;}
   }
 
+  .screensaver{position:fixed;inset:0;background:#000;z-index:900;
+    display:flex;align-items:center;justify-content:center;overflow:hidden;
+    opacity:0;visibility:hidden;transition:opacity 1.3s ease;}
+  .screensaver.show{opacity:1;visibility:visible;}
+  .ss-clock{display:flex;align-items:center;gap:10px;position:relative;z-index:1;}
+  .ss-grain{position:absolute;inset:-20%;pointer-events:none;opacity:0.05;mix-blend-mode:overlay;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    animation:grain-shift 0.6s steps(3) infinite;}
+  @keyframes grain-shift{0%,100%{transform:translate(0,0);}33%{transform:translate(-2%,1%);}66%{transform:translate(1%,-2%);}}
+  @keyframes seg-flicker{
+    0%{filter:brightness(1) saturate(1);}
+    22%{filter:brightness(1.1) saturate(0.92);}
+    48%{filter:brightness(0.9) saturate(1.08);}
+    74%{filter:brightness(1.05) saturate(0.95);}
+    100%{filter:brightness(1) saturate(1);}
+  }
+  .seg-digit rect.lit{animation-name:seg-flicker;animation-timing-function:ease-in-out;animation-iteration-count:infinite;}
+
   .flow-badge{display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:700;
     color:#2563eb;background:#dbeafe;border-radius:6px;padding:2px 7px;margin-bottom:5px;}
   html.dark .flow-badge{background:#1e2b4d;color:#93c5fd;}
@@ -446,6 +464,11 @@
   <div class="note" id="footnote"></div>
 </div>
 <div id="toast-stack"></div>
+
+<div class="screensaver" id="screensaver">
+  <div class="ss-clock" id="ss-clock"></div>
+  <div class="ss-grain"></div>
+</div>
 
 <script>
 /* =========================================================
@@ -2163,10 +2186,15 @@ function applyDarkMode(dark){
   if(now) drawSpectrumChart(now, selectedMatchId ? library.find(t=>t.id===selectedMatchId) : null);
 }
 async function loadDarkMode(){
-  let dark=false;
+  let dark=true; // default on — only overridden below if the user already chose otherwise
   try{
-    if(hasArtifactStorage){ const r=await window.storage.get(DARK_MODE_KEY,false).catch(()=>null); dark = !!(r&&r.value==='1'); }
-    else{ dark = localStorage.getItem(DARK_MODE_KEY)==='1'; }
+    if(hasArtifactStorage){
+      const r=await window.storage.get(DARK_MODE_KEY,false).catch(()=>null);
+      if(r && r.value!=null) dark = r.value==='1';
+    } else {
+      const stored = localStorage.getItem(DARK_MODE_KEY);
+      if(stored!=null) dark = stored==='1';
+    }
   }catch(e){}
   applyDarkMode(dark);
   document.getElementById('dark-mode-toggle').checked = dark;
@@ -2523,35 +2551,63 @@ const SEG_RECTS = {
   a:{x:6,y:2,w:22,h:6}, b:{x:26,y:4,w:6,h:24}, c:{x:26,y:32,w:6,h:24},
   d:{x:6,y:52,w:22,h:6}, e:{x:2,y:32,w:6,h:24}, f:{x:2,y:4,w:6,h:24}, g:{x:6,y:27,w:22,h:6}
 };
-function digitSvg(value){
+function digitSvg(value, w, h){
+  w = w||18; h = h||32;
   const lit = (value===null || value===undefined) ? [] : SEVEN_SEG[value];
   let rects='';
   for(const key of ['a','b','c','d','e','f','g']){
     const r = SEG_RECTS[key];
-    rects += `<rect x="${r.x}" y="${r.y}" width="${r.w}" height="${r.h}" rx="2" fill="${lit.includes(key)?'#ff2222':'#3a0a0a'}"/>`;
+    const on = lit.includes(key);
+    const flicker = on ? `animation-delay:-${(Math.random()*4).toFixed(2)}s;animation-duration:${(3.2+Math.random()*1.6).toFixed(2)}s;` : '';
+    rects += `<rect x="${r.x}" y="${r.y}" width="${r.w}" height="${r.h}" rx="2" class="${on?'lit':''}" style="${flicker}" fill="${on?'#ff2222':'#3a0a0a'}"/>`;
   }
-  return `<svg viewBox="0 0 34 60" width="18" height="32">${rects}</svg>`;
+  return `<svg class="seg-digit" viewBox="0 0 34 60" width="${w}" height="${h}">${rects}</svg>`;
 }
-function colonSvg(){
-  return `<svg viewBox="0 0 10 60" width="6" height="32"><circle cx="5" cy="20" r="4" fill="#ff2222"/><circle cx="5" cy="40" r="4" fill="#ff2222"/></svg>`;
+function colonSvg(w, h){
+  w = w||6; h = h||32;
+  return `<svg viewBox="0 0 10 60" width="${w}" height="${h}"><circle cx="5" cy="20" r="4" fill="#ff2222"/><circle cx="5" cy="40" r="4" fill="#ff2222"/></svg>`;
+}
+function clockMarkup(w, h){
+  const now = new Date();
+  const hh = now.getHours(), mm = now.getMinutes(), ss = now.getSeconds();
+  const hTens = Math.floor(hh/10), hOnes = hh%10;
+  const mTens = Math.floor(mm/10), mOnes = mm%10;
+  const sTens = Math.floor(ss/10), sOnes = ss%10;
+  return digitSvg(hTens===0 ? null : hTens, w, h) + digitSvg(hOnes, w, h) + colonSvg(w?Math.round(w/3):undefined, h) +
+    digitSvg(mTens, w, h) + digitSvg(mOnes, w, h) + colonSvg(w?Math.round(w/3):undefined, h) +
+    digitSvg(sTens, w, h) + digitSvg(sOnes, w, h);
 }
 function tickClock(){
   const el = document.getElementById('play-clock');
-  if(!el) return;
-  const now = new Date();
-  const h = now.getHours(), m = now.getMinutes(), s = now.getSeconds();
-  const hTens = Math.floor(h/10), hOnes = h%10;
-  const mTens = Math.floor(m/10), mOnes = m%10;
-  const sTens = Math.floor(s/10), sOnes = s%10;
-  el.innerHTML =
-    digitSvg(hTens===0 ? null : hTens) + digitSvg(hOnes) + colonSvg() +
-    digitSvg(mTens) + digitSvg(mOnes) + colonSvg() +
-    digitSvg(sTens) + digitSvg(sOnes);
+  if(el) el.innerHTML = clockMarkup();
+  const ssEl = document.getElementById('ss-clock');
+  if(ssEl && document.getElementById('screensaver').classList.contains('show')){
+    ssEl.innerHTML = clockMarkup(46, 84);
+  }
 }
 tickClock();
 setInterval(tickClock, 1000);
 populateManualKeySelect();
 loadDarkMode();
+
+/* ---- Screensaver: fades in after 20s of no interaction anywhere in the app ---- */
+let idleTimer = null;
+function showScreensaver(){
+  document.getElementById('ss-clock').innerHTML = clockMarkup(46, 84);
+  document.getElementById('screensaver').classList.add('show');
+}
+function hideScreensaver(){
+  document.getElementById('screensaver').classList.remove('show');
+}
+function resetIdleTimer(){
+  hideScreensaver();
+  clearTimeout(idleTimer);
+  idleTimer = setTimeout(showScreensaver, 20000);
+}
+['touchstart','mousedown','keydown','scroll'].forEach(ev=>{
+  window.addEventListener(ev, resetIdleTimer, {passive:true});
+});
+resetIdleTimer();
 </script>
 </body>
 </html>
