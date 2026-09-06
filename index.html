@@ -175,10 +175,14 @@
   details.weights summary{padding:11px 14px;font-size:12.5px;color:var(--dim);cursor:pointer;list-style:none;font-weight:600;}
   details.weights summary::-webkit-details-marker{display:none;}
   details.weights .content{padding:0 14px 14px;}
+  .weights-hint{font-size:11.5px;color:var(--dim);line-height:1.4;margin:0 0 10px;}
+  .weights-layout{display:flex;align-items:center;gap:14px;}
+  .wrow-group{flex:1;min-width:0;}
+  .weight-donut-holder{flex-shrink:0;line-height:0;}
   .wrow{display:flex;align-items:center;gap:10px;margin-bottom:8px;font-size:12px;color:var(--dim);}
   .wrow:last-child{margin-bottom:0;}
-  .wrow span.lbl{width:52px;flex-shrink:0;}
-  .wrow span.val{width:30px;text-align:right;color:var(--text);font-weight:600;}
+  .wrow span.lbl{width:96px;flex-shrink:0;}
+  .wrow span.val{width:34px;text-align:right;color:var(--text);font-weight:600;}
   input[type=range]{flex:1;accent-color:var(--accent);}
   .preset-row{display:flex;flex-direction:column;gap:7px;margin-top:12px;padding-top:12px;border-top:1px solid var(--line);}
   .preset-slot{display:flex;gap:6px;align-items:center;}
@@ -378,17 +382,20 @@
   .flow-pair-names .t{font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 
   .match-row{background:var(--card);border-radius:14px;margin-bottom:8px;box-shadow:0 1px 2px rgba(0,0,0,0.04);overflow:hidden;}
-  .match-main{display:flex;align-items:center;gap:11px;padding:10px 12px;cursor:pointer;}
+  .match-main{display:flex;align-items:center;gap:9px;padding:10px 12px;cursor:pointer;}
   .rank{width:16px;font-size:11px;color:#c2c2c8;font-weight:700;flex-shrink:0;}
   .match-info{flex:1;min-width:0;}
   .match-info .t{font-weight:600;font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:flex;align-items:center;gap:4px;}
   .match-info .a{font-size:11.5px;color:var(--dim);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
   .fav-mark{display:inline-flex;flex-shrink:0;}
-  .match-band-chart{flex-shrink:0;line-height:0;}
-  .chev{width:16px;text-align:center;color:#c2c2c8;font-size:11px;transition:transform .15s;flex-shrink:0;}
+  .match-donut{flex-shrink:0;line-height:0;}
+  .match-play-btn{flex-shrink:0;width:34px;height:34px;border-radius:50%;background:#16a34a;border:none;
+    display:flex;align-items:center;justify-content:center;cursor:pointer;}
+  .match-play-btn:active{background:#15803d;}
+  .chev{width:14px;text-align:center;color:#c2c2c8;font-size:11px;transition:transform .15s;flex-shrink:0;}
   .match-row.open .chev{transform:rotate(180deg);}
-  .breakdown{max-height:0;overflow:hidden;transition:max-height .18s ease;}
-  .match-row.open .breakdown{max-height:200px;}
+  .breakdown{max-height:0;overflow:hidden;transition:max-height .2s ease;}
+  .match-row.open .breakdown{max-height:360px;}
   .breakdown-inner{padding:2px 14px 14px 62px;display:flex;flex-direction:column;gap:8px;}
   .bd-row{display:flex;align-items:center;gap:10px;}
   .bd-row .bl{font-size:11.5px;color:var(--dim);width:44px;flex-shrink:0;}
@@ -396,6 +403,8 @@
   .bd-track i{display:block;height:100%;border-radius:3px;}
   .bd-row .bv{font-size:11.5px;font-weight:700;width:32px;text-align:right;flex-shrink:0;}
   .bd-row .bd-text{font-size:12px;font-weight:600;}
+  .bd-detail-chart{margin-top:2px;}
+  .bd-detail-chart .bd-detail-lbl{font-size:11.5px;color:var(--dim);margin-bottom:4px;}
   .now-playing-btn{display:flex;align-items:center;gap:7px;justify-content:center;
     background:#16a34a;color:#fff;border:none;border-radius:10px;padding:9px 12px;
     font-weight:700;font-size:12.5px;cursor:pointer;margin-top:4px;}
@@ -572,10 +581,17 @@
     <details class="weights">
       <summary>Adjust matching weights</summary>
       <div class="content">
-        <div class="wrow"><span class="lbl">BPM</span><input type="range" id="w-bpm" min="0" max="100" value="35"><span class="val" id="w-bpm-val">35</span></div>
-        <div class="wrow"><span class="lbl">Key</span><input type="range" id="w-key" min="0" max="100" value="30"><span class="val" id="w-key-val">30</span></div>
-        <div class="wrow"><span class="lbl">Bands</span><input type="range" id="w-bands" min="0" max="100" value="20"><span class="val" id="w-bands-val">20</span></div>
-        <div class="wrow"><span class="lbl">Loudness</span><input type="range" id="w-loud" min="0" max="100" value="15"><span class="val" id="w-loud-val">15</span></div>
+        <p class="weights-hint">Split 100% across what matters most when picking your next track. Raise one and the others make room automatically.</p>
+        <div class="weights-layout">
+          <div class="wrow-group">
+            <div class="wrow"><span class="lbl">BPM</span><input type="range" id="w-bpm" min="0" max="100" value="35"><span class="val" id="w-bpm-val">35%</span></div>
+            <div class="wrow"><span class="lbl">Key</span><input type="range" id="w-key" min="0" max="100" value="30"><span class="val" id="w-key-val">30%</span></div>
+            <div class="wrow"><span class="lbl">Loudness</span><input type="range" id="w-loud" min="0" max="100" value="15"><span class="val" id="w-loud-val">15%</span></div>
+            <div class="wrow"><span class="lbl">Multiband Loudness</span><input type="range" id="w-bands" min="0" max="100" value="20"><span class="val" id="w-bands-val">20%</span></div>
+          </div>
+          <div class="weight-donut-holder" id="weight-donut-holder"></div>
+        </div>
+        <p class="weights-hint" style="margin-top:2px;">The grey wheel shows your current split. On each suggestion below, the same-shaped wheel fills in with color — green where that category matches well, red where it doesn't.</p>
         <div class="preset-row" id="preset-row"></div>
       </div>
     </details>
@@ -587,9 +603,8 @@
       <div id="play-history"></div>
       <div class="play-clock" id="play-clock"></div>
     </div>
-    <div id="chart-holder"></div>
     <div id="now-card-holder"></div>
-    <div id="match-section" style="display:none;"><div class="section-lbl">Top matches</div></div>
+    <div id="match-section" style="display:none;"><div class="section-lbl">Top matches — tap a row for details, or hit ▶ to play it right away</div></div>
     <div id="match-list"></div>
     <button class="play-reset-btn" id="save-history-btn">💾 Save this session's history</button>
     <button class="play-reset-btn" id="play-reset-btn">↺ Reset — clear played history &amp; start a clean slate</button>
@@ -1535,6 +1550,33 @@ function pctColorSoft(p){
   return dark ? `hsl(${hue}, 42%, 18%)` : `hsl(${hue}, 75%, 94%)`;
 }
 
+// Reusable 4-slice donut: slices=[{value (0-100), color}], arc length = value,
+// order/size fixed by the caller. Used both for the grey "importance" wheel
+// (how you've weighted BPM/Key/Loudness/Multiband) and the per-track wheel
+// (same arc sizes, but each slice colored by how well that category matches).
+function donutSvg(slices, size, innerRatio){
+  size = size||64; innerRatio = innerRatio==null?0.55:innerRatio;
+  const r=size/2, cx=r, cy=r, rInner=r*innerRatio;
+  let angle=-90, paths='';
+  const total = slices.reduce((s,x)=>s+x.value,0)||1;
+  slices.forEach(s=>{
+    const sweep = s.value/total*360;
+    if(sweep<=0.001) return;
+    const a0=angle*Math.PI/180, a1=(angle+sweep)*Math.PI/180;
+    const x0=cx+r*Math.cos(a0), y0=cy+r*Math.sin(a0);
+    const x1=cx+r*Math.cos(a1), y1=cy+r*Math.sin(a1);
+    const xi1=cx+rInner*Math.cos(a1), yi1=cy+rInner*Math.sin(a1);
+    const xi0=cx+rInner*Math.cos(a0), yi0=cy+rInner*Math.sin(a0);
+    const largeArc = sweep>180?1:0;
+    paths += `<path d="M${x0.toFixed(2)},${y0.toFixed(2)} A${r},${r} 0 ${largeArc} 1 ${x1.toFixed(2)},${y1.toFixed(2)} L${xi1.toFixed(2)},${yi1.toFixed(2)} A${rInner},${rInner} 0 ${largeArc} 0 ${xi0.toFixed(2)},${yi0.toFixed(2)} Z" fill="${s.color}"/>`;
+    angle += sweep;
+  });
+  return `<svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">${paths}</svg>`;
+}
+// Neutral grey shades — one per weight category — so the "importance" wheel
+// never implies good/bad, only how much of your 100% each one takes up.
+const WEIGHT_GREYS = {bpm:'#9ca3af', key:'#6b7280', loud:'#4b5563', bands:'#374151'};
+
 /* =========================================================
    RENDER: LIBRARY
 ========================================================= */
@@ -1559,22 +1601,28 @@ function miniLineChartSvg(bands){
 // A tiny at-a-glance comparison: the Now Playing track's bands in flat grey,
 // the suggestion's bands colored per-band by how close they sit (same
 // green-to-red scale, same 12dB-to-red tolerance as the big chart).
-function bandCompareChartSvg(nowBands, suggBands){
-  const w=50, h=26, colW=w/4;
+// detailed=true renders bigger with band-name labels, for the row breakdown.
+function bandCompareChartSvg(nowBands, suggBands, detailed){
+  const w = detailed?260:50, h = detailed?56:26, colW=w/4;
   if(!nowBands || !suggBands){
     return `<svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}">
       <line x1="3" y1="${h/2}" x2="${w-3}" y2="${h/2}" stroke="#e2e2e8" stroke-width="2" stroke-dasharray="2,3"/>
     </svg>`;
   }
-  const yFor = db => h - Math.max(0,Math.min(1,(db-CHART_DB_MIN)/(CHART_DB_MAX-CHART_DB_MIN)))*h;
+  const chartH = detailed ? h-14 : h;
+  const yFor = db => chartH - Math.max(0,Math.min(1,(db-CHART_DB_MIN)/(CHART_DB_MAX-CHART_DB_MIN)))*chartH;
+  const labelNames = {low:'low', lowmid:'low-mid', himid:'hi-mid', high:'high'};
   let marks='';
   BAND_KEYS.forEach((k,i)=>{
     const x0=i*colW+2, x1=(i+1)*colW-2;
     const yNow = yFor(nowBands[k]);
-    marks += `<line x1="${x0}" y1="${yNow}" x2="${x1}" y2="${yNow}" stroke="#adadb5" stroke-width="2" stroke-linecap="round"/>`;
+    marks += `<line x1="${x0}" y1="${yNow}" x2="${x1}" y2="${yNow}" stroke="#adadb5" stroke-width="${detailed?3:2}" stroke-linecap="round"/>`;
     const ySugg = yFor(suggBands[k]);
     const color = pctColor(bandCloseness(nowBands[k], suggBands[k]));
-    marks += `<line x1="${x0}" y1="${ySugg}" x2="${x1}" y2="${ySugg}" stroke="${color}" stroke-width="2.4" stroke-linecap="round"/>`;
+    marks += `<line x1="${x0}" y1="${ySugg}" x2="${x1}" y2="${ySugg}" stroke="${color}" stroke-width="${detailed?3.4:2.4}" stroke-linecap="round"/>`;
+    if(detailed){
+      marks += `<text x="${(x0+x1)/2}" y="${chartH+11}" font-size="9" text-anchor="middle" fill="#9ca3af">${labelNames[k]}</text>`;
+    }
   });
   return `<svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}">${marks}</svg>`;
 }
@@ -2096,9 +2144,53 @@ nowInput.addEventListener('input', ()=>renderNowSuggestions(nowInput.value));
 nowInput.addEventListener('focus', ()=>renderNowSuggestions(nowInput.value));
 nowInput.addEventListener('blur', ()=>setTimeout(()=>document.getElementById('now-suggestions').classList.remove('show'),150));
 
-['w-bpm','w-key','w-bands','w-loud'].forEach(id=>{
+const WEIGHT_IDS = ['w-bpm','w-key','w-loud','w-bands'];
+function getWeights(){
+  const w={};
+  WEIGHT_IDS.forEach(id=>{ w[id]=+document.getElementById(id).value; });
+  return w;
+}
+function setWeights(w, skipId){
+  WEIGHT_IDS.forEach(id=>{
+    if(id===skipId) return;
+    document.getElementById(id).value = w[id];
+    document.getElementById(id+'-val').textContent = Math.round(w[id])+'%';
+  });
+  const skipEl = skipId && document.getElementById(skipId);
+  if(skipEl) document.getElementById(skipId+'-val').textContent = Math.round(w[skipId])+'%';
+}
+function renderWeightDonut(){
+  const w = getWeights();
+  const holder = document.getElementById('weight-donut-holder');
+  if(!holder) return;
+  holder.innerHTML = donutSvg([
+    {value:w['w-bpm'], color:WEIGHT_GREYS.bpm},
+    {value:w['w-key'], color:WEIGHT_GREYS.key},
+    {value:w['w-loud'], color:WEIGHT_GREYS.loud},
+    {value:w['w-bands'], color:WEIGHT_GREYS.bands}
+  ], 64);
+}
+WEIGHT_IDS.forEach(id=>{
   document.getElementById(id).addEventListener('input', e=>{
-    document.getElementById(id+'-val').textContent = e.target.value;
+    const newVal = Math.max(0, Math.min(100, +e.target.value));
+    const w = getWeights();
+    w[id] = newVal;
+    const others = WEIGHT_IDS.filter(x=>x!==id);
+    const otherSum = others.reduce((s,x)=>s+w[x],0);
+    const remaining = 100-newVal;
+    if(otherSum<=0){
+      others.forEach(x=>w[x]=remaining/others.length);
+    } else {
+      others.forEach(x=>w[x] = w[x]/otherSum*remaining);
+    }
+    // Round everything but the slider just touched, then fix the last one so
+    // the total is always exactly 100 (avoids floating-point drift showing
+    // as e.g. 99% or 101% across the labels).
+    let roundedSum = newVal;
+    others.slice(0,-1).forEach(x=>{ w[x]=Math.round(w[x]); roundedSum+=w[x]; });
+    w[others[others.length-1]] = 100-roundedSum;
+    setWeights(w, id);
+    renderWeightDonut();
     renderMatches();
   });
 });
@@ -2168,89 +2260,10 @@ function bandCloseness(nowDb, suggDb){
 const CHART_DB_MIN=-22, CHART_DB_MAX=8;
 const BAND_KEYS=['low','lowmid','himid','high'];
 
-function renderChartCard(){
-  return `<div class="chart-card">
-    <div class="chart-head">
-      <div class="chart-title">Spectrum balance</div>
-      <div class="chart-compare" id="chart-compare"></div>
-    </div>
-    <canvas class="spectrum-chart" id="spectrum-canvas"></canvas>
-    <div class="chart-labels"><span>low</span><span>low-mid</span><span>hi-mid</span><span>high</span></div>
-  </div>`;
-}
-
-function drawSpectrumChart(now, selected){
-  const cv = document.getElementById('spectrum-canvas');
-  if(!cv) return;
-  const dpr = window.devicePixelRatio||1;
-  const w = cv.clientWidth||300, h=130;
-  cv.width=w*dpr; cv.height=h*dpr;
-  const ctx = cv.getContext('2d');
-  ctx.setTransform(dpr,0,0,dpr,0,0);
-  ctx.clearRect(0,0,w,h);
-
-  const rootStyles = getComputedStyle(document.documentElement);
-  const gridColor = (rootStyles.getPropertyValue('--line')||'#eee').trim();
-  const labelColor = (rootStyles.getPropertyValue('--dim')||'#c2c2c8').trim();
-
-  if(!now || !now.bands){
-    ctx.fillStyle=labelColor; ctx.font='12px -apple-system, sans-serif';
-    ctx.textAlign='center'; ctx.textBaseline='middle';
-    ctx.fillText(now ? 'No spectrum data — added manually' : '', w/2, h/2);
-    return;
-  }
-
-  const padL=30, padR=6, padT=6, padB=4;
-  const plotW = w-padL-padR, plotH = h-padT-padB;
-  const yForDb = db => padT + plotH*(1-((db-CHART_DB_MIN)/(CHART_DB_MAX-CHART_DB_MIN)));
-
-  // gridlines + dB labels
-  ctx.strokeStyle=gridColor; ctx.fillStyle=labelColor; ctx.font='9.5px -apple-system, sans-serif';
-  ctx.textAlign='right'; ctx.textBaseline='middle';
-  for(let db=Math.ceil(CHART_DB_MIN/6)*6; db<=CHART_DB_MAX; db+=6){
-    const y = yForDb(db);
-    ctx.beginPath(); ctx.moveTo(padL, y); ctx.lineTo(w-padR, y); ctx.stroke();
-    ctx.fillText(db+'dB', padL-5, y);
-  }
-
-  // vertical dividers between the 4 band columns
-  const colW = plotW/4;
-  ctx.strokeStyle=gridColor;
-  for(let i=1;i<4;i++){
-    const x = padL+colW*i;
-    ctx.beginPath(); ctx.moveTo(x, padT); ctx.lineTo(x, padT+plotH); ctx.stroke();
-  }
-
-  function drawTrackLines(bands, color, lineWidth){
-    BAND_KEYS.forEach((key,i)=>{
-      const db = bands[key];
-      const y = yForDb(Math.max(CHART_DB_MIN, Math.min(CHART_DB_MAX, db)));
-      const x0 = padL+colW*i+colW*0.12, x1 = padL+colW*(i+1)-colW*0.12;
-      ctx.strokeStyle=color; ctx.lineWidth=lineWidth; ctx.lineCap='round';
-      ctx.beginPath(); ctx.moveTo(x0,y); ctx.lineTo(x1,y); ctx.stroke();
-    });
-  }
-
-  drawTrackLines(now.bands, '#b7b7bf', 4); // bold soft grey baseline
-
-  if(selected && selected.bands){
-    BAND_KEYS.forEach((key,i)=>{
-      const score = bandCloseness(now.bands[key], selected.bands[key]);
-      const color = pctColor(score);
-      const db = selected.bands[key];
-      const y = yForDb(Math.max(CHART_DB_MIN, Math.min(CHART_DB_MAX, db)));
-      const x0 = padL+colW*i+colW*0.12, x1 = padL+colW*(i+1)-colW*0.12;
-      ctx.strokeStyle=color; ctx.lineWidth=3; ctx.lineCap='round';
-      ctx.beginPath(); ctx.moveTo(x0,y); ctx.lineTo(x1,y); ctx.stroke();
-    });
-  }
-}
-
 let selectedMatchId = null;
 
 function renderMatches(){
   const holder=document.getElementById('now-card-holder');
-  const chartHolder=document.getElementById('chart-holder');
   const list=document.getElementById('match-list');
   const sectionLbl=document.getElementById('match-section');
   const now=library.find(t=>t.id===nowPlayingId);
@@ -2262,7 +2275,7 @@ function renderMatches(){
   const wTotal=(wBpm+wKey+wBands+wLoud)||1;
 
   if(!now){
-    holder.innerHTML=''; chartHolder.innerHTML='';
+    holder.innerHTML='';
     sectionLbl.style.display='none';
     list.innerHTML = `<div class="empty-state">Pick your current track above to see your top 10 matches.</div>`;
     return;
@@ -2276,8 +2289,6 @@ function renderMatches(){
       <div class="sub">${escapeHtml(now.artist||'Unknown artist')} · ${now.bpm} BPM · ${now.key.camelot} ${now.key.name} · ${fmtLoudness(now.loudness)}</div>
     </div>
   </div>`;
-
-  chartHolder.innerHTML = renderChartCard();
 
   function scoreTrack(t){
     const bm=bpmMatchInfo(now.bpm,t.bpm);
@@ -2331,8 +2342,6 @@ function renderMatches(){
     list.innerHTML = allPlayed
       ? `<div class="empty-state">You've played everything in your crate this session — hit Reset below to start fresh.</div>`
       : `<div class="empty-state">Add more tracks to your library to see suggested matches.</div>`;
-    drawSpectrumChart(now, null);
-    updateChartCompare(null);
     return;
   }
   sectionLbl.style.display='block';
@@ -2361,8 +2370,21 @@ function renderMatches(){
     const favBadge = isFav ? `<span class="fav-mark" title="Favourite">
       <svg viewBox="0 0 24 24" width="12" height="12"><path d="M12 2 L14.9 8.6 L22 9.3 L16.7 14.1 L18.2 21 L12 17.4 L5.8 21 L7.3 14.1 L2 9.3 L9.1 8.6 Z" fill="#eab308"/></svg>
     </span>` : '';
+    // Same arc sizes as the grey "importance" wheel (your weight split);
+    // color per slice is that category's own match score for this track.
+    // A category with no data (manual entries lack bands/loudness) gets a
+    // flat neutral grey slice rather than a misleading red or green.
+    const rowDonut = donutSvg([
+      {value:wBpm, color:pctColor(r.bs)},
+      {value:wKey, color:pctColor(r.kd.score)},
+      {value:wLoud, color:r.loudS==null?'#9ca3af':pctColor(r.loudS)},
+      {value:wBands, color:r.bandS==null?'#9ca3af':pctColor(r.bandS)}
+    ], 40);
+    const detailChart = r.bandS==null
+      ? `<span style="font-size:11.5px;color:var(--dim);">No spectrum data for this track</span>`
+      : bandCompareChartSvg(now.bands, r.t.bands, true);
     return `
-    <div class="match-row${r.t.id===selectedMatchId?' open':''}${isChain?' chain-match':(isFlow?' flow-match':'')}" data-id="${r.t.id}" style="background-color:${pctColorSoft(r.overall)};">
+    <div class="match-row${r.t.id===selectedMatchId?' open':''}${isChain?' chain-match':(isFlow?' flow-match':'')}" data-id="${r.t.id}">
       <div class="match-main">
         <div class="rank">${i+1}</div>
         <img class="art" src="${r.t.icon}" style="width:56px;height:56px;border-radius:7px;">
@@ -2371,13 +2393,20 @@ function renderMatches(){
           <div class="t">${favBadge}${escapeHtml(r.t.name)}</div>
           <div class="a">${escapeHtml(r.t.artist||'Unknown artist')}</div>
         </div>
-        <div class="match-band-chart">${bandCompareChartSvg(now.bands, r.t.bands)}</div>
-        <div class="chev">▾</div>
+        <div class="match-donut" title="Overall match, split by your weights">${rowDonut}</div>
+        <button class="match-play-btn" data-setnow="${r.t.id}" title="Play this now">
+          <svg viewBox="0 0 20 20" width="12" height="12"><path d="M5 3.5 L16 10 L5 16.5 Z" fill="#fff"/></svg>
+        </button>
+        <div class="chev" title="Show details">▾</div>
       </div>
       <div class="breakdown"><div class="breakdown-inner">
         <div class="bd-row"><span class="bl">BPM</span><span class="bd-text" style="color:${bpmDiffColor(r.bm.absDiff)}">${bpmText}</span></div>
         <div class="bd-row"><span class="bl">Key</span><span class="bd-text" style="color:${keyColor(r.kd.score)};font-weight:700;">${keyText}</span></div>
         <div class="bd-row"><span class="bl">Loudness</span>${loudRow}</div>
+        <div class="bd-detail-chart">
+          <div class="bd-detail-lbl">Multiband loudness — grey is Now Playing, color is this track</div>
+          ${detailChart}
+        </div>
         <button class="now-playing-btn" data-setnow="${r.t.id}">
           <svg viewBox="0 0 20 20" width="14" height="14"><path d="M5 3.5 L16 10 L5 16.5 Z" fill="#fff"/></svg>
           Now Playing
@@ -2395,36 +2424,16 @@ function renderMatches(){
   });
 
   list.querySelectorAll('.match-row').forEach(row=>{
-    row.querySelector('.match-main').addEventListener('click', ()=>{
+    row.querySelector('.match-main').addEventListener('click', e=>{
+      if(e.target.closest('.match-play-btn')) return; // Play Now handles itself, doesn't also toggle details
       const id = row.dataset.id;
       selectedMatchId = (selectedMatchId===id) ? null : id;
       list.querySelectorAll('.match-row').forEach(r2=>r2.classList.toggle('open', r2.dataset.id===selectedMatchId));
-      const sel = selectedMatchId ? results.find(r=>r.t.id===selectedMatchId) : null;
-      drawSpectrumChart(now, sel ? sel.t : null);
-      updateChartCompare(sel);
     });
   });
-
-  const initialSel = selectedMatchId ? results.find(r=>r.t.id===selectedMatchId) : null;
-  drawSpectrumChart(now, initialSel ? initialSel.t : null);
-  updateChartCompare(initialSel);
 }
 
-function updateChartCompare(sel){
-  const el = document.getElementById('chart-compare');
-  if(!el) return;
-  if(!sel){ el.innerHTML=''; return; }
-  if(sel.bandS==null){ el.innerHTML = `<span style="color:var(--dim);">vs ${escapeHtml(sel.t.name)} — no spectrum data</span>`; return; }
-  el.innerHTML = `<span class="swatch" style="background:${pctColor(sel.bandS)}"></span>vs ${escapeHtml(sel.t.name)} — <span class="pct" style="color:${pctColor(sel.bandS)}">${sel.bandS}%</span> band match`;
-}
 function fmtLoudness(v){ return v==null ? 'no loudness data' : v+' LUFS'; }
-
-window.addEventListener('resize', ()=>{
-  const now=library.find(t=>t.id===nowPlayingId);
-  if(!now) return;
-  const selRow = selectedMatchId ? library.find(t=>t.id===selectedMatchId) : null;
-  drawSpectrumChart(now, selRow);
-});
 
 /* =========================================================
    MATCHING WEIGHT PRESETS — 3 saveable slots
@@ -2459,10 +2468,18 @@ function currentWeights(){
   };
 }
 function applyWeights(w){
-  ['bpm','key','bands','loud'].forEach(k=>{
-    document.getElementById('w-'+k).value = w[k];
-    document.getElementById('w-'+k+'-val').textContent = w[k];
+  const total = (w.bpm+w.key+w.bands+w.loud) || 1;
+  const norm = {bpm:w.bpm/total*100, key:w.key/total*100, bands:w.bands/total*100, loud:w.loud/total*100};
+  // Round all but one, then fix the last so the displayed total is always exactly 100.
+  const keys = ['bpm','key','bands','loud'];
+  let sum=0;
+  keys.slice(0,-1).forEach(k=>{ norm[k]=Math.round(norm[k]); sum+=norm[k]; });
+  norm[keys[keys.length-1]] = 100-sum;
+  keys.forEach(k=>{
+    document.getElementById('w-'+k).value = norm[k];
+    document.getElementById('w-'+k+'-val').textContent = norm[k]+'%';
   });
+  renderWeightDonut();
   renderMatches();
 }
 function renderPresetRow(){
@@ -2605,8 +2622,6 @@ document.getElementById('settings-overlay').addEventListener('click', e=>{
 });
 function applyDarkMode(dark){
   document.documentElement.classList.toggle('dark', dark);
-  const now = library.find(t=>t.id===nowPlayingId);
-  if(now) drawSpectrumChart(now, selectedMatchId ? library.find(t=>t.id===selectedMatchId) : null);
   if(currentTab==='match') renderMatches();
 }
 async function loadDarkMode(){
@@ -3320,6 +3335,7 @@ function tickClock(){
 tickClock();
 setInterval(tickClock, 1000);
 populateManualKeySelect();
+renderWeightDonut();
 loadDarkMode();
 
 /* ---- Screensaver: fades in after 20s of no interaction anywhere in the app ----
