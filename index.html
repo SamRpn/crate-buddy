@@ -4,6 +4,10 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Crate Buddy</title>
+<link rel="apple-touch-icon" href="crate-buddy-icon-1080.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Crate Buddy">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Rubik+Wet+Paint&display=swap" rel="stylesheet">
 <style>
@@ -74,12 +78,12 @@
 
   /* ---- segmented tabs ---- */
   .tabs{display:flex;gap:2px;margin:0 20px 18px;background:#ececf0;border-radius:12px;padding:4px;}
-  .tabs button{flex:1;padding:8px 6px;background:transparent;border:none;border-radius:9px;
+  .tabs button{flex:1 1 0;min-width:0;padding:8px 6px;background:transparent;border:none;border-radius:9px;
     cursor:pointer;transition:background .15s;display:flex;align-items:center;justify-content:center;}
   .tabs button.active{background:var(--card);box-shadow:0 1px 3px rgba(0,0,0,0.08);}
   html.dark .tabs{background:#26262b;}
   html.dark .tabs button.active{background:#000;}
-  .tab-logo{height:22px;width:auto;display:block;}
+  .tab-logo{height:19px;width:auto;max-width:100%;display:block;}
   .tab-logo text{font-family:'Rubik Wet Paint', cursive;fill:#fff;stroke:#111;stroke-width:2.6;}
 
   section{padding:0 20px;}
@@ -199,9 +203,9 @@
   .history-and-clock #play-history{flex:1;min-width:0;}
   .play-clock{display:none;}
   @media (orientation: landscape){
-    .play-clock{display:block;flex-shrink:0;font-family:-apple-system,sans-serif;
-      font-weight:700;font-size:22px;color:var(--text);white-space:nowrap;padding-bottom:14px;}
-    .play-clock .secs{font-size:12px;font-weight:500;opacity:0.45;margin-left:2px;}
+    .play-clock{display:flex;align-items:center;gap:3px;flex-shrink:0;
+      padding:6px 10px;border-radius:8px;margin-bottom:14px;}
+    html.dark .play-clock{background:#000;}
   }
 
   .flow-badge{display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:700;
@@ -2507,15 +2511,42 @@ loadCrates();
 loadHistorySessions();
 
 /* Landscape-only clock next to the play-history strip — CSS handles when
-   it's actually visible, this just keeps its text current. */
+   it's actually visible. Rendered as real 7-segment shapes (not a font)
+   so unlit "ghost" segments show through exactly like a real LED clock. */
+const SEVEN_SEG = {
+  0:['a','b','c','d','e','f'], 1:['b','c'], 2:['a','b','g','e','d'],
+  3:['a','b','g','c','d'], 4:['f','g','b','c'], 5:['a','f','g','c','d'],
+  6:['a','f','g','e','c','d'], 7:['a','b','c'], 8:['a','b','c','d','e','f','g'],
+  9:['a','b','c','d','f','g']
+};
+const SEG_RECTS = {
+  a:{x:6,y:2,w:22,h:6}, b:{x:26,y:4,w:6,h:24}, c:{x:26,y:32,w:6,h:24},
+  d:{x:6,y:52,w:22,h:6}, e:{x:2,y:32,w:6,h:24}, f:{x:2,y:4,w:6,h:24}, g:{x:6,y:27,w:22,h:6}
+};
+function digitSvg(value){
+  const lit = (value===null || value===undefined) ? [] : SEVEN_SEG[value];
+  let rects='';
+  for(const key of ['a','b','c','d','e','f','g']){
+    const r = SEG_RECTS[key];
+    rects += `<rect x="${r.x}" y="${r.y}" width="${r.w}" height="${r.h}" rx="2" fill="${lit.includes(key)?'#ff2222':'#3a0a0a'}"/>`;
+  }
+  return `<svg viewBox="0 0 34 60" width="18" height="32">${rects}</svg>`;
+}
+function colonSvg(){
+  return `<svg viewBox="0 0 10 60" width="6" height="32"><circle cx="5" cy="20" r="4" fill="#ff2222"/><circle cx="5" cy="40" r="4" fill="#ff2222"/></svg>`;
+}
 function tickClock(){
   const el = document.getElementById('play-clock');
   if(!el) return;
   const now = new Date();
-  const hh = String(now.getHours()).padStart(2,'0');
-  const mm = String(now.getMinutes()).padStart(2,'0');
-  const ss = String(now.getSeconds()).padStart(2,'0');
-  el.innerHTML = `${hh}:${mm}<span class="secs">:${ss}</span>`;
+  const h = now.getHours(), m = now.getMinutes(), s = now.getSeconds();
+  const hTens = Math.floor(h/10), hOnes = h%10;
+  const mTens = Math.floor(m/10), mOnes = m%10;
+  const sTens = Math.floor(s/10), sOnes = s%10;
+  el.innerHTML =
+    digitSvg(hTens===0 ? null : hTens) + digitSvg(hOnes) + colonSvg() +
+    digitSvg(mTens) + digitSvg(mOnes) + colonSvg() +
+    digitSvg(sTens) + digitSvg(sOnes);
 }
 tickClock();
 setInterval(tickClock, 1000);
