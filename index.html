@@ -3116,6 +3116,23 @@ function renderDecks(){
   });
 }
 
+// Scores a track list across multiple animation frames instead of one long
+// blocking pass — keeps the UI responsive on a large library. Each chunk
+// does real work, then yields back to the browser before the next one.
+function scoreChunked(tracks, scoreFn, onDone){
+  const out = [];
+  const CHUNK = 120;
+  let i = 0;
+  function step(){
+    const end = Math.min(i+CHUNK, tracks.length);
+    for(; i<end; i++) out.push(scoreFn(tracks[i]));
+    if(i < tracks.length) requestAnimationFrame(step);
+    else onDone(out);
+  }
+  step();
+}
+let matchesRenderToken = 0;
+let lastRenderedResultsKey = '';
 let suggestionsEverRendered = false;
 function renderMatches(animateNew){
   renderDecks();
@@ -3133,6 +3150,7 @@ function renderMatches(animateNew){
   if(!now){
     sectionLbl.style.display='none';
     list.innerHTML = `<div class="empty-state">Pick your current track above to see your top 10 matches.</div>`;
+    lastRenderedResultsKey = '';
     return;
   }
 
@@ -3176,26 +3194,38 @@ function renderMatches(animateNew){
   // A saved Flow (from=now playing) means "last time, going into this track
   // worked great" — those get pinned above the algorithmic ranking.
   const flowToIds = showFlowChainSuggestions ? new Set(flows.filter(f=>f.from===now.id).map(f=>f.to)) : new Set();
-  const flowResults = restEligible.filter(t=>flowToIds.has(t.id)).map(scoreTrack).sort((a,b)=>b.overall-a.overall);
-  const regularResults = restEligible.filter(t=>!flowToIds.has(t.id)).map(scoreTrack).sort((a,b)=>b.overall-a.overall);
-  let results = [...flowResults, ...regularResults].slice(0, chainPick?9:10);
-  if(chainPick) results = [scoreTrack(chainPick), ...results];
-  const chainPickId = chainPick ? chainPick.id : null;
 
-  if(!results.some(r=>r.t.id===selectedMatchId)) selectedMatchId=null;
+  const renderToken = ++matchesRenderToken;
+  scoreChunked(restEligible, scoreTrack, (scored)=>{
+    if(renderToken !== matchesRenderToken) return; // superseded by a newer call — drop these stale results
+    const flowResults = scored.filter(r=>flowToIds.has(r.t.id)).sort((a,b)=>b.overall-a.overall);
+    const regularResults = scored.filter(r=>!flowToIds.has(r.t.id)).sort((a,b)=>b.overall-a.overall);
+    let results = [...flowResults, ...regularResults].slice(0, chainPick?9:10);
+    if(chainPick) results = [scoreTrack(chainPick), ...results];
+    const chainPickId = chainPick ? chainPick.id : null;
 
-  if(results.length===0){
-    sectionLbl.style.display='none';
-    const allPlayed = library.length>1 && library.every(t=>t.id===now.id || playedTrackIds.has(t.id));
-    const crateNote = activeCrateFilter ? ` in "${escapeHtml(activeCrateFilter.name)}"` : '';
-    list.innerHTML = allPlayed
-      ? `<div class="empty-state">You've played everything${crateNote} this session — hit Reset below to start fresh.</div>`
-      : `<div class="empty-state">${activeCrateFilter ? `No other tracks${crateNote} yet — add more, or switch back to All Tracks.` : 'Add more tracks to your library to see suggested matches.'}</div>`;
-    return;
-  }
-  sectionLbl.style.display='block';
+    if(!results.some(r=>r.t.id===selectedMatchId)) selectedMatchId=null;
 
-  list.innerHTML = results.map((r,i)=>{
+    if(results.length===0){
+      sectionLbl.style.display='none';
+      const allPlayed = library.length>1 && library.every(t=>t.id===now.id || playedTrackIds.has(t.id));
+      const crateNote = activeCrateFilter ? ` in "${escapeHtml(activeCrateFilter.name)}"` : '';
+      list.innerHTML = allPlayed
+        ? `<div class="empty-state">You've played everything${crateNote} this session — hit Reset below to start fresh.</div>`
+        : `<div class="empty-state">${activeCrateFilter ? `No other tracks${crateNote} yet — add more, or switch back to All Tracks.` : 'Add more tracks to your library to see suggested matches.'}</div>`;
+      lastRenderedResultsKey = '';
+      return;
+    }
+    sectionLbl.style.display='block';
+
+    // Skip the rebuild entirely if the result set is identical to what's
+    // already on screen — a real, frequent case (switching tabs, a
+    // re-render triggered by something that didn't actually change scores).
+    const resultsKey = results.map(r=>r.t.id+':'+r.overall).join(',')+'|'+chainPickId+'|'+selectedMatchId;
+    if(!animateNew && resultsKey===lastRenderedResultsKey) return;
+    lastRenderedResultsKey = resultsKey;
+
+    list.innerHTML = results.map((r,i)=>{
     const rounded = Math.round(r.bm.absDiff);
     const arrow = r.bm.diff>0 ? '▲' : (r.bm.diff<0 ? '▼' : '');
     const tempoNote = r.bm.mult===2 ? ' · half-time' : (r.bm.mult===0.5 ? ' · double-time' : '');
@@ -3274,6 +3304,7 @@ function renderMatches(animateNew){
       list.querySelectorAll('.match-row').forEach(r2=>r2.classList.toggle('open', r2.dataset.id===selectedMatchId));
     });
   });
+  }); // end scoreChunked callback
 }
 
 function fmtLoudness(v){ return v==null ? 'no loudness data' : v+' LUFS'; }
@@ -4126,7 +4157,7 @@ function renderFlowDetail(){
 /* =========================================================
    INIT
 ========================================================= */
-const APP_VERSION = '1.06';
+const APP_VERSION = '1.07';
 const APP_BUILD = '2026-09-08';
 document.getElementById('version-display').textContent = `${APP_VERSION} · ${APP_BUILD}`;
 let bootPromises = [];
