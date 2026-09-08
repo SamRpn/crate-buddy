@@ -17,7 +17,7 @@
     --line: #e7e7ec;
     --text: #1c1c1e;
     --dim: #8a8a90;
-    --accent: #ff5f6d;
+    --accent: #007AFF;
     --accent2: #ffa947;
     --radius: 16px;
     --radius-tight: 6px;
@@ -39,6 +39,7 @@
     --line: #302f34;
     --text: #f0f0f2;
     --dim: #9a9aa3;
+    --accent: #0A84FF;
   }
   html.dark body{background:var(--bg);}
   *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
@@ -61,7 +62,7 @@
   .organise-slide-in{animation:organise-slide 0.26s ease both;}
 
   /* ---- header / logo ---- */
-  header.top{position:sticky;top:0;z-index:70;padding:22px 20px 10px;display:flex;align-items:center;
+  header.top{position:sticky;top:0;z-index:70;padding:max(22px, env(safe-area-inset-top)) 20px 10px;display:flex;align-items:center;
     gap:12px;background:rgba(255,255,255,0.86);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);}
   html.dark header.top{background:rgba(16,17,20,0.82);}
   .logo{width:134px;height:52px;overflow:visible;flex-shrink:0;}
@@ -135,7 +136,7 @@
   /* ---- import ---- */
   .drop{border:1.5px dashed #d5d5db;border-radius:var(--radius);padding:36px 20px;
     text-align:center;color:var(--dim);cursor:pointer;background:var(--card);font-size:var(--text-body);line-height:1.6;}
-  .drop.drag{border-color:var(--accent);background:#fff6f4;}
+  .drop.drag{border-color:var(--accent);background:#eaf3ff;}
   .drop b{color:var(--text);display:block;font-size:var(--text-body-lg);margin-bottom:2px;}
   input[type=file]{display:none;}
 
@@ -145,6 +146,9 @@
   .collection-heading{display:flex;justify-content:space-between;align-items:baseline;
     margin:4px 2px 10px;font-size:var(--text-body-sm);font-weight:600;color:var(--text);}
   .collection-heading span:last-child{color:var(--dim);font-weight:600;}
+  .bulk-preview-btn{display:block;width:100%;margin-bottom:12px;background:var(--card);
+    border:1.5px dashed var(--line);border-radius:var(--radius-panel);padding:11px;
+    font-size:var(--text-body-sm);font-weight:600;color:var(--dim);cursor:pointer;}
 
   .manual-add{margin-top:10px;border:1.5px dashed #d5d5db;border-radius:var(--radius-panel);padding:14px 16px;
     text-align:center;color:var(--dim);cursor:pointer;background:var(--card);font-size:var(--text-body-sm);line-height:1.5;}
@@ -158,7 +162,7 @@
   .qrow .name{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
   .qrow .status{color:var(--dim);font-size:var(--text-body-sm);min-width:80px;text-align:right;}
   .qrow .status.ok{color:#2fbf5f;}
-  .qrow .status.err{color:var(--accent);}
+  .qrow .status.err{color:#dc2626;}
   .bar{width:50px;height:3px;background:var(--line);border-radius:2px;overflow:hidden;}
   .bar > i{display:block;height:100%;background:linear-gradient(90deg,var(--accent),var(--accent2));width:0%;}
 
@@ -167,15 +171,20 @@
   .track-row{background:var(--card);border-radius:var(--radius-card);padding:10px 12px;margin-bottom:8px;
     box-shadow:0 1px 2px rgba(0,0,0,0.04);}
   .track-row .head{display:flex;align-items:center;gap:9px;}
-  .track-row.selectable{cursor:pointer;}
-  .track-row.selected{background:#fff6f4;}
-  html.dark .track-row.selected{background:#2a1f1e;}
-  .select-check{width:22px;height:22px;border-radius:50%;border:2px solid var(--line);flex-shrink:0;
-    display:flex;align-items:center;justify-content:center;font-size:var(--text-body-sm);color:#fff;font-weight:700;}
+  #library-list.selecting .track-row{cursor:pointer;}
+  .track-row.selected{background:#eaf3ff;}
+  html.dark .track-row.selected{background:#132133;}
+  .select-check{width:0;height:22px;border-radius:50%;border:2px solid var(--line);flex-shrink:0;
+    display:flex;align-items:center;justify-content:center;font-size:var(--text-body-sm);color:#fff;font-weight:700;
+    overflow:hidden;opacity:0;box-sizing:border-box;
+    transition:width 0.24s cubic-bezier(0.34,1.15,0.64,1), opacity 0.18s ease, border-width 0.2s ease;}
+  #library-list.selecting .select-check{width:22px;opacity:1;}
   .select-check.checked{background:var(--accent);border-color:var(--accent);}
   @keyframes select-pop{0%{transform:scale(0.7);}55%{transform:scale(1.2);}100%{transform:scale(1);}}
   .select-check.pop{animation:select-pop 0.18s ease;}
-  @keyframes added-flash{0%{background:var(--card);}40%{background:rgba(22,163,74,0.18);}100%{background:var(--card);}}
+  .row-actions{display:flex;align-items:center;gap:9px;}
+  #library-list.selecting .row-actions{display:none;}
+  @keyframes added-flash{0%{background:var(--card);}40%{background:rgba(0,122,255,0.16);}100%{background:var(--card);}}
   .track-row.added-flash{animation:added-flash 0.22s ease;}
   .lib-toolbar{display:flex;align-items:center;gap:8px;margin-bottom:10px;min-height:32px;}
   .lib-toolbar button{background:var(--card);border:1px solid var(--line);border-radius:var(--radius-control);
@@ -202,10 +211,15 @@
   .track-title .a{color:var(--dim);font-size:var(--text-body-sm);margin-top:1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
   .mini-chart{flex-shrink:0;line-height:0;}
   .meta{font-size:var(--text-caption);color:var(--dim);white-space:nowrap;text-align:right;flex-shrink:0;}
+  @media (orientation: portrait){
+    .track-row .mini-chart, .track-row .meta{display:none;}
+  }
   .meta b{color:var(--text);}
   .edit-toggle,.del{background:none;border:none;color:#c9c9ce;cursor:pointer;font-size:var(--text-body);padding:2px 4px;flex-shrink:0;}
+  .add-preview-btn{background:none;border:1.5px dashed var(--line);border-radius:50%;color:var(--dim);cursor:pointer;
+    width:30px;height:30px;display:flex;align-items:center;justify-content:center;flex-shrink:0;padding:0;}
   .edit-toggle:hover{color:var(--cyan,#22a6d6);}
-  .del:hover{color:var(--accent);}
+  .del:hover{color:#dc2626;}
 
   .edit-panel{max-height:0;opacity:0;overflow:hidden;display:flex;flex-direction:column;gap:8px;
     transition:max-height 0.28s ease, opacity 0.22s ease;}
@@ -228,14 +242,14 @@
   .weights.open .weights-summary .weights-tri{transform:rotate(180deg);}
   .weights-save-row{display:flex;align-items:center;justify-content:space-between;margin-top:10px;}
   .weights-total{font-size:var(--text-body-sm);font-weight:800;color:#dc2626;}
-  .weights-total.valid{color:#16a34a;}
+  .weights-total.valid{color:var(--accent);}
   .weights-save-btn{position:relative;overflow:hidden;background:var(--line);border:1.5px solid transparent;
     border-radius:var(--radius-control);padding:8px 18px;cursor:not-allowed;}
-  .weights-save-btn.enabled{background:var(--card);border-color:#16a34a;cursor:pointer;}
-  .save-btn-fill{position:absolute;inset:0;background:#16a34a;opacity:0;transition:opacity 0.4s ease;}
+  .weights-save-btn.enabled{background:var(--card);border-color:var(--accent);cursor:pointer;}
+  .save-btn-fill{position:absolute;inset:0;background:var(--accent);opacity:0;transition:opacity 0.4s ease;}
   .save-btn-fill.filling{opacity:1;}
   .save-btn-label{position:relative;z-index:1;font-size:var(--text-body-sm);font-weight:700;color:var(--dim);}
-  .weights-save-btn.enabled .save-btn-label{color:#16a34a;}
+  .weights-save-btn.enabled .save-btn-label{color:var(--accent);}
   .weights-save-btn .save-btn-fill.filling ~ .save-btn-label{color:#fff;}
   .weights .content{max-height:0;overflow:hidden;opacity:0;
     transition:max-height 0.32s ease, opacity 0.22s ease;}
@@ -245,8 +259,7 @@
   .wrow{display:flex;align-items:center;gap:10px;margin-bottom:2px;font-size:var(--text-body-sm);color:var(--dim);}
   .wrow span.lbl{width:96px;flex-shrink:0;}
   .wrow span.val{width:34px;text-align:right;color:var(--text);font-weight:600;}
-  input[type=range]{flex:1;accent-color:#ff1414;}
-  .wrow input[type=range]{accent-color:#8e8e93;}
+  input[type=range]{flex:1;accent-color:var(--accent);}
   .tick-row{display:flex;justify-content:space-between;margin:2px 0 10px;padding:0 8px;}
   .tick-row span{width:2px;height:8px;border-radius:1px;background:#9ca3af;}
 
@@ -542,19 +555,19 @@
     <div class="tab-indicator" id="tab-indicator"></div>
     <button data-tab="import" class="active">
       <svg class="tab-logo" viewBox="0 0 118 26" xmlns="http://www.w3.org/2000/svg">
-        <text x="2" y="20" font-size="19" stroke-linejoin="round" paint-order="stroke fill"
-          letter-spacing="-0.5" rotate="-4,3,-2,4,-3,2,-1" transform="rotate(-2 58 13)">IMPORT</text>
+        <text x="59" y="20" font-size="19" text-anchor="middle" stroke-linejoin="round" paint-order="stroke fill"
+          letter-spacing="-0.5" rotate="-4,3,-2,4,-3,2,-1" transform="rotate(-2 59 13)">IMPORT</text>
       </svg>
     </button>
     <button data-tab="organise">
-      <svg class="tab-logo" viewBox="0 0 158 26" xmlns="http://www.w3.org/2000/svg">
-        <text x="79" y="20" font-size="19" text-anchor="middle" stroke-linejoin="round" paint-order="stroke fill"
-          letter-spacing="-1" rotate="-4,3,-2,4,-3,2,-1,3" transform="rotate(-1 79 13)">ORGANISE</text>
+      <svg class="tab-logo" viewBox="0 0 132 26" xmlns="http://www.w3.org/2000/svg">
+        <text x="66" y="20" font-size="19" text-anchor="middle" stroke-linejoin="round" paint-order="stroke fill"
+          letter-spacing="-2.2" rotate="-4,3,-2,4,-3,2,-1,3" transform="rotate(-1 66 13)">ORGANISE</text>
       </svg>
     </button>
     <button data-tab="match">
       <svg class="tab-logo" viewBox="0 0 66 26" xmlns="http://www.w3.org/2000/svg">
-        <text x="4" y="20" font-size="19" stroke-linejoin="round" paint-order="stroke fill"
+        <text x="33" y="20" font-size="19" text-anchor="middle" stroke-linejoin="round" paint-order="stroke fill"
           letter-spacing="-0.5" rotate="-4,3,-3,4" transform="rotate(2 33 13)">PLAY</text>
       </svg>
     </button>
@@ -596,6 +609,8 @@
       <span>Total Music Collection:</span>
       <span id="import-track-count"></span>
     </div>
+    <button class="bulk-preview-btn" id="bulk-preview-btn" style="display:none;"></button>
+    <input type="file" accept="audio/*" multiple id="bulk-preview-input" style="display:none;">
     <div id="library-list"></div>
   </section>
 
@@ -846,10 +861,13 @@ document.querySelectorAll('.tabs button').forEach(btn=>{
     TAB_ORDER.forEach(t=>{
       const sec = document.getElementById('tab-'+t);
       sec.style.display = (t===currentTab)?'block':'none';
-      if(t===currentTab){ sec.classList.remove('tab-fade'); void sec.offsetWidth; sec.classList.add('tab-fade'); }
     });
+    const activeSec = document.getElementById('tab-'+currentTab);
+    activeSec.classList.remove('tab-fade');
+    requestAnimationFrame(()=>activeSec.classList.add('tab-fade'));
     document.getElementById('footnote').style.display = (currentTab==='import') ? 'block':'none';
-    if(currentTab==='organise') renderOrganise();
+    if(currentTab!=='import') stopCurrentPreview();
+    if(currentTab==='organise') renderOrganise(true);
     if(currentTab==='match'){ requestWakeLock(); renderNowChip(); populateCrateFilterSelect(); }
     else{ releaseWakeLock(); renderNowChip(); }
   });
@@ -1061,14 +1079,18 @@ function updateBatchToast(current, total, filename, fileFrac){
   t.querySelector('.tstate').textContent = `${current} of ${total}`;
   bar.style.width = overallPct+'%';
 }
-function finishBatchToast(done, fail){
+function finishBatchToast(done, fail, dupes){
   if(!batchToast) return;
   const t = batchToast;
+  const dupeNote = dupes>0 ? ` (${dupes} duplicate${dupes===1?'':'s'} skipped)` : '';
   if(done>0){
     t.classList.add('success');
     const label = done===1 ? '1 track added to crate' : `${done} tracks added to crate`;
     const failNote = fail>0 ? ` — ${fail} failed` : '';
-    t.innerHTML = `${CHECK_SVG}<div class="tbody"><div class="tname">${label}${failNote}</div></div>`;
+    t.innerHTML = `${CHECK_SVG}<div class="tbody"><div class="tname">${label}${failNote}${dupeNote}</div></div>`;
+  } else if(dupes>0 && fail===0){
+    t.classList.add('success');
+    t.innerHTML = `${CHECK_SVG}<div class="tbody"><div class="tname">Already in your crate${dupeNote}</div></div>`;
   } else {
     t.classList.add('error');
     t.innerHTML = `<div class="tbody"><div class="tname">Couldn't analyse ${fail===1?'that track':'those tracks'}</div></div>`;
@@ -1080,12 +1102,20 @@ function finishBatchToast(done, fail){
 async function processBatch(){
   if(isProcessingBatch) return;
   isProcessingBatch = true;
-  let done=0, fail=0;
+  let done=0, fail=0, dupes=0;
+  const norm = s => (s||'').trim().toLowerCase();
   showHeaderProgress('Analyzing tracks…');
   while(pendingQueue.length>0){
     const file = pendingQueue.shift();
-    const total = done+fail+pendingQueue.length+1;
-    const current = done+fail+1;
+    const total = done+fail+dupes+pendingQueue.length+1;
+    const current = done+fail+dupes+1;
+    // Cheap pre-check — same filename+size as a track we already have means
+    // this is almost certainly the exact same file, so skip it before
+    // spending time decoding and analyzing it at all.
+    if(library.some(t=>t.sourceFile && t.sourceFile.name===file.name && t.sourceFile.size===file.size)){
+      dupes++;
+      continue;
+    }
     updateBatchToast(current, total, file.name, 0);
     setHeaderProgress(((current-1)/total)*100, `${current} of ${total} — ${file.name}`);
     try{
@@ -1093,6 +1123,12 @@ async function processBatch(){
         updateBatchToast(current, total, file.name, p);
         setHeaderProgress(((current-1+p)/total)*100);
       });
+      // Post-analysis check — catches the same song re-encoded or renamed,
+      // which the filename+size pre-check above can't catch.
+      if(library.some(t=>norm(t.name)===norm(track.name) && norm(t.artist)===norm(track.artist))){
+        dupes++;
+        continue;
+      }
       library.unshift(track);
       freshlyAddedIds.add(track.id);
       await persistTrackAdd(track);
@@ -1103,7 +1139,7 @@ async function processBatch(){
     }
   }
   renderLibrary(); renderNowPlayingSelect(); updateCount();
-  finishBatchToast(done, fail);
+  finishBatchToast(done, fail, dupes);
   setHeaderProgress(100);
   setTimeout(hideHeaderProgress, 400);
   isProcessingBatch = false;
@@ -1314,7 +1350,10 @@ async function analyzeFile(file, onProgress){
   onProgress(0.8);
 
   const keyInfo = estimateKey(mono, audioBuffer.sampleRate);
-  onProgress(0.92);
+  onProgress(0.9);
+
+  const previewAudio = extractPreviewDataUrl(audioBuffer, findLoudestWindowCenter(mono, audioBuffer.sampleRate, audioBuffer.duration));
+  onProgress(0.97);
 
   ctx.close();
 
@@ -1330,10 +1369,136 @@ async function analyzeFile(file, onProgress){
     duration: audioBuffer.duration,
     bpm: Math.round(bpm),
     key: keyInfo,
-    bands, loudness, peaks, icon,
+    bands, loudness, peaks, icon, previewAudio,
     sourceFile: {name: file.name, size: file.size}
   };
 }
+
+// Scans the middle 60% of the track (skipping intros/outros) for the loudest
+// *sustained* ~1.5s window — a rolling-energy approach rather than a single
+// peak sample, since one loud transient (a kick hit) isn't the same as "the
+// drop." Returns the center time of that window, in seconds.
+function findLoudestWindowCenter(mono, sampleRate, duration){
+  const searchStart = Math.floor(duration*0.2*sampleRate);
+  const searchEnd = Math.floor(duration*0.8*sampleRate);
+  const winSize = Math.floor(1.5*sampleRate);
+  const step = Math.floor(0.5*sampleRate);
+  let bestStart = searchStart, bestEnergy = -1;
+  if(searchEnd-winSize <= searchStart) return duration/2; // very short track — just use the middle
+  for(let i=searchStart; i+winSize<=searchEnd; i+=step){
+    let sum=0;
+    for(let j=i;j<i+winSize;j+=4){ sum += mono[j]*mono[j]; } // sample every 4th for speed
+    if(sum>bestEnergy){ bestEnergy=sum; bestStart=i; }
+  }
+  return (bestStart + winSize/2) / sampleRate;
+}
+// Slices a 15s clip anchored 5s before the loudest moment, downsamples to a
+// low mono rate (this is a quick-preview, not a critical-listening copy),
+// and encodes it as a small WAV data URL — playable directly in <audio>,
+// and safe to store as a plain string in either storage backend.
+function extractPreviewDataUrl(audioBuffer, anchorTime){
+  const duration = audioBuffer.duration;
+  let start = Math.max(0, anchorTime-5);
+  let end = Math.min(duration, start+15);
+  start = Math.max(0, end-15);
+  const srcRate = audioBuffer.sampleRate;
+  const startSample = Math.floor(start*srcRate);
+  const endSample = Math.floor(end*srcRate);
+  const ch0 = audioBuffer.getChannelData(0);
+  const ch1 = audioBuffer.numberOfChannels>1 ? audioBuffer.getChannelData(1) : null;
+  const sliceLen = Math.max(1, endSample-startSample);
+  const targetRate = 16000;
+  const ratio = srcRate/targetRate;
+  const outLen = Math.max(1, Math.floor(sliceLen/ratio));
+  const out = new Int16Array(outLen);
+  for(let i=0;i<outLen;i++){
+    const s = startSample + Math.floor(i*ratio);
+    let v = ch1 ? (ch0[s]+ch1[s])/2 : (ch0[s]||0);
+    v = Math.max(-1, Math.min(1, v));
+    out[i] = v<0 ? v*0x8000 : v*0x7FFF;
+  }
+  const buffer = new ArrayBuffer(44 + out.length*2);
+  const view = new DataView(buffer);
+  const writeStr = (offset,str)=>{ for(let i=0;i<str.length;i++) view.setUint8(offset+i, str.charCodeAt(i)); };
+  writeStr(0,'RIFF'); view.setUint32(4, 36+out.length*2, true);
+  writeStr(8,'WAVE'); writeStr(12,'fmt ');
+  view.setUint32(16,16,true); view.setUint16(20,1,true); view.setUint16(22,1,true);
+  view.setUint32(24,targetRate,true); view.setUint32(28,targetRate*2,true);
+  view.setUint16(32,2,true); view.setUint16(34,16,true);
+  writeStr(36,'data'); view.setUint32(40,out.length*2,true);
+  for(let i=0;i<out.length;i++) view.setInt16(44+i*2, out[i], true);
+  const bytes = new Uint8Array(buffer);
+  let binary='';
+  const chunk=0x8000;
+  for(let i=0;i<bytes.length;i+=chunk){ binary += String.fromCharCode.apply(null, bytes.subarray(i, i+chunk)); }
+  return 'data:audio/wav;base64,'+btoa(binary);
+}
+// For tracks already in the library from before this feature existed — the
+// original audio was never kept, so a preview can only be (re)built by
+// pointing back at that same file. This skips the full BPM/key/band re-run,
+// it only extracts the preview clip.
+async function generatePreviewFromFile(file){
+  const arrBuf = await file.arrayBuffer();
+  const ctx = new (window.AudioContext||window.webkitAudioContext)();
+  const audioBuffer = await ctx.decodeAudioData(arrBuf);
+  const mono = mixToMono(audioBuffer);
+  const previewAudio = extractPreviewDataUrl(audioBuffer, findLoudestWindowCenter(mono, audioBuffer.sampleRate, audioBuffer.duration));
+  ctx.close();
+  return previewAudio;
+}
+
+// Matches a batch of re-selected files back to their existing track records
+// by filename+size (stored on every track since it was first imported), so
+// previews can be backfilled for many tracks in one go instead of one at a
+// time — no need for the user to know or care which track is which.
+async function processBulkPreviewFiles(files){
+  const candidates = library.filter(t=>!t.previewAudio && t.sourceFile);
+  if(candidates.length===0){ showInfoToast('No tracks are missing a preview', false); return; }
+  const matches = [];
+  for(const file of files){
+    const track = candidates.find(t=>t.sourceFile.name===file.name && t.sourceFile.size===file.size && !matches.some(m=>m.track.id===t.id));
+    if(track) matches.push({file, track});
+  }
+  if(matches.length===0){
+    showInfoToast("None of those files matched a track that's missing a preview", true);
+    return;
+  }
+  showHeaderProgress(`Preview 1 of ${matches.length}…`);
+  let done=0, failed=0;
+  for(let i=0;i<matches.length;i++){
+    setHeaderProgress((i/matches.length)*100, `Preview ${i+1} of ${matches.length} — ${matches[i].track.name}`);
+    try{
+      matches[i].track.previewAudio = await generatePreviewFromFile(matches[i].file);
+      await persistTrackAdd(matches[i].track);
+      done++;
+    }catch(err){
+      console.error(err);
+      failed++;
+    }
+  }
+  setHeaderProgress(100);
+  setTimeout(hideHeaderProgress, 400);
+  renderLibrary();
+  const unmatched = files.length - matches.length;
+  showInfoToast(`Added ${done} preview${done===1?'':'s'}` +
+    `${failed?`, ${failed} failed`:''}${unmatched?`, ${unmatched} file${unmatched===1?'':'s'} didn't match any track`:''}`, done>0);
+}
+function updateBulkPreviewBtn(){
+  const btn = document.getElementById('bulk-preview-btn');
+  if(!btn) return;
+  const missing = library.filter(t=>!t.previewAudio).length;
+  if(missing===0){ btn.style.display='none'; return; }
+  btn.style.display = 'block';
+  btn.textContent = `🎵 Add previews for ${missing} track${missing===1?'':'s'} without one`;
+}
+document.getElementById('bulk-preview-btn').addEventListener('click', ()=>{
+  document.getElementById('bulk-preview-input').click();
+});
+document.getElementById('bulk-preview-input').addEventListener('change', e=>{
+  const files = Array.from(e.target.files||[]);
+  e.target.value='';
+  if(files.length) processBulkPreviewFiles(files);
+});
 
 function mixToMono(audioBuffer){
   const ch0=audioBuffer.getChannelData(0);
@@ -1714,8 +1879,9 @@ function bandCompareChartSvg(nowBands, suggBands, detailed){
   const w = detailed?250:50, h = detailed?150:26;
   const padL = detailed?26:0, padB = detailed?16:0;
   const plotW = w-padL, colW = plotW/4;
+  const svgAttrs = detailed ? `width="100%" style="display:block;"` : `width="${w}" height="${h}"`;
   if(!nowBands || !suggBands){
-    return `<svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}">
+    return `<svg ${svgAttrs} viewBox="0 0 ${w} ${h}">
       <line x1="3" y1="${h/2}" x2="${w-3}" y2="${h/2}" stroke="#e2e2e8" stroke-width="2" stroke-dasharray="2,3"/>
     </svg>`;
   }
@@ -1741,27 +1907,14 @@ function bandCompareChartSvg(nowBands, suggBands, detailed){
       marks += `<text x="${(x0+x1)/2}" y="${chartH+12}" font-size="9" text-anchor="middle" fill="#9ca3af">${labelNames[k]}</text>`;
     }
   });
-  return `<svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}">${marks}</svg>`;
+  return `<svg ${svgAttrs} viewBox="0 0 ${w} ${h}">${marks}</svg>`;
 }
 
 function trackRowHtml(t){
   const selected = selectedTrackIds.has(t.id);
-  if(selectionMode){
-    return `<div class="track-row selectable${selected?' selected':''}" data-id="${t.id}">
-      <div class="head">
-        <div class="select-check${selected?' checked':''}">${selected?'✓':''}</div>
-        <img class="art" src="${t.icon}">
-        <div class="track-title">
-          <div class="t">${escapeHtml(t.name)}</div>
-          <div class="a">${escapeHtml(t.artist||'Unknown artist')}</div>
-        </div>
-        <div class="mini-chart">${miniLineChartSvg(t.bands)}</div>
-        <div class="meta"><b>${t.bpm}</b> bpm<br>${t.key.camelot} ${t.key.name}</div>
-      </div>
-    </div>`;
-  }
-  return `<div class="track-row${freshlyAddedIds.has(t.id)?' row-fresh':''}" data-id="${t.id}">
+  return `<div class="track-row${freshlyAddedIds.has(t.id)?' row-fresh':''}${selected?' selected':''}" data-id="${t.id}">
     <div class="head">
+      <div class="select-check${selected?' checked':''}">${selected?'✓':''}</div>
       <img class="art" src="${t.icon}">
       <div class="track-title">
         <div class="t">${escapeHtml(t.name)}</div>
@@ -1769,14 +1922,28 @@ function trackRowHtml(t){
       </div>
       <div class="mini-chart">${miniLineChartSvg(t.bands)}</div>
       <div class="meta"><b>${t.bpm}</b> bpm<br>${t.key.camelot} ${t.key.name}</div>
-      <button class="fav-star${favourites.includes(t.id)?' is-fav':''}" data-fav="${t.id}" title="Add to Favourites">
-        <svg viewBox="0 0 24 24" width="17" height="17">
-          <path d="M12 2 L14.9 8.6 L22 9.3 L16.7 14.1 L18.2 21 L12 17.4 L5.8 21 L7.3 14.1 L2 9.3 L9.1 8.6 Z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
-          <path class="star-fill" d="M12 2 L14.9 8.6 L22 9.3 L16.7 14.1 L18.2 21 L12 17.4 L5.8 21 L7.3 14.1 L2 9.3 L9.1 8.6 Z" fill="#eab308" opacity="${favourites.includes(t.id)?'1':'0'}"/>
-        </svg>
-      </button>
-      <button class="edit-toggle" data-edit="${t.id}">✎</button>
-      <button class="del" data-del="${t.id}">✕</button>
+      <div class="row-actions">
+        ${t.previewAudio ? `
+        <button class="match-play-btn" data-preview="${t.id}" title="Play 15s preview">
+          <svg viewBox="0 0 34 34" width="30" height="30">
+            <circle class="play-fill" cx="17" cy="17" r="16" style="fill:var(--accent)" opacity="0"></circle>
+            <circle cx="17" cy="17" r="15" fill="none" style="stroke:var(--accent)" stroke-width="2"></circle>
+            <path class="play-tri" d="M13.5 9.5 L24 17 L13.5 24.5 Z" fill="none" style="stroke:var(--accent)" stroke-width="1.8" stroke-linejoin="round"></path>
+          </svg>
+        </button>` : `
+        <button class="add-preview-btn" data-add-preview="${t.id}" title="Add a 15s preview clip">
+          <svg viewBox="0 0 24 24" width="16" height="16"><path fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" d="M12 5v14M5 12h14"/></svg>
+        </button>
+        <input type="file" accept="audio/*" class="add-preview-input" id="add-preview-input-${t.id}" style="display:none;">`}
+        <button class="fav-star${favourites.includes(t.id)?' is-fav':''}" data-fav="${t.id}" title="Add to Favourites">
+          <svg viewBox="0 0 24 24" width="17" height="17">
+            <path d="M12 2 L14.9 8.6 L22 9.3 L16.7 14.1 L18.2 21 L12 17.4 L5.8 21 L7.3 14.1 L2 9.3 L9.1 8.6 Z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
+            <path class="star-fill" d="M12 2 L14.9 8.6 L22 9.3 L16.7 14.1 L18.2 21 L12 17.4 L5.8 21 L7.3 14.1 L2 9.3 L9.1 8.6 Z" fill="#eab308" opacity="${favourites.includes(t.id)?'1':'0'}"/>
+          </svg>
+        </button>
+        <button class="edit-toggle" data-edit="${t.id}">✎</button>
+        <button class="del" data-del="${t.id}">✕</button>
+      </div>
     </div>
     <div class="edit-panel" id="edit-${t.id}">
       <div class="edit-pic-row">
@@ -1799,7 +1966,28 @@ function trackRowHtml(t){
 let selectionMode = false;
 let selectedTrackIds = new Set();
 let freshlyAddedIds = new Set(); // consumed once by renderLibrary to animate newly-added rows in
+let currentPreviewAudio = null, currentPreviewBtn = null;
+function stopCurrentPreview(){
+  if(currentPreviewAudio){ currentPreviewAudio.pause(); currentPreviewAudio = null; }
+  if(currentPreviewBtn){
+    const fill = currentPreviewBtn.querySelector('.play-fill'), tri = currentPreviewBtn.querySelector('.play-tri');
+    if(fill) fill.classList.remove('filling');
+    if(tri) tri.classList.remove('filling');
+    currentPreviewBtn = null;
+  }
+}
 
+function exitSelectionMode(){
+  selectionMode=false; selectedTrackIds.clear();
+  const el = document.getElementById('library-list');
+  el.classList.remove('selecting');
+  el.querySelectorAll('.track-row').forEach(row=>{
+    row.classList.remove('selected');
+    const check = row.querySelector('.select-check');
+    if(check){ check.classList.remove('checked'); check.textContent=''; }
+  });
+  renderLibToolbar();
+}
 function renderLibToolbar(){
   const el = document.getElementById('lib-toolbar');
   if(!el) return;
@@ -1808,7 +1996,9 @@ function renderLibToolbar(){
     el.innerHTML = `<button id="select-toggle-btn">Select</button>`;
     document.getElementById('select-toggle-btn').addEventListener('click', ()=>{
       selectionMode=true; selectedTrackIds.clear();
-      renderLibToolbar(); renderLibrary();
+      document.getElementById('library-list').classList.add('selecting');
+      hapticTap(10);
+      renderLibToolbar();
     });
     return;
   }
@@ -1823,7 +2013,14 @@ function renderLibToolbar(){
   document.getElementById('select-all-btn').addEventListener('click', ()=>{
     if(allSelected) selectedTrackIds.clear();
     else library.forEach(t=>selectedTrackIds.add(t.id));
-    renderLibToolbar(); renderLibrary();
+    document.querySelectorAll('#library-list .track-row').forEach(row=>{
+      const isSel = selectedTrackIds.has(row.dataset.id);
+      row.classList.toggle('selected', isSel);
+      const check = row.querySelector('.select-check');
+      check.classList.toggle('checked', isSel);
+      check.textContent = isSel ? '✓' : '';
+    });
+    renderLibToolbar();
   });
   document.getElementById('add-to-crate-btn').addEventListener('click', ()=>{
     const picker = document.getElementById('crate-picker');
@@ -1846,10 +2043,7 @@ function renderLibToolbar(){
         hapticTap(20);
         document.querySelectorAll('.track-row.selected').forEach(r=>r.classList.add('added-flash'));
         showInfoToast(`Added ${added} track${added===1?'':'s'} to "${crate.name}"${skipped?`, ${skipped} already there`:''}`, false);
-        setTimeout(()=>{
-          selectionMode=false; selectedTrackIds.clear();
-          renderLibToolbar(); renderLibrary();
-        }, 220);
+        setTimeout(exitSelectionMode, 220);
       });
     });
   });
@@ -1857,41 +2051,40 @@ function renderLibToolbar(){
     if(selectedTrackIds.size===0) return;
     if(!confirm(`Delete ${selectedTrackIds.size} track${selectedTrackIds.size===1?'':'s'}? This can't be undone.`)) return;
     const ids = Array.from(selectedTrackIds);
+    const rows = ids.map(id=>document.querySelector(`.track-row[data-id="${id}"]`)).filter(Boolean);
+    await Promise.all(rows.map(row=>new Promise(resolve=>animateRemoveEl(row, resolve))));
     library = library.filter(t=>!selectedTrackIds.has(t.id));
     for(const id of ids){ await persistTrackDelete(id); await cleanupReferencesToTrack(id); }
     selectionMode=false; selectedTrackIds.clear();
     renderLibToolbar(); renderLibrary(); renderNowPlayingSelect(); renderMatches(); updateCount();
   });
-  document.getElementById('cancel-select-btn').addEventListener('click', ()=>{
-    selectionMode=false; selectedTrackIds.clear();
-    renderLibToolbar(); renderLibrary();
-  });
+  document.getElementById('cancel-select-btn').addEventListener('click', exitSelectionMode);
 }
 
 function renderLibrary(){
+  stopCurrentPreview();
+  updateBulkPreviewBtn();
   const el = document.getElementById('library-list');
   renderLibToolbar();
   if(library.length===0){ el.innerHTML = `<div class="lib-empty">No tracks yet — add some from Import.</div>`; return; }
   el.innerHTML = library.map(trackRowHtml).join('');
   freshlyAddedIds.clear();
 
-  if(selectionMode){
-    el.querySelectorAll('.track-row').forEach(row=>{
-      row.addEventListener('click', ()=>{
-        const id = row.dataset.id;
-        const nowSelected = !selectedTrackIds.has(id);
-        if(nowSelected) selectedTrackIds.add(id); else selectedTrackIds.delete(id);
-        row.classList.toggle('selected', nowSelected);
-        const check = row.querySelector('.select-check');
-        check.classList.toggle('checked', nowSelected);
-        check.textContent = nowSelected ? '✓' : '';
-        check.classList.remove('pop'); void check.offsetWidth; check.classList.add('pop');
-        hapticTap(10);
-        renderLibToolbar(); // cheap — just the small toolbar, not the whole list
-      });
+  el.querySelectorAll('.track-row').forEach(row=>{
+    row.addEventListener('click', ()=>{
+      if(!selectionMode) return;
+      const id = row.dataset.id;
+      const nowSelected = !selectedTrackIds.has(id);
+      if(nowSelected) selectedTrackIds.add(id); else selectedTrackIds.delete(id);
+      row.classList.toggle('selected', nowSelected);
+      const check = row.querySelector('.select-check');
+      check.classList.toggle('checked', nowSelected);
+      check.textContent = nowSelected ? '✓' : '';
+      check.classList.remove('pop'); void check.offsetWidth; check.classList.add('pop');
+      hapticTap(10);
+      renderLibToolbar(); // cheap — just the small toolbar, not the whole list
     });
-    return;
-  }
+  });
 
   el.querySelectorAll('[data-del]').forEach(btn=>{
     btn.addEventListener('click', ()=>{
@@ -1903,6 +2096,50 @@ function renderLibrary(){
         await cleanupReferencesToTrack(id);
         renderLibrary(); renderNowPlayingSelect(); renderMatches(); updateCount();
       });
+    });
+  });
+
+  el.querySelectorAll('[data-preview]').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const id = btn.dataset.preview;
+      if(currentPreviewBtn===btn){ stopCurrentPreview(); return; }
+      stopCurrentPreview();
+      const t = library.find(x=>x.id===id);
+      if(!t || !t.previewAudio) return;
+      const audio = new Audio(t.previewAudio);
+      currentPreviewAudio = audio; currentPreviewBtn = btn;
+      btn.querySelector('.play-fill').classList.add('filling');
+      btn.querySelector('.play-tri').classList.add('filling');
+      hapticTap(10);
+      audio.addEventListener('ended', stopCurrentPreview);
+      audio.play().catch(()=>{ stopCurrentPreview(); showInfoToast("Couldn't play that preview", true); });
+    });
+  });
+  el.querySelectorAll('[data-add-preview]').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      document.getElementById('add-preview-input-'+btn.dataset.addPreview).click();
+    });
+  });
+  el.querySelectorAll('.add-preview-input').forEach(input=>{
+    input.addEventListener('change', async e=>{
+      const file = e.target.files[0];
+      e.target.value='';
+      if(!file) return;
+      const id = input.id.replace('add-preview-input-','');
+      const track = library.find(t=>t.id===id);
+      if(!track) return;
+      showHeaderProgress('Preparing preview…');
+      try{
+        track.previewAudio = await generatePreviewFromFile(file);
+        await persistTrackAdd(track);
+        setHeaderProgress(100); setTimeout(hideHeaderProgress,300);
+        renderLibrary();
+        showInfoToast('Preview added', false);
+      }catch(err){
+        console.error(err);
+        hideHeaderProgress();
+        showInfoToast("Couldn't read that file for a preview", true);
+      }
     });
   });
 
@@ -2141,54 +2378,31 @@ async function saveFavourites(){
   }catch(e){ console.error('favourites save failed', e); }
 }
 
-// Scores how well two tracks would sit back-to-back, using the same
-// BPM/key/bands/loudness math as the main matching engine, but with fixed
-// default weights (independent of the live sliders) so chain generation is
-// consistent regardless of what the user has their weights set to.
-function scoreJoint(a, b){
-  const bm = bpmMatchInfo(a.bpm, b.bpm);
-  const bs = Math.round(bm.score);
-  const kd = camelotDistance(a.key.camelot, b.key.camelot);
-  const bandS = bandsScore(a.bands, b.bands);
-  const loudS = loudnessScore(a.loudness, b.loudness);
-  const parts = [{score:bs,weight:35},{score:kd.score,weight:30}];
-  if(bandS!=null) parts.push({score:bandS,weight:20});
-  if(loudS!=null) parts.push({score:loudS,weight:15});
-  const total = parts.reduce((s,p)=>s+p.weight,0)||1;
-  return Math.round(parts.reduce((s,p)=>s+p.score*p.weight,0)/total);
-}
-// Greedily stitches 5 non-overlapping saved Flows into one 10-track chain —
-// each new Flow is picked because its "from" track scores best against the
-// chain's current last track, so the joints between flows are algorithmically
-// validated even though only the flows themselves were manually proven.
-function tryBuildChain(availablePairs){
-  const pairs = [...availablePairs];
-  for(let i=pairs.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [pairs[i],pairs[j]]=[pairs[j],pairs[i]]; }
-  const used = new Set();
-  const seedIdx = pairs.findIndex(p=>!used.has(p.from)&&!used.has(p.to));
-  if(seedIdx===-1) return null;
-  const chainPairs = [pairs[seedIdx]];
-  used.add(pairs[seedIdx].from); used.add(pairs[seedIdx].to);
-  let lastTrack = library.find(t=>t.id===pairs[seedIdx].to);
-  // Try to extend up to 5 flows (10 tracks), but a chain of at least 3 flows
-  // (6 tracks) is still a valid, saveable result — chains can now run
-  // anywhere from 6 to 10 tracks rather than requiring the full 10.
+// Walks a path through your saved Flows by following shared endpoints — the
+// "to" of one Flow becomes the "from" of the next — so every single link in
+// a Chain is a transition you've actually proven, not an algorithmic guess
+// bridging two independent pairs. A chain of 5 linked Flows shares endpoints
+// down to 6 total tracks (A→B→C→D→E→F), not 10.
+function tryBuildChain(availableFlows){
+  const flowsCopy = [...availableFlows];
+  for(let i=flowsCopy.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [flowsCopy[i],flowsCopy[j]]=[flowsCopy[j],flowsCopy[i]]; }
+  if(flowsCopy.length===0) return null;
+  const seed = flowsCopy[0];
+  const chainFlows = [seed];
+  const usedTracks = new Set([seed.from, seed.to]);
+  let lastTrack = seed.to;
   for(let step=1; step<5; step++){
-    let best=null, bestScore=-1;
-    for(const p of pairs){
-      if(used.has(p.from) || used.has(p.to)) continue;
-      const fromTrack = library.find(t=>t.id===p.from);
-      if(!fromTrack || !lastTrack) continue;
-      const score = scoreJoint(lastTrack, fromTrack);
-      if(score>bestScore){ bestScore=score; best=p; }
-    }
-    if(!best) break; // stop extending, but keep whatever we've already built
-    chainPairs.push(best); used.add(best.from); used.add(best.to);
-    lastTrack = library.find(t=>t.id===best.to);
+    // The next link must actually start where the chain currently ends —
+    // that's what "flows into each other" means — and mustn't revisit a
+    // track already in the chain (no loops).
+    const next = flowsCopy.find(f=>f.from===lastTrack && !usedTracks.has(f.to));
+    if(!next) break; // stop extending, but keep whatever we've already linked
+    chainFlows.push(next);
+    usedTracks.add(next.to);
+    lastTrack = next.to;
   }
-  if(chainPairs.length<3) return null; // shorter than 6 tracks isn't a real "chain"
-  const trackIds = [];
-  chainPairs.forEach(p=>{ trackIds.push(p.from, p.to); });
+  if(chainFlows.length<3) return null; // fewer than 3 linked flows (4 tracks) isn't a real "chain"
+  const trackIds = [chainFlows[0].from, ...chainFlows.map(f=>f.to)];
   return trackIds;
 }
 function generateChainCandidates(){
@@ -2598,9 +2812,9 @@ function renderMatches(animateNew){
         <div class="match-score" style="color:${pctColor(r.overall)}">${r.overall}%</div>
         <button class="match-play-btn" data-setnow="${r.t.id}" title="Play this now">
           <svg viewBox="0 0 34 34" width="34" height="34">
-            <circle class="play-fill" cx="17" cy="17" r="16" fill="#16a34a" opacity="0"></circle>
-            <circle cx="17" cy="17" r="15" fill="none" stroke="#16a34a" stroke-width="2"></circle>
-            <path class="play-tri" d="M13.5 9.5 L24 17 L13.5 24.5 Z" fill="none" stroke="#16a34a" stroke-width="1.8" stroke-linejoin="round"></path>
+            <circle class="play-fill" cx="17" cy="17" r="16" style="fill:var(--accent)" opacity="0"></circle>
+            <circle cx="17" cy="17" r="15" fill="none" style="stroke:var(--accent)" stroke-width="2"></circle>
+            <path class="play-tri" d="M13.5 9.5 L24 17 L13.5 24.5 Z" fill="none" style="stroke:var(--accent)" stroke-width="1.8" stroke-linejoin="round"></path>
           </svg>
         </button>
         <div class="chev" title="Show details">▾</div>
@@ -2748,7 +2962,7 @@ function importLibraryFile(file){
       for(const c of payload.chains){
         if(!c || !Array.isArray(c.trackIds)) continue;
         const remapped = c.trackIds.map(id=>idRemap[id]).filter(Boolean);
-        if(remapped.length < 6) continue; // a track dropped out — no longer a valid chain
+        if(remapped.length < 4) continue; // a track dropped out — no longer a valid chain
         const key = remapped.join(',');
         if(chains.some(x=>x.trackIds.join(',')===key)) continue;
         chains.push({id:'ch_'+Date.now()+'_'+Math.random().toString(36).slice(2,7),
@@ -3098,7 +3312,7 @@ let manualFlowFrom = null, manualFlowTo = null;
 let openHistorySessionId = null; // only relevant when openCrateId === '__history__'
 let generatedChainCandidates = [];
 
-function renderOrganise(){
+function renderOrganise(skipAnim){
   const listView = document.getElementById('organise-list-view');
   const detailView = document.getElementById('organise-detail-view');
   const goingToDetail = openCrateId !== null;
@@ -3118,10 +3332,14 @@ function renderOrganise(){
     renderOrganiseList();
   }
   showEl.style.display = 'block';
-  showEl.style.setProperty('--slide-from', goingToDetail ? '18px' : '-18px');
-  showEl.classList.remove('organise-slide-in');
-  void showEl.offsetWidth;
-  showEl.classList.add('organise-slide-in');
+  if(skipAnim){
+    showEl.classList.remove('organise-slide-in');
+  } else {
+    showEl.style.setProperty('--slide-from', goingToDetail ? '18px' : '-18px');
+    showEl.classList.remove('organise-slide-in');
+    void showEl.offsetWidth;
+    showEl.classList.add('organise-slide-in');
+  }
 }
 
 function renderOrganiseList(){
@@ -3207,7 +3425,7 @@ function renderFavDetail(){
 
 function renderChainDetail(){
   const el = document.getElementById('organise-detail-content');
-  let html = `<div class="section-lbl">Chains — 5 saved Flows stitched into one sequence</div>
+  let html = `<div class="section-lbl">Chains — saved Flows linked end-to-end into one sequence</div>
     <button class="new-crate-btn" id="generate-chains-btn">🔀 Generate 5 chains</button>`;
   if(generatedChainCandidates.length>0){
     html += `<div class="section-lbl" style="margin-top:14px;">New candidates — tap Save to keep one</div>`;
