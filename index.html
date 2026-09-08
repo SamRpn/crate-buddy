@@ -58,6 +58,7 @@
     background-size:200% 100%;animation:shimmer-sweep 1.3s ease-in-out infinite;}
   @keyframes tab-fade-in{from{opacity:0;transform:translateY(4px);}to{opacity:1;transform:translateY(0);}}
   .tab-fade{animation:tab-fade-in 0.22s ease both;}
+  .tab-animating{will-change:opacity, transform;}
   @keyframes organise-slide{from{opacity:0;transform:translateX(var(--slide-from, 18px));}to{opacity:1;transform:translateX(0);}}
   .organise-slide-in{animation:organise-slide 0.26s ease both;}
 
@@ -235,10 +236,9 @@
   .track-title{flex:1;min-width:0;}
   .track-title .t{font-weight:600;font-size:var(--text-body);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
   .track-title .a{color:var(--dim);font-size:var(--text-body-sm);margin-top:1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-  .mini-chart{flex-shrink:0;line-height:0;}
   .meta{font-size:var(--text-caption);color:var(--dim);white-space:nowrap;text-align:right;flex-shrink:0;}
   @media (orientation: portrait){
-    .track-row .mini-chart, .track-row .meta{display:none;}
+    .track-row .meta-key{display:none;}
   }
   .meta b{color:var(--text);}
   .edit-toggle,.del{background:none;border:none;color:#c9c9ce;cursor:pointer;font-size:var(--text-body);padding:2px 4px;flex-shrink:0;}
@@ -931,7 +931,9 @@ document.querySelectorAll('.tabs button').forEach(btn=>{
     });
     const activeSec = document.getElementById('tab-'+currentTab);
     activeSec.classList.remove('tab-fade');
+    activeSec.classList.add('tab-animating');
     requestAnimationFrame(()=>activeSec.classList.add('tab-fade'));
+    setTimeout(()=>activeSec.classList.remove('tab-animating'), 260);
     document.getElementById('footnote').style.display = (currentTab==='import') ? 'block':'none';
     if(currentTab!=='import') stopCurrentPreview();
     if(currentTab==='organise') renderOrganise(true);
@@ -2058,8 +2060,7 @@ function trackRowHtml(t, opts){
         <div class="t">${escapeHtml(t.name)}</div>
         <div class="a">${escapeHtml(t.artist||'Unknown artist')}</div>
       </div>
-      <div class="mini-chart">${miniLineChartSvg(t.bands)}</div>
-      <div class="meta"><b>${t.bpm}</b> bpm<br>${t.key.camelot} ${t.key.name}</div>
+      <div class="meta"><span class="meta-bpm"><b>${t.bpm}</b> bpm</span><br><span class="meta-key">${t.key.camelot} ${t.key.name}</span></div>
       <div class="row-actions">
         ${t.previewAudio ? `
         <button class="match-play-btn" data-preview="${t.id}" title="Play 15s preview">
@@ -4157,7 +4158,7 @@ function renderFlowDetail(){
 /* =========================================================
    INIT
 ========================================================= */
-const APP_VERSION = '1.07';
+const APP_VERSION = '1.08';
 const APP_BUILD = '2026-09-08';
 document.getElementById('version-display').textContent = `${APP_VERSION} · ${APP_BUILD}`;
 let bootPromises = [];
