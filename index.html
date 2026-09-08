@@ -392,7 +392,8 @@
     100%{opacity:0.22;}
   }
 
-  .match-row.flow-match{border:2px solid #6b7280;
+  .match-row.flow-match{border:2px solid #6b7280;}
+  .match-row.flow-match .match-main{
     background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='9'%3E%3Cpath d='M0,4.5 Q5,0.5 10,4.5 T20,4.5' stroke='%236b7280' stroke-width='1.4' fill='none' opacity='0.36'/%3E%3C/svg%3E");
     background-repeat:repeat;}
   .chain-badge{display:inline-flex;align-items:center;gap:4px;font-size:var(--text-micro);font-weight:700;
@@ -401,7 +402,8 @@
   .chain-start-icon{display:inline-flex;align-items:center;justify-content:center;width:15px;height:15px;
     background:#e5e7eb;color:#374151;border-radius:4px;font-size:var(--text-micro);margin-left:2px;vertical-align:middle;}
   html.dark .chain-start-icon{background:#4b5563;color:#e5e7eb;}
-  .match-row.chain-match{border:2px solid #6b7280;
+  .match-row.chain-match{border:2px solid #6b7280;}
+  .match-row.chain-match .match-main{
     background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='26' height='13'%3E%3Cg transform='rotate(28 13 6.5)' stroke='%236b7280' stroke-width='1.1' fill='none' opacity='0.38'%3E%3Cellipse cx='5.5' cy='6.5' rx='4' ry='2.4'/%3E%3Cellipse cx='13' cy='6.5' rx='4' ry='2.4'/%3E%3Cellipse cx='20.5' cy='6.5' rx='4' ry='2.4'/%3E%3C/g%3E%3C/svg%3E");
     background-repeat:repeat;}
   .graffiti-label{height:21px;width:auto;display:block;}
@@ -933,7 +935,7 @@ document.querySelectorAll('.tabs button').forEach(btn=>{
     document.getElementById('footnote').style.display = (currentTab==='import') ? 'block':'none';
     if(currentTab!=='import') stopCurrentPreview();
     if(currentTab==='organise') renderOrganise(true);
-    if(currentTab==='match'){ requestWakeLock(); renderNowChip(); populateCrateFilterSelect(); renderMatches(); }
+    if(currentTab==='match'){ requestWakeLock(); renderNowChip(); populateCrateFilterSelect(); if(suggestionsEverRendered) renderDecks(); else renderMatches(); }
     else{ releaseWakeLock(); renderNowChip(); }
     updateHeaderScrollState();
   });
@@ -2003,7 +2005,7 @@ function miniLineChartSvg(bands){
 // green-to-orange-to-red scale, same dB tolerance as the row shape).
 // detailed=true renders much bigger with a real dB axis and band-name labels,
 // for the row breakdown.
-function bandCompareChartSvg(nowBands, suggBands, detailed){
+function bandCompareChartSvg(nowBands, suggBands, detailed, colors){
   const w = detailed?250:50, h = detailed?150:26;
   const padL = detailed?26:0, padB = detailed?16:0;
   const plotW = w-padL, colW = plotW/4;
@@ -2027,9 +2029,9 @@ function bandCompareChartSvg(nowBands, suggBands, detailed){
   BAND_KEYS.forEach((k,i)=>{
     const x0=padL+i*colW+3, x1=padL+(i+1)*colW-3;
     const yNow = yFor(nowBands[k]);
-    marks += `<line x1="${x0}" y1="${yNow}" x2="${x1}" y2="${yNow}" stroke="#adadb5" stroke-width="${detailed?4:2}" stroke-linecap="round"/>`;
+    marks += `<line x1="${x0}" y1="${yNow}" x2="${x1}" y2="${yNow}" stroke="${colors?colors[0]:'#adadb5'}" stroke-width="${detailed?4:2}" stroke-linecap="round"/>`;
     const ySugg = yFor(suggBands[k]);
-    const color = pctColor(bandCloseness(nowBands[k], suggBands[k]));
+    const color = colors ? colors[1] : pctColor(bandCloseness(nowBands[k], suggBands[k]));
     marks += `<line x1="${x0}" y1="${ySugg}" x2="${x1}" y2="${ySugg}" stroke="${color}" stroke-width="${detailed?4.6:2.4}" stroke-linecap="round"/>`;
     if(detailed){
       marks += `<text x="${(x0+x1)/2}" y="${chartH+12}" font-size="9" text-anchor="middle" fill="#9ca3af">${labelNames[k]}</text>`;
@@ -2047,20 +2049,9 @@ function trackRowHtml(t, opts){
     ? `<button class="del" ${removeAttr}="${t.id}" title="Remove from this list">✕</button>`
     : `<button class="del" data-del="${t.id}" title="Delete from your collection">✕</button>`;
   return `<div class="track-row drag-row${freshlyAddedIds.has(t.id)?' row-fresh':''}${selected?' selected':''}" data-id="${t.id}">
-    <div class="drag-backdrop"><div class="drag-eq"><i></i><i></i><i></i></div></div>
-    <div class="drag-impact"></div>
     <div class="head drag-content">
       <div class="select-check${selected?' checked':''}">${selected?'✓':''}</div>
       <div class="drag-sleeve">
-        <div class="drag-vinyl">
-          <svg viewBox="0 0 100 100" width="100%" height="100%">
-            <circle cx="50" cy="50" r="49" fill="#161616"/>
-            <circle cx="50" cy="50" r="41" fill="none" stroke="#2a2a2a" stroke-width="1"/>
-            <circle cx="50" cy="50" r="33" fill="none" stroke="#2a2a2a" stroke-width="1"/>
-            <circle cx="50" cy="50" r="20" fill="#f2f2ed"/>
-            <circle cx="50" cy="50" r="2.5" fill="#111"/>
-          </svg>
-        </div>
         <img class="art" src="${t.icon}">
       </div>
       <div class="track-title drag-info">
@@ -2128,6 +2119,26 @@ let dragPtr = null;           // tracks the live pointer gesture only; independe
 let dragBraking = null;       // the gesture currently winding down, if any — force-stopped if a new one starts
 
 function dragElsFor(row){
+  if(!row.querySelector('.drag-backdrop')){
+    const prefix = document.createElement('div');
+    prefix.innerHTML = `<div class="drag-backdrop"><div class="drag-eq"><i></i><i></i><i></i></div></div><div class="drag-impact"></div>`;
+    row.insertBefore(prefix.children[1], row.firstChild);
+    row.insertBefore(prefix.children[0], row.firstChild);
+    const sleeve = row.querySelector('.drag-sleeve');
+    if(sleeve){
+      const vinylWrap = document.createElement('div');
+      vinylWrap.innerHTML = `<div class="drag-vinyl">
+        <svg viewBox="0 0 100 100" width="100%" height="100%">
+          <circle cx="50" cy="50" r="49" fill="#161616"/>
+          <circle cx="50" cy="50" r="41" fill="none" stroke="#2a2a2a" stroke-width="1"/>
+          <circle cx="50" cy="50" r="33" fill="none" stroke="#2a2a2a" stroke-width="1"/>
+          <circle cx="50" cy="50" r="20" fill="#f2f2ed"/>
+          <circle cx="50" cy="50" r="2.5" fill="#111"/>
+        </svg>
+      </div>`;
+      sleeve.insertBefore(vinylWrap.firstElementChild, sleeve.firstChild);
+    }
+  }
   return { row, backdrop: row.querySelector('.drag-backdrop'), eq: row.querySelector('.drag-eq'),
     impact: row.querySelector('.drag-impact'), content: row.querySelector('.drag-content'),
     vinyl: row.querySelector('.drag-vinyl'), vinylSvg: row.querySelector('.drag-vinyl svg'),
@@ -2644,8 +2655,7 @@ function renderNowChip(){
   clearTimeout(headerNowHideTimer);
   if(show){
     el.style.display='flex'; div1.style.display='block'; div2.style.display='block';
-    void el.offsetWidth;
-    el.classList.add('show');
+    requestAnimationFrame(()=>el.classList.add('show'));
   } else {
     el.classList.remove('show');
     headerNowHideTimer = setTimeout(()=>{
@@ -3054,18 +3064,8 @@ const BAND_KEYS=['low','lowmid','himid','high'];
 
 let selectedMatchId = null;
 
-function renderMatches(animateNew){
+function renderDecks(){
   const holder=document.getElementById('now-card-holder');
-  const list=document.getElementById('match-list');
-  const sectionLbl=document.getElementById('match-section');
-  const now=library.find(t=>t.id===nowPlayingId);
-
-  const wBpm=activeWeights['w-bpm'];
-  const wKey=activeWeights['w-key'];
-  const wBands=activeWeights['w-bands'];
-  const wLoud=activeWeights['w-loud'];
-  const wTotal=(wBpm+wKey+wBands+wLoud)||1;
-
   const deckAT = deckA ? library.find(t=>t.id===deckA.trackId) : null;
   const deckBT = deckB ? library.find(t=>t.id===deckB.trackId) : null;
   const deckCard = (t, label, colorVar, empty) => empty ? `
@@ -3098,7 +3098,7 @@ function renderMatches(animateNew){
         <span><i style="background:#e94f9e"></i>Deck A</span>
         <span><i style="background:#2bb3a3"></i>Deck B</span>
       </div>
-      ${(deckAT&&deckBT) ? bandCompareChartSvg(deckAT.bands, deckBT.bands, true) : `<div class="empty-state" style="padding:10px 0;">Load a track into both decks to compare.</div>`}
+      ${(deckAT&&deckBT) ? bandCompareChartSvg(deckAT.bands, deckBT.bands, true, ['#e94f9e','#2bb3a3']) : `<div class="empty-state" style="padding:10px 0;">Load a track into both decks to compare.</div>`}
     </div>
   </div>`;
   if(deckA && deckB){
@@ -3114,6 +3114,21 @@ function renderMatches(animateNew){
     document.getElementById('tonal-dropdown').classList.toggle('open', tonalDropdownOpen);
     hapticTap(10);
   });
+}
+
+let suggestionsEverRendered = false;
+function renderMatches(animateNew){
+  renderDecks();
+  suggestionsEverRendered = true;
+  const list=document.getElementById('match-list');
+  const sectionLbl=document.getElementById('match-section');
+  const now=library.find(t=>t.id===nowPlayingId);
+
+  const wBpm=activeWeights['w-bpm'];
+  const wKey=activeWeights['w-key'];
+  const wBands=activeWeights['w-bands'];
+  const wLoud=activeWeights['w-loud'];
+  const wTotal=(wBpm+wKey+wBands+wLoud)||1;
 
   if(!now){
     sectionLbl.style.display='none';
@@ -3209,20 +3224,9 @@ function renderMatches(animateNew){
       : bandCompareChartSvg(now.bands, r.t.bands, true);
     return `
     <div class="match-row drag-row${r.t.id===selectedMatchId?' open':''}${isChain?' chain-match':(isFlow?' flow-match':'')}${animateNew?' row-fresh':''}" data-id="${r.t.id}"${animateNew?` style="animation-delay:${i*35}ms;"`:''}>
-      <div class="drag-backdrop"><div class="drag-eq"><i></i><i></i><i></i></div></div>
-      <div class="drag-impact"></div>
       <div class="match-main drag-content">
         <div class="rank">${i+1}</div>
         <div class="drag-sleeve">
-          <div class="drag-vinyl">
-            <svg viewBox="0 0 100 100" width="100%" height="100%">
-              <circle cx="50" cy="50" r="49" fill="#161616"/>
-              <circle cx="50" cy="50" r="41" fill="none" stroke="#2a2a2a" stroke-width="1"/>
-              <circle cx="50" cy="50" r="33" fill="none" stroke="#2a2a2a" stroke-width="1"/>
-              <circle cx="50" cy="50" r="20" fill="#f2f2ed"/>
-              <circle cx="50" cy="50" r="2.5" fill="#111"/>
-            </svg>
-          </div>
           <img class="art" src="${r.t.icon}" style="width:56px;height:56px;border-radius:var(--radius-thumb);">
         </div>
         <div class="match-info drag-info">
@@ -4122,7 +4126,7 @@ function renderFlowDetail(){
 /* =========================================================
    INIT
 ========================================================= */
-const APP_VERSION = '1.04';
+const APP_VERSION = '1.06';
 const APP_BUILD = '2026-09-08';
 document.getElementById('version-display').textContent = `${APP_VERSION} · ${APP_BUILD}`;
 let bootPromises = [];
