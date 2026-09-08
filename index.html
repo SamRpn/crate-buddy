@@ -168,6 +168,10 @@
   .select-check{width:22px;height:22px;border-radius:50%;border:2px solid var(--line);flex-shrink:0;
     display:flex;align-items:center;justify-content:center;font-size:var(--text-body-sm);color:#fff;font-weight:700;}
   .select-check.checked{background:var(--accent);border-color:var(--accent);}
+  @keyframes select-pop{0%{transform:scale(0.7);}55%{transform:scale(1.2);}100%{transform:scale(1);}}
+  .select-check.pop{animation:select-pop 0.18s ease;}
+  @keyframes added-flash{0%{background:var(--card);}40%{background:rgba(22,163,74,0.18);}100%{background:var(--card);}}
+  .track-row.added-flash{animation:added-flash 0.22s ease;}
   .lib-toolbar{display:flex;align-items:center;gap:8px;margin-bottom:10px;min-height:32px;}
   .lib-toolbar button{background:var(--card);border:1px solid var(--line);border-radius:var(--radius-control);
     padding:7px 12px;font-size:var(--text-body-sm);font-weight:600;color:var(--dim);cursor:pointer;}
@@ -242,6 +246,9 @@
   .tick-row span{width:2px;height:8px;border-radius:1px;background:#9ca3af;}
 
   .now-search-row{display:flex;align-items:center;gap:8px;margin-bottom:14px;}
+  .crate-filter-row{display:flex;align-items:center;gap:8px;margin-bottom:14px;font-size:var(--text-body-sm);color:var(--dim);}
+  .crate-filter-row select{flex:1;background:var(--card);border:1px solid var(--line);border-radius:var(--radius-control);
+    padding:9px 10px;font-size:var(--text-body-sm);color:var(--text);}
   .now-search{position:relative;flex:1;min-width:0;}
   .now-undo-btn{flex-shrink:0;}
   .now-search input{width:100%;background:var(--card);color:var(--text);border:none;border-radius:var(--radius-panel);
@@ -656,6 +663,10 @@
         <svg viewBox="0 0 24 24" width="19" height="19"><path fill="currentColor" d="M12.5 8V4.5L6 10l6.5 5.5V12c3.3 0 6 2.7 6 6 0 .7-.1 1.4-.4 2 1.5-1.1 2.4-2.9 2.4-4.9 0-3.3-2.7-6-6-6Z"/></svg>
       </button>
     </div>
+    <div class="crate-filter-row">
+      <span class="crate-filter-label">Suggest from</span>
+      <select id="crate-filter-select"><option value="">All Tracks</option></select>
+    </div>
     <div class="history-and-clock">
       <div id="play-history"></div>
       <div class="play-clock" id="play-clock"></div>
@@ -826,7 +837,7 @@ document.querySelectorAll('.tabs button').forEach(btn=>{
     });
     document.getElementById('footnote').style.display = (currentTab==='import') ? 'block':'none';
     if(currentTab==='organise') renderOrganise();
-    if(currentTab==='match'){ requestWakeLock(); renderNowChip(); }
+    if(currentTab==='match'){ requestWakeLock(); renderNowChip(); populateCrateFilterSelect(); }
     else{ releaseWakeLock(); renderNowChip(); }
   });
 });
@@ -1783,9 +1794,13 @@ function renderLibToolbar(){
           else { crate.trackIds.push(id); added++; }
         });
         await saveCrates();
+        hapticTap(20);
+        document.querySelectorAll('.track-row.selected').forEach(r=>r.classList.add('added-flash'));
         showInfoToast(`Added ${added} track${added===1?'':'s'} to "${crate.name}"${skipped?`, ${skipped} already there`:''}`, false);
-        selectionMode=false; selectedTrackIds.clear();
-        renderLibToolbar(); renderLibrary();
+        setTimeout(()=>{
+          selectionMode=false; selectedTrackIds.clear();
+          renderLibToolbar(); renderLibrary();
+        }, 220);
       });
     });
   });
@@ -1815,8 +1830,15 @@ function renderLibrary(){
     el.querySelectorAll('.track-row').forEach(row=>{
       row.addEventListener('click', ()=>{
         const id = row.dataset.id;
-        if(selectedTrackIds.has(id)) selectedTrackIds.delete(id); else selectedTrackIds.add(id);
-        renderLibToolbar(); renderLibrary();
+        const nowSelected = !selectedTrackIds.has(id);
+        if(nowSelected) selectedTrackIds.add(id); else selectedTrackIds.delete(id);
+        row.classList.toggle('selected', nowSelected);
+        const check = row.querySelector('.select-check');
+        check.classList.toggle('checked', nowSelected);
+        check.textContent = nowSelected ? '✓' : '';
+        check.classList.remove('pop'); void check.offsetWidth; check.classList.add('pop');
+        hapticTap(10);
+        renderLibToolbar(); // cheap — just the small toolbar, not the whole list
       });
     });
     return;
@@ -2381,6 +2403,21 @@ function bandCloseness(nowDb, suggDb){
 }
 
 const CHART_DB_MIN=-22, CHART_DB_MAX=8;
+
+let suggestionsCrateFilterId = '';
+function populateCrateFilterSelect(){
+  const sel = document.getElementById('crate-filter-select');
+  if(!sel) return;
+  const current = sel.value;
+  sel.innerHTML = `<option value="">All Tracks</option>` +
+    crates.map(c=>`<option value="${c.id}">${escapeHtml(c.name)}</option>`).join('');
+  sel.value = crates.some(c=>c.id===current) ? current : '';
+  suggestionsCrateFilterId = sel.value;
+}
+document.getElementById('crate-filter-select').addEventListener('change', e=>{
+  suggestionsCrateFilterId = e.target.value;
+  renderMatches();
+});
 const BAND_KEYS=['low','lowmid','himid','high'];
 
 let selectedMatchId = null;
@@ -2431,7 +2468,9 @@ function renderMatches(animateNew){
     return {t,bs,bm,kd,bandS,loudDiff,loudS,overall};
   }
 
-  const eligible = library.filter(t=>t.id!==now.id && !playedTrackIds.has(t.id));
+  const activeCrateFilter = suggestionsCrateFilterId ? crates.find(c=>c.id===suggestionsCrateFilterId) : null;
+  const crateFilterSet = activeCrateFilter ? new Set(activeCrateFilter.trackIds) : null;
+  const eligible = library.filter(t=>t.id!==now.id && !playedTrackIds.has(t.id) && (!crateFilterSet || crateFilterSet.has(t.id)));
 
   // If we're mid-chain, the chain's next step gets pinned above even the
   // Flow matches — it's not just one proven transition, it's a whole
@@ -2462,9 +2501,10 @@ function renderMatches(animateNew){
   if(results.length===0){
     sectionLbl.style.display='none';
     const allPlayed = library.length>1 && library.every(t=>t.id===now.id || playedTrackIds.has(t.id));
+    const crateNote = activeCrateFilter ? ` in "${escapeHtml(activeCrateFilter.name)}"` : '';
     list.innerHTML = allPlayed
-      ? `<div class="empty-state">You've played everything in your crate this session — hit Reset below to start fresh.</div>`
-      : `<div class="empty-state">Add more tracks to your library to see suggested matches.</div>`;
+      ? `<div class="empty-state">You've played everything${crateNote} this session — hit Reset below to start fresh.</div>`
+      : `<div class="empty-state">${activeCrateFilter ? `No other tracks${crateNote} yet — add more, or switch back to All Tracks.` : 'Add more tracks to your library to see suggested matches.'}</div>`;
     return;
   }
   sectionLbl.style.display='block';
@@ -3242,7 +3282,7 @@ function renderFlowDetail(){
 loadLibrary();
 loadFlows();
 loadChains();
-loadCrates();
+loadCrates().then(populateCrateFilterSelect);
 loadFavourites();
 document.getElementById('now-undo-btn').addEventListener('click', undoLastSelection);
 loadFlowChainSetting();
