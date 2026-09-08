@@ -168,9 +168,9 @@
 
   /* ---- track rows (library) ---- */
   .lib-empty, .empty-state{padding:50px 20px;text-align:center;color:var(--dim);font-size:var(--text-body);line-height:1.6;}
-  .track-row{background:var(--card);border-radius:var(--radius-card);padding:10px 12px;margin-bottom:8px;
+  .track-row{background:var(--card);border-radius:var(--radius-card);margin-bottom:8px;
     box-shadow:0 1px 2px rgba(0,0,0,0.04);}
-  .track-row .head{display:flex;align-items:center;gap:9px;}
+  .track-row .head{display:flex;align-items:center;gap:9px;padding:10px 12px;}
   #library-list.selecting .track-row{cursor:pointer;}
   .track-row.selected{background:#eaf3ff;}
   html.dark .track-row.selected{background:#132133;}
@@ -186,6 +186,26 @@
   #library-list.selecting .row-actions{display:none;}
   @keyframes added-flash{0%{background:var(--card);}40%{background:rgba(0,122,255,0.16);}100%{background:var(--card);}}
   .track-row.added-flash{animation:added-flash 0.22s ease;}
+
+  /* ---- drag-to-preview: works identically in Import, Organise, and Play ---- */
+  .drag-row{position:relative;overflow:hidden;touch-action:pan-y;}
+  .drag-backdrop{position:absolute;inset:0;width:80px;background:var(--accent);
+    display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;z-index:0;}
+  .drag-eq{display:flex;align-items:flex-end;gap:3px;height:16px;opacity:0;}
+  .drag-eq i{display:block;width:3px;background:#fff;border-radius:1px;}
+  .drag-eq i:nth-child(1){height:40%;} .drag-eq i:nth-child(2){height:90%;} .drag-eq i:nth-child(3){height:60%;}
+  @keyframes drag-eq-bar{0%,100%{transform:scaleY(0.4);}50%{transform:scaleY(1);}}
+  .drag-eq.playing i{animation:drag-eq-bar 0.9s ease-in-out infinite;transform-origin:bottom;}
+  .drag-eq.playing i:nth-child(2){animation-delay:0.15s;} .drag-eq.playing i:nth-child(3){animation-delay:0.3s;}
+  .drag-impact{position:absolute;left:29px;top:50%;width:20px;height:20px;margin-top:-10px;border-radius:50%;
+    background:radial-gradient(circle, rgba(255,255,255,0.95), rgba(255,255,255,0) 70%);
+    opacity:0;transform:scale(0.3);pointer-events:none;z-index:4;}
+  .drag-sleeve{position:relative;flex-shrink:0;z-index:1;}
+  .drag-vinyl{position:absolute;inset:0;border-radius:50%;transform:translateX(0%);pointer-events:none;z-index:0;}
+  .drag-sleeve .art{position:relative;z-index:1;}
+  .drag-content{position:relative;z-index:1;background:var(--card);}
+  .drag-info{transition:transform 0.32s cubic-bezier(.3,.9,.4,1);}
+
   .lib-toolbar{display:flex;align-items:center;gap:8px;margin-bottom:10px;min-height:32px;}
   .lib-toolbar button{background:var(--card);border:1px solid var(--line);border-radius:var(--radius-control);
     padding:7px 12px;font-size:var(--text-body-sm);font-weight:600;color:var(--dim);cursor:pointer;}
@@ -218,6 +238,8 @@
   .edit-toggle,.del{background:none;border:none;color:#c9c9ce;cursor:pointer;font-size:var(--text-body);padding:2px 4px;flex-shrink:0;}
   .add-preview-btn{background:none;border:1.5px dashed var(--line);border-radius:50%;color:var(--dim);cursor:pointer;
     width:30px;height:30px;display:flex;align-items:center;justify-content:center;flex-shrink:0;padding:0;}
+  .now-playing-text-btn{background:var(--accent);color:#fff;border:none;border-radius:var(--radius-control);
+    padding:6px 10px;font-size:var(--text-caption);font-weight:700;cursor:pointer;flex-shrink:0;white-space:nowrap;}
   .edit-toggle:hover{color:var(--cyan,#22a6d6);}
   .del:hover{color:#dc2626;}
 
@@ -543,6 +565,10 @@
           <input type="range" id="clock-drift" min="0" max="100" value="50" style="flex:1;">
           <span id="clock-drift-val" style="font-size:var(--text-body-sm);color:var(--dim);min-width:30px;text-align:right;">50%</span>
         </div>
+      </div>
+      <div class="modal-row">
+        <span>Vinyl brake effect</span>
+        <label class="switch"><input type="checkbox" id="vinyl-brake-toggle" checked><span class="switch-slider"></span></label>
       </div>
       <div class="modal-row" style="border-top:1px solid var(--line);padding-top:14px;margin-top:4px;">
         <span style="color:var(--dim);font-size:var(--text-caption);">Version</span>
@@ -1910,13 +1936,32 @@ function bandCompareChartSvg(nowBands, suggBands, detailed){
   return `<svg ${svgAttrs} viewBox="0 0 ${w} ${h}">${marks}</svg>`;
 }
 
-function trackRowHtml(t){
+function trackRowHtml(t, opts){
+  opts = opts || {};
+  const showEdit = opts.showEdit !== false;
+  const removeAttr = opts.removeAttr || null;
   const selected = selectedTrackIds.has(t.id);
-  return `<div class="track-row${freshlyAddedIds.has(t.id)?' row-fresh':''}${selected?' selected':''}" data-id="${t.id}">
-    <div class="head">
+  const delBtn = removeAttr
+    ? `<button class="del" ${removeAttr}="${t.id}" title="Remove from this list">✕</button>`
+    : `<button class="del" data-del="${t.id}" title="Delete from your collection">✕</button>`;
+  return `<div class="track-row drag-row${freshlyAddedIds.has(t.id)?' row-fresh':''}${selected?' selected':''}" data-id="${t.id}">
+    <div class="drag-backdrop"><div class="drag-eq"><i></i><i></i><i></i></div></div>
+    <div class="drag-impact"></div>
+    <div class="head drag-content">
       <div class="select-check${selected?' checked':''}">${selected?'✓':''}</div>
-      <img class="art" src="${t.icon}">
-      <div class="track-title">
+      <div class="drag-sleeve">
+        <div class="drag-vinyl">
+          <svg viewBox="0 0 100 100" width="100%" height="100%">
+            <circle cx="50" cy="50" r="49" fill="#161616"/>
+            <circle cx="50" cy="50" r="41" fill="none" stroke="#2a2a2a" stroke-width="1"/>
+            <circle cx="50" cy="50" r="33" fill="none" stroke="#2a2a2a" stroke-width="1"/>
+            <circle cx="50" cy="50" r="20" fill="#f2f2ed"/>
+            <circle cx="50" cy="50" r="2.5" fill="#111"/>
+          </svg>
+        </div>
+        <img class="art" src="${t.icon}">
+      </div>
+      <div class="track-title drag-info">
         <div class="t">${escapeHtml(t.name)}</div>
         <div class="a">${escapeHtml(t.artist||'Unknown artist')}</div>
       </div>
@@ -1935,17 +1980,18 @@ function trackRowHtml(t){
           <svg viewBox="0 0 24 24" width="16" height="16"><path fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" d="M12 5v14M5 12h14"/></svg>
         </button>
         <input type="file" accept="audio/*" class="add-preview-input" id="add-preview-input-${t.id}" style="display:none;">`}
+        ${!removeAttr ? `<button class="now-playing-text-btn" data-setnow="${t.id}" title="Set as Now Playing">Now Playing</button>` : ''}
         <button class="fav-star${favourites.includes(t.id)?' is-fav':''}" data-fav="${t.id}" title="Add to Favourites">
           <svg viewBox="0 0 24 24" width="17" height="17">
             <path d="M12 2 L14.9 8.6 L22 9.3 L16.7 14.1 L18.2 21 L12 17.4 L5.8 21 L7.3 14.1 L2 9.3 L9.1 8.6 Z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
             <path class="star-fill" d="M12 2 L14.9 8.6 L22 9.3 L16.7 14.1 L18.2 21 L12 17.4 L5.8 21 L7.3 14.1 L2 9.3 L9.1 8.6 Z" fill="#eab308" opacity="${favourites.includes(t.id)?'1':'0'}"/>
           </svg>
         </button>
-        <button class="edit-toggle" data-edit="${t.id}">✎</button>
-        <button class="del" data-del="${t.id}">✕</button>
+        ${showEdit ? `<button class="edit-toggle" data-edit="${t.id}">✎</button>` : ''}
+        ${delBtn}
       </div>
     </div>
-    <div class="edit-panel" id="edit-${t.id}">
+    ${showEdit ? `<div class="edit-panel" id="edit-${t.id}">
       <div class="edit-pic-row">
         <img class="edit-pic-preview" id="edit-pic-preview-${t.id}" src="${t.icon}">
         <button class="edit-pic-btn" data-pic="${t.id}">Change picture</button>
@@ -1959,7 +2005,7 @@ function trackRowHtml(t){
         <button class="edit-save" data-save="${t.id}">Save</button>
         <button class="edit-cancel" data-cancel="${t.id}">Cancel</button>
       </div>
-    </div>
+    </div>` : ''}
   </div>`;
 }
 
@@ -1967,6 +2013,161 @@ let selectionMode = false;
 let selectedTrackIds = new Set();
 let freshlyAddedIds = new Set(); // consumed once by renderLibrary to animate newly-added rows in
 let currentPreviewAudio = null, currentPreviewBtn = null;
+// ===== Drag-to-preview: works identically in Import, Organise, Play =====
+const DRAG_CAP = 80;          // matches .drag-backdrop width — how far the row visually slides
+const DRAG_PULL = 130;        // total thumb travel needed to reach the cap (the "resistance" range)
+const DRAG_POWER = 3;         // higher = more exponential resistance
+const DRAG_REVEAL_MS = 320;   // vinyl pop-out / info-shift / final snap-back — matches the info bar's own fall-back speed
+const DRAG_RAMP_MS = 2000;    // vinyl brake: playbackRate ramp duration, both spin-up and spin-down
+const DRAG_FADE_IN_MS = 500;
+const DRAG_FADE_OUT_MS = 2000;
+const DRAG_VINYL_PCT = 58;    // how much of the disc peeks out from behind the sleeve
+let vinylBrakeEnabled = true;
+let dragPtr = null;           // tracks the live pointer gesture only; independent of audio/animation state below
+let dragBraking = null;       // the gesture currently winding down, if any — force-stopped if a new one starts
+
+function dragElsFor(row){
+  return { row, backdrop: row.querySelector('.drag-backdrop'), eq: row.querySelector('.drag-eq'),
+    impact: row.querySelector('.drag-impact'), content: row.querySelector('.drag-content'),
+    vinyl: row.querySelector('.drag-vinyl'), vinylSvg: row.querySelector('.drag-vinyl svg'),
+    info: row.querySelector('.drag-info') };
+}
+function dragSetVisual(els, px){
+  els.content.style.transform = 'translateX('+px+'px)';
+  els.backdrop.style.opacity = String(px/DRAG_CAP);
+}
+function dragSpinLoop(state){
+  if(state.stopped) return;
+  const elapsed = performance.now() - state.speedStart;
+  let rate = state.speedDir===1 ? Math.min(1, elapsed/DRAG_RAMP_MS)
+    : state.speedDir===-1 ? Math.max(0, 1-elapsed/DRAG_RAMP_MS) : 1;
+  if(state.audio && !state.audio.paused) state.audio.playbackRate = Math.max(0.05, rate);
+  state.rot = (state.rot + 3*Math.max(0.05,rate)) % 360;
+  if(state.els.vinylSvg) state.els.vinylSvg.style.transform = 'rotate('+state.rot+'deg)';
+  if(state.speedDir===1 && rate>=1 && !state.eqShown){
+    state.eqShown = true;
+    state.els.eq.style.transition=''; state.els.eq.style.opacity='1'; state.els.eq.classList.add('playing');
+  }
+  state.rafId = requestAnimationFrame(()=>dragSpinLoop(state));
+}
+function dragFadeVolume(audio, from, to, ms){
+  const start = performance.now();
+  function step(){
+    if(audio.paused && to===0) return;
+    const t = Math.min(1, (performance.now()-start)/ms);
+    try{ audio.volume = from + (to-from)*t; }catch(e){}
+    if(t<1) requestAnimationFrame(step);
+  }
+  step();
+}
+function dragActivate(state){
+  if(state.active) return;
+  state.active = true;
+  hapticTap(15);
+  stopCurrentPreview();
+  const t = library.find(x=>x.id===state.trackId);
+  if(t && t.previewAudio){
+    const audio = new Audio(t.previewAudio);
+    audio.loop = true; audio.volume = 0; audio.playbackRate = 0.05;
+    state.audio = audio;
+    audio.play().catch(()=>{});
+    dragFadeVolume(audio, 0, 1, DRAG_FADE_IN_MS);
+  }
+  state.speedDir = 1; state.speedStart = performance.now();
+  if(!state.rafId) dragSpinLoop(state);
+  state.els.vinyl.style.transition = 'transform '+DRAG_REVEAL_MS+'ms cubic-bezier(.3,.9,.4,1)';
+  state.els.vinyl.style.transform = 'translateX('+DRAG_VINYL_PCT+'%)';
+  state.els.info.style.transition = 'transform '+DRAG_REVEAL_MS+'ms cubic-bezier(.3,.9,.4,1)';
+  state.els.info.style.transform = 'translateX(26px)';
+  const impact = state.els.impact;
+  impact.style.transition='none'; impact.style.opacity='0.95'; impact.style.transform='scale(0.3)';
+  void impact.offsetWidth;
+  impact.style.transition='transform 0.45s ease-out, opacity 0.45s ease-out';
+  impact.style.opacity='0'; impact.style.transform='scale(3.4)';
+}
+function dragFullStop(state){
+  state.stopped = true;
+  if(state.audio){ state.audio.pause(); state.audio=null; }
+  if(state.rafId) cancelAnimationFrame(state.rafId);
+  clearTimeout(state.brakeTimer);
+  if(dragBraking===state) dragBraking=null;
+  const els = state.els;
+  els.eq.style.transition=''; els.eq.style.opacity='0'; els.eq.classList.remove('playing');
+  els.vinyl.style.transition = 'transform '+DRAG_REVEAL_MS+'ms cubic-bezier(.34,1.15,.64,1)';
+  els.vinyl.style.transform = 'translateX(0%)';
+  els.info.style.transition = 'transform '+DRAG_REVEAL_MS+'ms cubic-bezier(.34,1.15,.64,1)';
+  els.info.style.transform = 'translateX(0px)';
+  els.content.style.transition = 'transform '+DRAG_REVEAL_MS+'ms cubic-bezier(.34,1.15,.64,1)';
+  dragSetVisual(els, 0);
+  setTimeout(()=>{ els.content.style.transition=''; els.vinyl.style.transition=''; els.info.style.transition=''; }, DRAG_REVEAL_MS);
+}
+function dragBeginBrake(state){
+  dragBraking = state;
+  state.speedDir = -1; state.speedStart = performance.now();
+  if(state.audio) dragFadeVolume(state.audio, state.audio.volume, 0, DRAG_FADE_OUT_MS);
+  const rampMs = vinylBrakeEnabled ? DRAG_RAMP_MS : 150;
+  state.els.eq.style.transition = 'opacity '+rampMs+'ms ease';
+  state.els.eq.style.opacity = '0';
+  state.els.eq.classList.remove('playing');
+  state.brakeTimer = setTimeout(()=>dragFullStop(state), rampMs);
+}
+function dragPointerDown(e){
+  if(dragPtr) return;
+  const row = e.target.closest('.drag-row');
+  if(!row) return;
+  if(e.target.closest('.row-actions, .select-check, .edit-panel')) return;
+  if(row.closest('#library-list.selecting')) return;
+  if(row.classList.contains('open')) return; // Play: only drag when the dropdown is closed
+  const point = e.touches ? e.touches[0] : e;
+  dragPtr = { row, trackId: row.dataset.id, startX: point.clientX, startY: point.clientY,
+    locked: null, state: null };
+}
+function dragPointerMove(e){
+  if(!dragPtr) return;
+  const point = e.touches ? e.touches[0] : e;
+  const dx = point.clientX - dragPtr.startX, dy = point.clientY - dragPtr.startY;
+  if(dragPtr.locked===null){
+    if(Math.abs(dx)<8 && Math.abs(dy)<8) return; // small wobble tolerance before committing to a direction
+    dragPtr.locked = Math.abs(dx) > Math.abs(dy)*1.4;
+    if(!dragPtr.locked){ dragPtr=null; return; } // vertical intent — leave scrolling alone entirely
+    if(dragBraking) dragFullStop(dragBraking); // a new gesture starting cuts off any still-braking previous one
+    dragPtr.state = { els: dragElsFor(dragPtr.row), trackId: dragPtr.trackId, active:false,
+      audio:null, rafId:null, rot:0, speedDir:0, speedStart:0, eqShown:false, stopped:false, brakeTimer:null };
+  }
+  if(e.cancelable) e.preventDefault(); // committed horizontal — keep the page from also scrolling
+  const raw = Math.max(0, dx);
+  const t = Math.min(1, raw/DRAG_PULL);
+  const eased = 1-Math.pow(1-t, DRAG_POWER);
+  const rowOffset = Math.min(eased*DRAG_PULL, DRAG_CAP);
+  const state = dragPtr.state;
+  if(!state.active){
+    dragSetVisual(state.els, rowOffset);
+    if(rowOffset >= DRAG_CAP-0.5) dragActivate(state);
+  } else {
+    dragSetVisual(state.els, rowOffset);
+    const openness = rowOffset/DRAG_CAP;
+    if(state.audio) state.audio.volume = openness;
+    state.els.vinyl.style.transition = 'none';
+    state.els.vinyl.style.transform = 'translateX('+(openness*DRAG_VINYL_PCT)+'%)';
+    state.els.info.style.transition = 'none';
+    state.els.info.style.transform = 'translateX('+(openness*26)+'px)';
+    if(openness < 0.04){ dragFullStop(state); dragPtr=null; }
+  }
+}
+function dragPointerUp(){
+  if(!dragPtr) return;
+  const state = dragPtr.state;
+  if(state){ state.active ? dragBeginBrake(state) : dragFullStop(state); }
+  dragPtr = null;
+}
+document.addEventListener('mousedown', dragPointerDown);
+document.addEventListener('mousemove', dragPointerMove);
+document.addEventListener('mouseup', dragPointerUp);
+document.addEventListener('touchstart', dragPointerDown, {passive:true});
+document.addEventListener('touchmove', dragPointerMove, {passive:false});
+document.addEventListener('touchend', dragPointerUp);
+document.addEventListener('touchcancel', dragPointerUp);
+
 function stopCurrentPreview(){
   if(currentPreviewAudio){ currentPreviewAudio.pause(); currentPreviewAudio = null; }
   if(currentPreviewBtn){
@@ -2089,6 +2290,8 @@ function renderLibrary(){
   el.querySelectorAll('[data-del]').forEach(btn=>{
     btn.addEventListener('click', ()=>{
       const id = btn.dataset.del;
+      const track = library.find(t=>t.id===id);
+      if(!confirm(`Delete "${track?track.name:'this track'}" from your collection? This can't be undone.`)) return;
       const row = btn.closest('.track-row');
       animateRemoveEl(row, async ()=>{
         library = library.filter(t=>t.id!==id);
@@ -2096,6 +2299,12 @@ function renderLibrary(){
         await cleanupReferencesToTrack(id);
         renderLibrary(); renderNowPlayingSelect(); renderMatches(); updateCount();
       });
+    });
+  });
+  el.querySelectorAll('[data-setnow]').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      selectNowPlayingDebounced(btn.dataset.setnow);
+      document.querySelector('[data-tab="match"]').click();
     });
   });
 
@@ -2800,11 +3009,24 @@ function renderMatches(animateNew){
       ? `<span style="font-size:var(--text-caption);color:var(--dim);">No spectrum data for this track</span>`
       : bandCompareChartSvg(now.bands, r.t.bands, true);
     return `
-    <div class="match-row${r.t.id===selectedMatchId?' open':''}${isChain?' chain-match':(isFlow?' flow-match':'')}${animateNew?' row-fresh':''}" data-id="${r.t.id}"${animateNew?` style="animation-delay:${i*35}ms;"`:''}>
-      <div class="match-main">
+    <div class="match-row drag-row${r.t.id===selectedMatchId?' open':''}${isChain?' chain-match':(isFlow?' flow-match':'')}${animateNew?' row-fresh':''}" data-id="${r.t.id}"${animateNew?` style="animation-delay:${i*35}ms;"`:''}>
+      <div class="drag-backdrop"><div class="drag-eq"><i></i><i></i><i></i></div></div>
+      <div class="drag-impact"></div>
+      <div class="match-main drag-content">
         <div class="rank">${i+1}</div>
-        <img class="art" src="${r.t.icon}" style="width:56px;height:56px;border-radius:var(--radius-thumb);">
-        <div class="match-info">
+        <div class="drag-sleeve">
+          <div class="drag-vinyl">
+            <svg viewBox="0 0 100 100" width="100%" height="100%">
+              <circle cx="50" cy="50" r="49" fill="#161616"/>
+              <circle cx="50" cy="50" r="41" fill="none" stroke="#2a2a2a" stroke-width="1"/>
+              <circle cx="50" cy="50" r="33" fill="none" stroke="#2a2a2a" stroke-width="1"/>
+              <circle cx="50" cy="50" r="20" fill="#f2f2ed"/>
+              <circle cx="50" cy="50" r="2.5" fill="#111"/>
+            </svg>
+          </div>
+          <img class="art" src="${r.t.icon}" style="width:56px;height:56px;border-radius:var(--radius-thumb);">
+        </div>
+        <div class="match-info drag-info">
           ${chainBadge}${flowBadge}
           <div class="t">${favBadge}${escapeHtml(r.t.name)}</div>
           <div class="a">${escapeHtml(r.t.artist||'Unknown artist')}</div>
@@ -3122,6 +3344,27 @@ async function loadFlowChainSetting(){
   }catch(e){}
   document.getElementById('flowchain-toggle').checked = showFlowChainSuggestions;
 }
+const VINYL_BRAKE_KEY = 'cratebuddy:vinyl-brake';
+async function loadVinylBrakeSetting(){
+  try{
+    if(hasArtifactStorage){
+      const r = await window.storage.get(VINYL_BRAKE_KEY,false).catch(()=>null);
+      if(r && r.value!=null) vinylBrakeEnabled = r.value==='1';
+    } else {
+      const s = localStorage.getItem(VINYL_BRAKE_KEY);
+      if(s!=null) vinylBrakeEnabled = s==='1';
+    }
+  }catch(e){}
+  document.getElementById('vinyl-brake-toggle').checked = vinylBrakeEnabled;
+}
+document.getElementById('vinyl-brake-toggle').addEventListener('change', async e=>{
+  vinylBrakeEnabled = e.target.checked;
+  try{
+    if(hasArtifactStorage) await window.storage.set(VINYL_BRAKE_KEY, vinylBrakeEnabled?'1':'0', false);
+    else localStorage.setItem(VINYL_BRAKE_KEY, vinylBrakeEnabled?'1':'0');
+  }catch(err){ console.error('vinyl brake setting save failed', err); }
+});
+
 document.getElementById('flowchain-toggle').addEventListener('change', async e=>{
   showFlowChainSuggestions = e.target.checked;
   try{
@@ -3400,26 +3643,79 @@ document.getElementById('organise-back-btn').addEventListener('click', ()=>{
   renderOrganise();
 });
 
+function wireTrackRowActions(el, opts){
+  opts = opts || {};
+  el.querySelectorAll('[data-preview]').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const id = btn.dataset.preview;
+      if(currentPreviewBtn===btn){ stopCurrentPreview(); return; }
+      stopCurrentPreview();
+      const t = library.find(x=>x.id===id);
+      if(!t || !t.previewAudio) return;
+      const audio = new Audio(t.previewAudio);
+      currentPreviewAudio = audio; currentPreviewBtn = btn;
+      btn.querySelector('.play-fill').classList.add('filling');
+      btn.querySelector('.play-tri').classList.add('filling');
+      hapticTap(10);
+      audio.addEventListener('ended', stopCurrentPreview);
+      audio.play().catch(()=>{ stopCurrentPreview(); showInfoToast("Couldn't play that preview", true); });
+    });
+  });
+  el.querySelectorAll('[data-fav]').forEach(btn=>{
+    btn.addEventListener('click', async ()=>{
+      const id = btn.dataset.fav;
+      const fillEl = btn.querySelector('.star-fill');
+      hapticTap(12);
+      if(favourites.includes(id)){
+        favourites = favourites.filter(fid=>fid!==id);
+        await saveFavourites();
+        btn.classList.remove('is-fav'); fillEl.style.opacity = '0';
+      } else {
+        favourites.push(id);
+        await saveFavourites();
+        btn.classList.add('is-fav'); fillEl.style.opacity = '1';
+        hapticTap(20);
+      }
+    });
+  });
+  if(opts.onSetnow){
+    el.querySelectorAll('[data-setnow]').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        selectNowPlayingDebounced(btn.dataset.setnow);
+        document.querySelector('[data-tab="match"]').click();
+      });
+    });
+  }
+  if(opts.onRemoveFav){
+    el.querySelectorAll('[data-remove-fav]').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        const row = btn.closest('.track-row');
+        animateRemoveEl(row, async ()=>{ await opts.onRemoveFav(btn.dataset.removeFav); renderFavDetail(); });
+      });
+    });
+  }
+  if(opts.onRemoveCrate){
+    el.querySelectorAll('[data-remove-crate]').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        const row = btn.closest('.track-row');
+        animateRemoveEl(row, async ()=>{ await opts.onRemoveCrate(btn.dataset.removeCrate); });
+      });
+    });
+  }
+}
+
 function renderFavDetail(){
   const el = document.getElementById('organise-detail-content');
   const tracks = favourites.map(id=>library.find(t=>t.id===id)).filter(Boolean);
   el.innerHTML = `<div class="section-lbl">Favourites</div>` +
     (tracks.length===0 ? `<div class="lib-empty">No favourites yet — tap the ☆ on any track in Import.</div>` :
-     tracks.map(t=>`
-      <div class="organise-row">
-        <img src="${t.icon}">
-        <div><div class="t">${escapeHtml(t.name)}</div><div class="a">${escapeHtml(t.artist||'Unknown artist')}</div></div>
-        <button class="remove-btn" data-remove-fav="${t.id}">✕</button>
-      </div>`).join(''));
-  el.querySelectorAll('[data-remove-fav]').forEach(btn=>{
-    btn.addEventListener('click', ()=>{
-      const row = btn.closest('.organise-row');
-      animateRemoveEl(row, async ()=>{
-        favourites = favourites.filter(id=>id!==btn.dataset.removeFav);
-        await saveFavourites();
-        renderFavDetail();
-      });
-    });
+     `<div id="fav-tracks-list">${tracks.map(t=>trackRowHtml(t, {showEdit:false, removeAttr:'data-remove-fav'})).join('')}</div>`);
+  wireTrackRowActions(el, {
+    onSetnow: true,
+    onRemoveFav: async (id)=>{
+      favourites = favourites.filter(fid=>fid!==id);
+      await saveFavourites();
+    }
   });
 }
 
@@ -3556,24 +3852,19 @@ function renderCrateDetail(){
     ${trackPickerHtml('crate-add','Add a track to this crate…')}
     <div id="crate-tracks-list">
       ${tracks.length===0 ? `<div class="lib-empty">No tracks yet.</div>` :
-        tracks.map(t=>`
-        <div class="organise-row">
-          <img src="${t.icon}">
-          <div><div class="t">${escapeHtml(t.name)}</div><div class="a">${escapeHtml(t.artist||'Unknown artist')}</div></div>
-          <button class="remove-btn" data-remove="${t.id}">✕</button>
-        </div>`).join('')}
+        tracks.map(t=>trackRowHtml(t, {showEdit:false, removeAttr:'data-remove-crate'})).join('')}
     </div>`;
   wireTrackPicker('crate-add', crate.trackIds, async (id)=>{
     crate.trackIds.push(id);
     await saveCrates();
     renderCrateDetail();
   }, false);
-  el.querySelectorAll('[data-remove]').forEach(btn=>{
-    btn.addEventListener('click', async ()=>{
-      crate.trackIds = crate.trackIds.filter(id=>id!==btn.dataset.remove);
+  wireTrackRowActions(el, {
+    onSetnow: true,
+    onRemoveCrate: async (id)=>{
+      crate.trackIds = crate.trackIds.filter(tid=>tid!==id);
       await saveCrates();
-      renderCrateDetail();
-    });
+    }
   });
 }
 
@@ -3637,6 +3928,7 @@ bootPromises.push(loadCrates().then(populateCrateFilterSelect));
 bootPromises.push(loadFavourites());
 document.getElementById('now-undo-btn').addEventListener('click', undoLastSelection);
 bootPromises.push(loadFlowChainSetting());
+bootPromises.push(loadVinylBrakeSetting());
 bootPromises.push(loadClockSettings());
 bootPromises.push(loadHistorySessions());
 
