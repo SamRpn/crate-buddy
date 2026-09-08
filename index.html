@@ -2390,6 +2390,34 @@ function renderLibToolbar(){
   document.getElementById('cancel-select-btn').addEventListener('click', exitSelectionMode);
 }
 
+const LOGO_BASE_MARGIN = -15; // the CSS-declared starting point; alignLogoToTrackIcons() corrects from here
+// The logo is hand-drawn SVG text with a thick outline and slight rotation,
+// both of which shift where the ink actually starts rendering in ways that
+// are hard to predict from the SVG's own coordinates. Rather than guess a
+// static CSS offset, measure the real rendered position of the logo's ink
+// and the first track row's artwork in whatever browser is actually running
+// this, and compute the exact correction needed — self-corrects regardless
+// of rendering-engine differences (this was built and checked in Chromium,
+// but the actual device is Safari, and the two don't always agree on exact
+// sub-pixel text geometry, so a live measurement is more trustworthy than a
+// number derived on a different engine).
+function alignLogoToTrackIcons(){
+  const logo = document.querySelector('.logo');
+  const crateText = logo ? logo.querySelector('text') : null;
+  const rowArt = document.querySelector('#library-list .drag-sleeve, #library-list .art');
+  if(!logo || !crateText || !rowArt) return;
+  logo.style.marginLeft = LOGO_BASE_MARGIN + 'px'; // reset to the known baseline before measuring, so repeated calls don't compound
+  const textBox = crateText.getBoundingClientRect();
+  const artBox = rowArt.getBoundingClientRect();
+  const diff = artBox.left - textBox.left;
+  logo.style.marginLeft = (LOGO_BASE_MARGIN + diff) + 'px';
+}
+window.addEventListener('resize', alignLogoToTrackIcons);
+window.addEventListener('orientationchange', ()=>setTimeout(alignLogoToTrackIcons, 150));
+if(document.fonts && document.fonts.ready){
+  document.fonts.ready.then(alignLogoToTrackIcons); // the logo font loads async — re-measure once it's actually swapped in
+}
+
 const LIBRARY_BATCH_SIZE = 40;
 let importRenderedCount = LIBRARY_BATCH_SIZE;
 function renderLibrary(){
@@ -2402,6 +2430,7 @@ function renderLibrary(){
   el.innerHTML = library.slice(0, visibleCount).map(trackRowHtml).join('');
   freshlyAddedIds.clear();
   wireLibraryRows(el);
+  alignLogoToTrackIcons();
 }
 // Only the first batch renders up front — the rest loads in as you actually
 // scroll toward it, so opening a large library doesn't pay for rows you
@@ -4187,7 +4216,7 @@ function renderFlowDetail(){
 /* =========================================================
    INIT
 ========================================================= */
-const APP_VERSION = '1.09';
+const APP_VERSION = '1.10';
 const APP_BUILD = '2026-09-08';
 document.getElementById('version-display').textContent = `${APP_VERSION} · ${APP_BUILD}`;
 let bootPromises = [];
