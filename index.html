@@ -65,18 +65,20 @@
   header.top{position:sticky;top:0;z-index:70;padding:max(22px, env(safe-area-inset-top)) 20px 10px;display:flex;align-items:center;
     gap:12px;background:rgba(255,255,255,0.86);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);}
   html.dark header.top{background:rgba(16,17,20,0.82);}
-  .logo{width:134px;height:52px;overflow:visible;flex-shrink:0;margin-left:-15px;}
+  .logo{width:134px;height:52px;overflow:visible;flex-shrink:0;margin-left:-15px;transition:opacity 0.15s ease;}
+  header.top.scrolled .logo{display:none;}
   .header-divider{width:1px;align-self:stretch;background:var(--line);flex-shrink:0;}
-  .header-now{flex:1;min-width:0;display:flex;align-items:center;gap:8px;}
-  .header-now img{width:30px;height:30px;border-radius:var(--radius-tight);object-fit:cover;flex-shrink:0;}
-  .header-now-info{min-width:0;}
-  .header-now-label{font-size:var(--text-micro);letter-spacing:0.3px;color:var(--dim);line-height:1;margin-bottom:2px;}
+  .header-now{flex:1;min-width:0;display:flex;align-items:center;gap:10px;}
+  .header-deck-chip{display:flex;align-items:center;gap:5px;min-width:0;flex:1;}
+  .header-deck-chip img{width:24px;height:24px;border-radius:var(--radius-tight);object-fit:contain;flex-shrink:0;
+    border:1.5px solid var(--deck-color);background:var(--bg);}
+  .header-deck-chip-name{font-size:var(--text-caption);font-weight:600;color:var(--text);overflow:hidden;
+    text-overflow:ellipsis;white-space:nowrap;}
   .header-progress{flex:1;min-width:0;display:flex;flex-direction:column;justify-content:center;gap:4px;}
   .header-progress-label{font-size:var(--text-micro);color:var(--dim);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
   .header-progress-track{height:4px;border-radius:2px;background:var(--line);overflow:hidden;}
   .header-progress-fill{height:100%;border-radius:2px;background:linear-gradient(90deg,var(--accent),var(--accent2));
     width:0%;transition:width 0.2s ease;}
-  .header-now-name{font-size:var(--text-body-sm);font-weight:600;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
   .header-right{display:flex;align-items:center;gap:12px;flex-shrink:0;margin-left:auto;}
   .settings-btn{background:none;border:none;padding:4px;color:var(--dim);cursor:pointer;display:flex;}
 
@@ -220,7 +222,7 @@
     color:var(--text);cursor:pointer;border-bottom:1px solid var(--line);}
   .crate-picker-item:last-child{border-bottom:none;}
   .crate-picker-item:active{background:var(--bg);}
-  .art{width:64px;height:64px;border-radius:var(--radius-thumb);object-fit:cover;flex-shrink:0;background:#eee;
+  .art{width:64px;height:64px;border-radius:var(--radius-thumb);object-fit:contain;flex-shrink:0;background:#eee;
     box-shadow:0 1px 4px rgba(0,0,0,0.15);}
   .fav-star{background:none;border:none;cursor:pointer;padding:4px;color:#9ca3af;
     display:flex;align-items:center;justify-content:center;}
@@ -405,7 +407,7 @@
   .deck-card{background:var(--card);border-radius:var(--radius-card);padding:12px;
     border:2px solid var(--deck-color);box-shadow:0 1px 2px rgba(0,0,0,0.04);min-width:0;}
   .deck-card .deck-label{font-size:var(--text-micro);font-weight:800;letter-spacing:.5px;color:var(--deck-color);margin-bottom:8px;}
-  .deck-card .art{width:100%;aspect-ratio:1;border-radius:var(--radius-thumb);object-fit:cover;margin-bottom:8px;display:block;}
+  .deck-card .art{width:100%;aspect-ratio:1;border-radius:var(--radius-thumb);object-fit:contain;margin-bottom:8px;display:block;background:var(--bg);}
   .deck-card .t{font-size:var(--text-body-sm);font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
   .deck-card .sub{font-size:var(--text-caption);color:var(--dim);margin-top:1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
   .deck-card.empty{display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;
@@ -459,7 +461,7 @@
 
   .organise-row{display:flex;align-items:center;gap:10px;background:var(--card);border-radius:var(--radius-panel);
     padding:9px 12px;margin-bottom:8px;box-shadow:0 1px 2px rgba(0,0,0,0.04);}
-  .organise-row img{width:40px;height:40px;border-radius:var(--radius-thumb);object-fit:cover;flex-shrink:0;}
+  .organise-row img{width:40px;height:40px;border-radius:var(--radius-thumb);object-fit:contain;flex-shrink:0;background:var(--bg);}
   .organise-row .t{font-size:var(--text-body);font-weight:600;}
   .organise-row .a{font-size:var(--text-caption);color:var(--dim);}
   .organise-row .remove-btn{margin-left:auto;background:none;border:none;color:#c9c9ce;font-size:var(--text-body-lg);cursor:pointer;padding:4px;}
@@ -528,10 +530,13 @@
     </div>
     <div class="header-divider" id="header-now-divider-1" style="display:none;"></div>
     <div class="header-now" id="header-now" style="display:none;">
-      <img id="header-now-art">
-      <div class="header-now-info">
-        <div class="header-now-label">NOW PLAYING</div>
-        <div class="header-now-name" id="header-now-name"></div>
+      <div class="header-deck-chip" id="header-deck-a" style="--deck-color:#e94f9e">
+        <img id="header-deck-a-art">
+        <div class="header-deck-chip-name" id="header-deck-a-name"></div>
+      </div>
+      <div class="header-deck-chip" id="header-deck-b" style="--deck-color:#2bb3a3">
+        <img id="header-deck-b-art">
+        <div class="header-deck-chip-name" id="header-deck-b-name"></div>
       </div>
       <div class="play-clock header-clock" id="play-clock"></div>
     </div>
@@ -911,8 +916,9 @@ document.querySelectorAll('.tabs button').forEach(btn=>{
     document.getElementById('footnote').style.display = (currentTab==='import') ? 'block':'none';
     if(currentTab!=='import') stopCurrentPreview();
     if(currentTab==='organise') renderOrganise(true);
-    if(currentTab==='match'){ requestWakeLock(); renderNowChip(); populateCrateFilterSelect(); }
+    if(currentTab==='match'){ requestWakeLock(); renderNowChip(); populateCrateFilterSelect(); renderMatches(); }
     else{ releaseWakeLock(); renderNowChip(); }
+    updateHeaderScrollState();
   });
 });
 document.getElementById('footnote').innerHTML =
@@ -2598,22 +2604,35 @@ function undoLastSelection(){
   renderNowChip();
   hapticTap();
 }
+let headerScrolled = false;
+function updateHeaderScrollState(){
+  const scrolled = currentTab==='match' && window.scrollY > 160;
+  if(scrolled === headerScrolled) return;
+  headerScrolled = scrolled;
+  document.querySelector('header.top').classList.toggle('scrolled', scrolled);
+  renderNowChip();
+}
+window.addEventListener('scroll', updateHeaderScrollState, {passive:true});
 function renderNowChip(){
   const el = document.getElementById('header-now');
   const div1 = document.getElementById('header-now-divider-1');
   const div2 = document.getElementById('header-now-divider-2');
   const undoBtn = document.getElementById('now-undo-btn');
   if(!el) return;
-  const t = library.find(x=>x.id===nowPlayingId);
-  const show = t && currentTab==='match';
+  const deckAT = deckA ? library.find(x=>x.id===deckA.trackId) : null;
+  const deckBT = deckB ? library.find(x=>x.id===deckB.trackId) : null;
+  const show = (deckAT || deckBT) && currentTab==='match' && headerScrolled;
   el.style.display = show ? 'flex' : 'none';
   div1.style.display = show ? 'block' : 'none';
   div2.style.display = show ? 'block' : 'none';
   undoBtn.style.display =
     (currentTab==='match' && previousNowPlayingId && library.some(x=>x.id===previousNowPlayingId)) ? 'flex' : 'none';
   if(!show) return;
-  document.getElementById('header-now-art').src = t.icon;
-  document.getElementById('header-now-name').textContent = t.name;
+  const aChip = document.getElementById('header-deck-a'), bChip = document.getElementById('header-deck-b');
+  aChip.style.display = deckAT ? 'flex' : 'none';
+  bChip.style.display = deckBT ? 'flex' : 'none';
+  if(deckAT){ document.getElementById('header-deck-a-art').src = deckAT.icon; document.getElementById('header-deck-a-name').textContent = deckAT.name; }
+  if(deckBT){ document.getElementById('header-deck-b-art').src = deckBT.icon; document.getElementById('header-deck-b-name').textContent = deckBT.name; }
 }
 
 /* =========================================================
@@ -4056,7 +4075,7 @@ function renderFlowDetail(){
 /* =========================================================
    INIT
 ========================================================= */
-const APP_VERSION = '1.02';
+const APP_VERSION = '1.03';
 const APP_BUILD = '2026-09-08';
 document.getElementById('version-display').textContent = `${APP_VERSION} · ${APP_BUILD}`;
 let bootPromises = [];
