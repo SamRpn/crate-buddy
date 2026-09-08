@@ -2390,16 +2390,28 @@ function renderLibToolbar(){
   document.getElementById('cancel-select-btn').addEventListener('click', exitSelectionMode);
 }
 
+const LIBRARY_BATCH_SIZE = 40;
+let importRenderedCount = LIBRARY_BATCH_SIZE;
 function renderLibrary(){
   stopCurrentPreview();
   updateBulkPreviewBtn();
   const el = document.getElementById('library-list');
   renderLibToolbar();
   if(library.length===0){ el.innerHTML = `<div class="lib-empty">No tracks yet — add some from Import.</div>`; return; }
-  el.innerHTML = library.map(trackRowHtml).join('');
+  const visibleCount = Math.min(Math.max(importRenderedCount, LIBRARY_BATCH_SIZE), library.length);
+  el.innerHTML = library.slice(0, visibleCount).map(trackRowHtml).join('');
   freshlyAddedIds.clear();
+  wireLibraryRows(el);
+}
+// Only the first batch renders up front — the rest loads in as you actually
+// scroll toward it, so opening a large library doesn't pay for rows you
+// never look at. wireLibraryRows takes a scope element so this same wiring
+// logic works whether it's given the whole list (full render) or just a
+// newly-appended batch (incremental load), without double-attaching
+// listeners to rows that were already wired.
+function wireLibraryRows(scopeEl){
 
-  el.querySelectorAll('.track-row').forEach(row=>{
+  scopeEl.querySelectorAll('.track-row').forEach(row=>{
     row.addEventListener('click', ()=>{
       if(!selectionMode) return;
       const id = row.dataset.id;
@@ -2415,7 +2427,7 @@ function renderLibrary(){
     });
   });
 
-  el.querySelectorAll('[data-del]').forEach(btn=>{
+  scopeEl.querySelectorAll('[data-del]').forEach(btn=>{
     btn.addEventListener('click', ()=>{
       const id = btn.dataset.del;
       const track = library.find(t=>t.id===id);
@@ -2430,7 +2442,7 @@ function renderLibrary(){
     });
   });
 
-  el.querySelectorAll('[data-preview]').forEach(btn=>{
+  scopeEl.querySelectorAll('[data-preview]').forEach(btn=>{
     btn.addEventListener('click', ()=>{
       const id = btn.dataset.preview;
       if(currentPreviewBtn===btn){ stopCurrentPreview(); return; }
@@ -2446,12 +2458,12 @@ function renderLibrary(){
       audio.play().catch(()=>{ stopCurrentPreview(); showInfoToast("Couldn't play that preview", true); });
     });
   });
-  el.querySelectorAll('[data-add-preview]').forEach(btn=>{
+  scopeEl.querySelectorAll('[data-add-preview]').forEach(btn=>{
     btn.addEventListener('click', ()=>{
       document.getElementById('add-preview-input-'+btn.dataset.addPreview).click();
     });
   });
-  el.querySelectorAll('.add-preview-input').forEach(input=>{
+  scopeEl.querySelectorAll('.add-preview-input').forEach(input=>{
     input.addEventListener('change', async e=>{
       const file = e.target.files[0];
       e.target.value='';
@@ -2474,7 +2486,7 @@ function renderLibrary(){
     });
   });
 
-  el.querySelectorAll('[data-fav]').forEach(btn=>{
+  scopeEl.querySelectorAll('[data-fav]').forEach(btn=>{
     btn.addEventListener('click', async ()=>{
       const id = btn.dataset.fav;
       const fillEl = btn.querySelector('.star-fill');
@@ -2493,16 +2505,16 @@ function renderLibrary(){
       hapticTap(20);
     });
   });
-  el.querySelectorAll('[data-edit]').forEach(btn=>{
+  scopeEl.querySelectorAll('[data-edit]').forEach(btn=>{
     btn.addEventListener('click', ()=>{
       const panel = document.getElementById('edit-'+btn.dataset.edit);
       panel.classList.toggle('show');
     });
   });
-  el.querySelectorAll('[data-pic]').forEach(btn=>{
+  scopeEl.querySelectorAll('[data-pic]').forEach(btn=>{
     btn.addEventListener('click', ()=>document.getElementById('edit-pic-input-'+btn.dataset.pic).click());
   });
-  el.querySelectorAll('.edit-pic-input').forEach(input=>{
+  scopeEl.querySelectorAll('.edit-pic-input').forEach(input=>{
     input.addEventListener('change', async e=>{
       const id = input.id.replace('edit-pic-input-','');
       const file = e.target.files[0];
@@ -2512,10 +2524,10 @@ function renderLibrary(){
       input.dataset.pending = dataUrl || '';
     });
   });
-  el.querySelectorAll('[data-cancel]').forEach(btn=>{
+  scopeEl.querySelectorAll('[data-cancel]').forEach(btn=>{
     btn.addEventListener('click', ()=>{ document.getElementById('edit-'+btn.dataset.cancel).classList.remove('show'); });
   });
-  el.querySelectorAll('[data-save]').forEach(btn=>{
+  scopeEl.querySelectorAll('[data-save]').forEach(btn=>{
     btn.addEventListener('click', async ()=>{
       const id = btn.dataset.save;
       const track = library.find(t=>t.id===id);
@@ -2536,6 +2548,23 @@ function renderLibrary(){
     });
   });
 }
+function maybeLoadMoreLibraryRows(){
+  if(currentTab!=='import') return;
+  if(importRenderedCount>=library.length) return;
+  const el = document.getElementById('library-list');
+  if(!el) return;
+  const nearBottom = window.scrollY + window.innerHeight > document.documentElement.scrollHeight - 900;
+  if(!nearBottom) return;
+  const prevCount = importRenderedCount;
+  importRenderedCount = Math.min(importRenderedCount + LIBRARY_BATCH_SIZE, library.length);
+  const nextBatch = library.slice(prevCount, importRenderedCount);
+  if(nextBatch.length===0) return;
+  const wrapper = document.createElement('div');
+  wrapper.innerHTML = nextBatch.map(trackRowHtml).join('');
+  wireLibraryRows(wrapper); // wire while still in the wrapper, where .track-row descendant queries actually match
+  while(wrapper.firstChild) el.appendChild(wrapper.firstChild); // now move the already-wired rows into the real list
+}
+window.addEventListener('scroll', maybeLoadMoreLibraryRows, {passive:true});
 
 /* =========================================================
    NOW PLAYING / MATCHING
@@ -4158,7 +4187,7 @@ function renderFlowDetail(){
 /* =========================================================
    INIT
 ========================================================= */
-const APP_VERSION = '1.08';
+const APP_VERSION = '1.09';
 const APP_BUILD = '2026-09-08';
 document.getElementById('version-display').textContent = `${APP_VERSION} · ${APP_BUILD}`;
 let bootPromises = [];
