@@ -65,7 +65,7 @@
   header.top{position:sticky;top:0;z-index:70;padding:max(22px, env(safe-area-inset-top)) 20px 10px;display:flex;align-items:center;
     gap:12px;background:rgba(255,255,255,0.86);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);}
   html.dark header.top{background:rgba(16,17,20,0.82);}
-  .logo{width:134px;height:52px;overflow:visible;flex-shrink:0;}
+  .logo{width:134px;height:52px;overflow:visible;flex-shrink:0;margin-left:-8px;}
   .header-divider{width:1px;align-self:stretch;background:var(--line);flex-shrink:0;}
   .header-now{flex:1;min-width:0;display:flex;align-items:center;gap:8px;}
   .header-now img{width:30px;height:30px;border-radius:var(--radius-tight);object-fit:cover;flex-shrink:0;}
@@ -201,10 +201,10 @@
     background:radial-gradient(circle, rgba(255,255,255,0.95), rgba(255,255,255,0) 70%);
     opacity:0;transform:scale(0.3);pointer-events:none;z-index:4;}
   .drag-sleeve{position:relative;flex-shrink:0;z-index:1;}
-  .drag-vinyl{position:absolute;inset:0;border-radius:50%;transform:translateX(0%);pointer-events:none;z-index:0;}
+  .drag-vinyl{position:absolute;inset:0;border-radius:50%;transform:translateX(0%);pointer-events:none;z-index:0;will-change:transform;}
   .drag-sleeve .art{position:relative;z-index:1;}
-  .drag-content{position:relative;z-index:1;background:var(--card);}
-  .drag-info{transition:transform 0.32s cubic-bezier(.3,.9,.4,1);}
+  .drag-content{position:relative;z-index:1;background:var(--card);will-change:transform;}
+  .drag-info{transition:transform 0.32s cubic-bezier(.3,.9,.4,1);will-change:transform;}
 
   .lib-toolbar{display:flex;align-items:center;gap:8px;margin-bottom:10px;min-height:32px;}
   .lib-toolbar button{background:var(--card);border:1px solid var(--line);border-radius:var(--radius-control);
@@ -238,8 +238,6 @@
   .edit-toggle,.del{background:none;border:none;color:#c9c9ce;cursor:pointer;font-size:var(--text-body);padding:2px 4px;flex-shrink:0;}
   .add-preview-btn{background:none;border:1.5px dashed var(--line);border-radius:50%;color:var(--dim);cursor:pointer;
     width:30px;height:30px;display:flex;align-items:center;justify-content:center;flex-shrink:0;padding:0;}
-  .now-playing-text-btn{background:var(--accent);color:#fff;border:none;border-radius:var(--radius-control);
-    padding:6px 10px;font-size:var(--text-caption);font-weight:700;cursor:pointer;flex-shrink:0;white-space:nowrap;}
   .edit-toggle:hover{color:var(--cyan,#22a6d6);}
   .del:hover{color:#dc2626;}
 
@@ -1980,7 +1978,6 @@ function trackRowHtml(t, opts){
           <svg viewBox="0 0 24 24" width="16" height="16"><path fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" d="M12 5v14M5 12h14"/></svg>
         </button>
         <input type="file" accept="audio/*" class="add-preview-input" id="add-preview-input-${t.id}" style="display:none;">`}
-        ${!removeAttr ? `<button class="now-playing-text-btn" data-setnow="${t.id}" title="Set as Now Playing">Now Playing</button>` : ''}
         <button class="fav-star${favourites.includes(t.id)?' is-fav':''}" data-fav="${t.id}" title="Add to Favourites">
           <svg viewBox="0 0 24 24" width="17" height="17">
             <path d="M12 2 L14.9 8.6 L22 9.3 L16.7 14.1 L18.2 21 L12 17.4 L5.8 21 L7.3 14.1 L2 9.3 L9.1 8.6 Z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
@@ -2122,6 +2119,8 @@ function dragPointerDown(e){
   dragPtr = { row, trackId: row.dataset.id, startX: point.clientX, startY: point.clientY,
     locked: null, state: null };
 }
+let dragMoveScheduled = false;
+let dragLatestX = 0;
 function dragPointerMove(e){
   if(!dragPtr) return;
   const point = e.touches ? e.touches[0] : e;
@@ -2132,10 +2131,19 @@ function dragPointerMove(e){
     if(!dragPtr.locked){ dragPtr=null; return; } // vertical intent — leave scrolling alone entirely
     if(dragBraking) dragFullStop(dragBraking); // a new gesture starting cuts off any still-braking previous one
     dragPtr.state = { els: dragElsFor(dragPtr.row), trackId: dragPtr.trackId, active:false,
-      audio:null, rafId:null, rot:0, speedDir:0, speedStart:0, eqShown:false, stopped:false, brakeTimer:null };
+      audio:null, rafId:null, rot:0, speedDir:0, speedStart:0, eqShown:false, stopped:false, brakeTimer:null, transitionCleared:false };
   }
-  if(e.cancelable) e.preventDefault(); // committed horizontal — keep the page from also scrolling
-  const raw = Math.max(0, dx);
+  if(e.cancelable) e.preventDefault(); // committed horizontal — keep the page from also scrolling (must happen synchronously, in this event)
+  dragLatestX = dx;
+  if(!dragMoveScheduled){
+    dragMoveScheduled = true;
+    requestAnimationFrame(dragApplyMove); // batch all the actual visual work to once per displayed frame
+  }
+}
+function dragApplyMove(){
+  dragMoveScheduled = false;
+  if(!dragPtr || !dragPtr.locked) return;
+  const raw = Math.max(0, dragLatestX);
   const t = Math.min(1, raw/DRAG_PULL);
   const eased = 1-Math.pow(1-t, DRAG_POWER);
   const rowOffset = Math.min(eased*DRAG_PULL, DRAG_CAP);
@@ -2147,9 +2155,12 @@ function dragPointerMove(e){
     dragSetVisual(state.els, rowOffset);
     const openness = rowOffset/DRAG_CAP;
     if(state.audio) state.audio.volume = openness;
-    state.els.vinyl.style.transition = 'none';
+    if(!state.transitionCleared){
+      state.els.vinyl.style.transition = 'none';
+      state.els.info.style.transition = 'none';
+      state.transitionCleared = true;
+    }
     state.els.vinyl.style.transform = 'translateX('+(openness*DRAG_VINYL_PCT)+'%)';
-    state.els.info.style.transition = 'none';
     state.els.info.style.transform = 'translateX('+(openness*26)+'px)';
     if(openness < 0.04){ dragFullStop(state); dragPtr=null; }
   }
@@ -2299,12 +2310,6 @@ function renderLibrary(){
         await cleanupReferencesToTrack(id);
         renderLibrary(); renderNowPlayingSelect(); renderMatches(); updateCount();
       });
-    });
-  });
-  el.querySelectorAll('[data-setnow]').forEach(btn=>{
-    btn.addEventListener('click', ()=>{
-      selectNowPlayingDebounced(btn.dataset.setnow);
-      document.querySelector('[data-tab="match"]').click();
     });
   });
 
@@ -3678,14 +3683,6 @@ function wireTrackRowActions(el, opts){
       }
     });
   });
-  if(opts.onSetnow){
-    el.querySelectorAll('[data-setnow]').forEach(btn=>{
-      btn.addEventListener('click', ()=>{
-        selectNowPlayingDebounced(btn.dataset.setnow);
-        document.querySelector('[data-tab="match"]').click();
-      });
-    });
-  }
   if(opts.onRemoveFav){
     el.querySelectorAll('[data-remove-fav]').forEach(btn=>{
       btn.addEventListener('click', ()=>{
@@ -3711,7 +3708,6 @@ function renderFavDetail(){
     (tracks.length===0 ? `<div class="lib-empty">No favourites yet — tap the ☆ on any track in Import.</div>` :
      `<div id="fav-tracks-list">${tracks.map(t=>trackRowHtml(t, {showEdit:false, removeAttr:'data-remove-fav'})).join('')}</div>`);
   wireTrackRowActions(el, {
-    onSetnow: true,
     onRemoveFav: async (id)=>{
       favourites = favourites.filter(fid=>fid!==id);
       await saveFavourites();
@@ -3860,7 +3856,6 @@ function renderCrateDetail(){
     renderCrateDetail();
   }, false);
   wireTrackRowActions(el, {
-    onSetnow: true,
     onRemoveCrate: async (id)=>{
       crate.trackIds = crate.trackIds.filter(tid=>tid!==id);
       await saveCrates();
