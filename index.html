@@ -70,6 +70,11 @@
   .header-now img{width:30px;height:30px;border-radius:var(--radius-tight);object-fit:cover;flex-shrink:0;}
   .header-now-info{min-width:0;}
   .header-now-label{font-size:var(--text-micro);letter-spacing:0.3px;color:var(--dim);line-height:1;margin-bottom:2px;}
+  .header-progress{flex:1;min-width:0;display:flex;flex-direction:column;justify-content:center;gap:4px;}
+  .header-progress-label{font-size:var(--text-micro);color:var(--dim);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .header-progress-track{height:4px;border-radius:2px;background:var(--line);overflow:hidden;}
+  .header-progress-fill{height:100%;border-radius:2px;background:linear-gradient(90deg,var(--accent),var(--accent2));
+    width:0%;transition:width 0.2s ease;}
   .header-now-name{font-size:var(--text-body-sm);font-weight:600;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
   .header-right{display:flex;align-items:center;gap:12px;flex-shrink:0;margin-left:auto;}
   .settings-btn{background:none;border:none;padding:4px;color:var(--dim);cursor:pointer;display:flex;}
@@ -473,6 +478,10 @@
         stroke-linejoin="round" paint-order="stroke fill" letter-spacing="-0.5"
         rotate="4,-3,5,-4,3" transform="rotate(2 60 40)">BUDDY</text>
     </svg>
+    <div class="header-progress" id="header-progress" style="display:none;">
+      <div class="header-progress-label" id="header-progress-label"></div>
+      <div class="header-progress-track"><div class="header-progress-fill" id="header-progress-fill"></div></div>
+    </div>
     <div class="header-divider" id="header-now-divider-1" style="display:none;"></div>
     <div class="header-now" id="header-now" style="display:none;">
       <img id="header-now-art">
@@ -994,6 +1003,32 @@ let pendingQueue = [];
 let isProcessingBatch = false;
 let batchToast = null;
 
+function showHeaderProgress(label){
+  const el = document.getElementById('header-progress');
+  if(!el) return;
+  document.getElementById('header-progress-label').textContent = label||'';
+  document.getElementById('header-progress-fill').style.width = '0%';
+  el.style.display = 'flex';
+}
+function setHeaderProgress(pct, label){
+  const fill = document.getElementById('header-progress-fill');
+  if(!fill) return;
+  fill.style.width = Math.max(0,Math.min(100,pct))+'%';
+  if(label!=null) document.getElementById('header-progress-label').textContent = label;
+}
+function hideHeaderProgress(){
+  const el = document.getElementById('header-progress');
+  if(el) el.style.display = 'none';
+}
+// A quick, satisfying "something just happened" flash for near-instant
+// operations that don't have real granular progress to report (e.g. a
+// single crate save) — not a lie about progress, just a fast confirmation.
+function flashHeaderProgress(label){
+  showHeaderProgress(label);
+  requestAnimationFrame(()=>setHeaderProgress(100));
+  setTimeout(hideHeaderProgress, 420);
+}
+
 function ensureBatchToast(){
   if(batchToast) return batchToast;
   const stack = document.getElementById('toast-stack');
@@ -1042,13 +1077,18 @@ async function processBatch(){
   if(isProcessingBatch) return;
   isProcessingBatch = true;
   let done=0, fail=0;
+  showHeaderProgress('Analyzing tracks…');
   while(pendingQueue.length>0){
     const file = pendingQueue.shift();
     const total = done+fail+pendingQueue.length+1;
     const current = done+fail+1;
     updateBatchToast(current, total, file.name, 0);
+    setHeaderProgress(((current-1)/total)*100, `${current} of ${total} — ${file.name}`);
     try{
-      const track = await analyzeFile(file, p=>updateBatchToast(current, total, file.name, p));
+      const track = await analyzeFile(file, p=>{
+        updateBatchToast(current, total, file.name, p);
+        setHeaderProgress(((current-1+p)/total)*100);
+      });
       library.unshift(track);
       freshlyAddedIds.add(track.id);
       await persistTrackAdd(track);
@@ -1060,6 +1100,8 @@ async function processBatch(){
   }
   renderLibrary(); renderNowPlayingSelect(); updateCount();
   finishBatchToast(done, fail);
+  setHeaderProgress(100);
+  setTimeout(hideHeaderProgress, 400);
   isProcessingBatch = false;
 }
 function escapeHtml(s){ const d=document.createElement('div'); d.textContent=s||''; return d.innerHTML; }
@@ -1788,12 +1830,15 @@ function renderLibToolbar(){
       btn.addEventListener('click', async ()=>{
         const crate = crates.find(c=>c.id===btn.dataset.targetCrate);
         if(!crate) return;
+        showHeaderProgress(`Adding to "${crate.name}"…`);
         let added=0, skipped=0;
         selectedTrackIds.forEach(id=>{
           if(crate.trackIds.includes(id)) skipped++;
           else { crate.trackIds.push(id); added++; }
         });
         await saveCrates();
+        setHeaderProgress(100);
+        setTimeout(hideHeaderProgress, 400);
         hapticTap(20);
         document.querySelectorAll('.track-row.selected').forEach(r=>r.classList.add('added-flash'));
         showInfoToast(`Added ${added} track${added===1?'':'s'} to "${crate.name}"${skipped?`, ${skipped} already there`:''}`, false);
@@ -2612,7 +2657,8 @@ function showInfoToast(message, isError){
 }
 
 function exportLibrary(){
-  const payload = { app:'cratebuddy', version:1, exportedAt:Date.now(), library, flows };
+  const payload = { app:'cratebuddy', version:2, exportedAt:Date.now(),
+    library, flows, crates, chains, favourites, activeWeights };
   const blob = new Blob([JSON.stringify(payload)], {type:'application/json'});
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
@@ -2620,7 +2666,7 @@ function exportLibrary(){
   a.download = `cratebuddy-backup-${new Date().toISOString().slice(0,10)}.json`;
   document.body.appendChild(a); a.click(); document.body.removeChild(a);
   URL.revokeObjectURL(url);
-  showInfoToast(`Exported ${library.length} track${library.length===1?'':'s'}`, false);
+  showInfoToast(`Exported ${library.length} track${library.length===1?'':'s'} and your preferences`, false);
 }
 
 function importLibraryFile(file){
@@ -2631,42 +2677,119 @@ function importLibraryFile(file){
     catch(e){ showInfoToast("Couldn't read that file — is it a Crate Buddy backup?", true); return; }
 
     const importedTracks = Array.isArray(payload.library) ? payload.library : [];
-    if(importedTracks.length===0 && !Array.isArray(payload.flows)){
+    const hasAnyData = importedTracks.length || payload.flows || payload.crates || payload.chains || payload.favourites;
+    if(!hasAnyData){
       showInfoToast("That file doesn't look like a Crate Buddy backup", true);
       return;
     }
+    showHeaderProgress('Importing backup…');
 
     // De-dupe by name+artist rather than id — the same song analyzed on two
     // different devices gets two different random ids, so id-matching alone
-    // would just create duplicates.
+    // would just create duplicates. idRemap tracks old-id -> the id this
+    // track actually ends up under locally, so every other imported thing
+    // that references a track (Flows, Crates, Chains, Favourites) can be
+    // correctly repointed instead of silently dangling.
     const norm = s => (s||'').trim().toLowerCase();
+    const idRemap = {};
     let added=0, skipped=0;
     for(const t of importedTracks){
-      const dupe = library.some(existing => norm(existing.name)===norm(t.name) && norm(existing.artist)===norm(t.artist));
-      if(dupe){ skipped++; continue; }
+      const dupe = library.find(existing => norm(existing.name)===norm(t.name) && norm(existing.artist)===norm(t.artist));
+      if(dupe){ skipped++; idRemap[t.id] = dupe.id; continue; }
       library.unshift(t);
       freshlyAddedIds.add(t.id);
       await persistTrackAdd(t);
+      idRemap[t.id] = t.id;
       added++;
     }
+    setHeaderProgress(55);
 
-    // Merge in any Flows not already saved here (matched by the from/to pair,
-    // not id, same reasoning as track de-dupe above).
+    // Flows: merge by the remapped from/to pair, not the raw imported ids.
     if(Array.isArray(payload.flows)){
       let flowsAdded=0;
       for(const f of payload.flows){
         if(!f || !f.from || !f.to) continue;
-        if(flows.some(existing=>existing.from===f.from && existing.to===f.to)) continue;
-        flows.push(f);
+        const from = idRemap[f.from], to = idRemap[f.to];
+        if(!from || !to) continue; // track no longer exists on either device
+        if(flows.some(existing=>existing.from===from && existing.to===to)) continue;
+        flows.push({...f, from, to});
         flowsAdded++;
       }
       if(flowsAdded>0) await saveFlows();
     }
 
-    renderLibrary(); renderNowPlayingSelect(); updateCount();
+    // Crates: merge into an existing same-named crate if there is one,
+    // otherwise create a new one — either way, remapped track ids only.
+    if(Array.isArray(payload.crates)){
+      let cratesChanged=false;
+      for(const c of payload.crates){
+        if(!c || !Array.isArray(c.trackIds)) continue;
+        const remapped = c.trackIds.map(id=>idRemap[id]).filter(Boolean);
+        const existing = crates.find(x=>norm(x.name)===norm(c.name));
+        if(existing){
+          remapped.forEach(id=>{ if(!existing.trackIds.includes(id)) existing.trackIds.push(id); });
+        } else {
+          crates.push({id:'c_'+Date.now()+'_'+Math.random().toString(36).slice(2,7), name:c.name, trackIds:remapped});
+        }
+        cratesChanged = true;
+      }
+      if(cratesChanged) await saveCrates();
+    }
+    setHeaderProgress(75);
+
+    // Chains: a chain's identity is its ordered track sequence, so skip if
+    // an identical (remapped) sequence already exists locally.
+    if(Array.isArray(payload.chains)){
+      let chainsChanged=false;
+      for(const c of payload.chains){
+        if(!c || !Array.isArray(c.trackIds)) continue;
+        const remapped = c.trackIds.map(id=>idRemap[id]).filter(Boolean);
+        if(remapped.length < 6) continue; // a track dropped out — no longer a valid chain
+        const key = remapped.join(',');
+        if(chains.some(x=>x.trackIds.join(',')===key)) continue;
+        chains.push({id:'ch_'+Date.now()+'_'+Math.random().toString(36).slice(2,7),
+          name: c.name || 'Chain '+(chains.length+1), trackIds:remapped, savedAt:Date.now()});
+        chainsChanged = true;
+      }
+      if(chainsChanged) await saveChains();
+    }
+
+    // Favourites: simple remapped set union.
+    if(Array.isArray(payload.favourites)){
+      let favChanged=false;
+      payload.favourites.forEach(id=>{
+        const local = idRemap[id];
+        if(local && !favourites.includes(local)){ favourites.push(local); favChanged=true; }
+      });
+      if(favChanged) await saveFavourites();
+    }
+
+    // Weight preferences — these fully replace the local split, since
+    // "import preferences" should mean the new device now matches.
+    if(payload.activeWeights && typeof payload.activeWeights==='object'){
+      const w = {
+        'w-bpm': +payload.activeWeights['w-bpm']||0,
+        'w-key': +payload.activeWeights['w-key']||0,
+        'w-bands': +payload.activeWeights['w-bands']||0,
+        'w-loud': +payload.activeWeights['w-loud']||0,
+      };
+      const total = (w['w-bpm']+w['w-key']+w['w-bands']+w['w-loud']) || 1;
+      const keys = ['w-bpm','w-key','w-bands','w-loud'];
+      let sum=0;
+      keys.slice(0,-1).forEach(k=>{ w[k]=Math.round((w[k]/total*100)/10)*10; sum+=w[k]; });
+      w[keys[keys.length-1]] = 100-sum;
+      activeWeights = w;
+      setSliders(activeWeights);
+      updateWeightsSaveState();
+      await saveActiveWeights();
+    }
+
+    setHeaderProgress(100);
+    setTimeout(hideHeaderProgress, 400);
+    renderLibrary(); renderNowPlayingSelect(); updateCount(); populateCrateFilterSelect();
     showInfoToast(`Imported ${added} track${added===1?'':'s'}${skipped?`, skipped ${skipped} duplicate${skipped===1?'':'s'}`:''}`, false);
   };
-  reader.onerror = ()=> showInfoToast("Couldn't read that file", true);
+  reader.onerror = ()=>{ hideHeaderProgress(); showInfoToast("Couldn't read that file", true); };
   reader.readAsText(file);
 }
 
