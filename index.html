@@ -65,7 +65,7 @@
   header.top{position:sticky;top:0;z-index:70;padding:max(22px, env(safe-area-inset-top)) 20px 10px;display:flex;align-items:center;
     gap:12px;background:rgba(255,255,255,0.86);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);}
   html.dark header.top{background:rgba(16,17,20,0.82);}
-  .logo{width:134px;height:52px;overflow:visible;flex-shrink:0;margin-left:-8px;}
+  .logo{width:134px;height:52px;overflow:visible;flex-shrink:0;margin-left:-15px;}
   .header-divider{width:1px;align-self:stretch;background:var(--line);flex-shrink:0;}
   .header-now{flex:1;min-width:0;display:flex;align-items:center;gap:8px;}
   .header-now img{width:30px;height:30px;border-radius:var(--radius-tight);object-fit:cover;flex-shrink:0;}
@@ -289,8 +289,8 @@
     padding:9px 10px;font-size:var(--text-body-sm);color:var(--text);}
   .now-search{position:relative;flex:1;min-width:0;}
   .now-undo-btn{flex-shrink:0;}
-  .now-search input{width:100%;background:var(--card);color:var(--text);border:none;border-radius:var(--radius-panel);
-    padding:13px 12px;font-size:var(--text-body-lg);box-shadow:0 1px 2px rgba(0,0,0,0.04);}
+  .now-search input{width:100%;background:var(--card);color:var(--text);border:1px solid var(--line);border-radius:var(--radius-control);
+    padding:9px 11px;font-size:var(--text-body);box-shadow:none;}
   .now-suggestions{position:absolute;left:0;right:0;top:calc(100% + 6px);background:var(--card);
     border-radius:var(--radius-panel);box-shadow:0 6px 20px rgba(0,0,0,0.14);z-index:50;max-height:0;
     overflow-y:auto;opacity:0;transform:translateY(-4px);pointer-events:none;
@@ -299,6 +299,8 @@
   .now-suggestion-row{display:flex;align-items:center;gap:10px;padding:9px 12px;cursor:pointer;}
   .now-suggestion-row:active{background:var(--bg);}
   .now-suggestion-row img{width:32px;height:32px;border-radius:var(--radius-tight);object-fit:cover;flex-shrink:0;}
+  .now-sugg-score{font-size:var(--text-caption);font-weight:800;flex-shrink:0;}
+  .now-sugg-crate{font-size:var(--text-caption);font-weight:700;color:var(--dim);flex-shrink:0;width:16px;text-align:center;}
   .now-suggestion-row .t{font-size:var(--text-body-sm);font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
   .now-suggestion-row .a{font-size:var(--text-caption);color:var(--dim);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 
@@ -316,14 +318,12 @@
 
   .history-and-clock{display:flex;align-items:center;gap:14px;}
   .history-and-clock #play-history{flex:1;min-width:0;}
-  .play-clock{display:none;}
+  .play-clock{display:flex;align-items:center;gap:3px;flex-shrink:0;position:relative;overflow:hidden;
+    padding:5px 8px;border-radius:8px;background:#000;}
   html.clock-hidden .play-clock{display:none !important;}
-  @media (orientation: landscape){
-    .play-clock{display:flex;align-items:center;gap:3px;flex-shrink:0;position:relative;overflow:hidden;
-      padding:6px 10px;border-radius:8px;margin-bottom:14px;background:#000;}
-    html:not(.dark) .play-clock{border:2px solid #fff;
-      box-shadow:0 0 0 1px rgba(0,0,0,0.85), 0 6px 18px rgba(0,0,0,0.16), 0 1px 3px rgba(0,0,0,0.1);}
-  }
+  html:not(.dark) .play-clock{border:1.5px solid #fff;
+    box-shadow:0 0 0 1px rgba(0,0,0,0.85), 0 4px 12px rgba(0,0,0,0.14);}
+  .header-clock{margin-left:10px;}
   .pc-secs{display:inline-flex;align-items:center;opacity:0.5;}
 
   .screensaver{position:fixed;inset:0;background:#000;z-index:900;
@@ -446,6 +446,7 @@
   .new-crate-btn{display:block;width:100%;margin-top:10px;background:var(--card);
     border:1.5px dashed var(--line);border-radius:var(--radius-panel);padding:12px;
     font-size:var(--text-body-sm);font-weight:600;color:var(--dim);cursor:pointer;}
+  .organise-divider{height:1px;background:var(--line);margin:20px 2px;}
 
   .back-btn{background:none;border:none;color:var(--text);font-size:var(--text-body);font-weight:600;
     padding:2px 0 14px;cursor:pointer;}
@@ -522,6 +523,7 @@
         <div class="header-now-label">NOW PLAYING</div>
         <div class="header-now-name" id="header-now-name"></div>
       </div>
+      <div class="play-clock header-clock" id="play-clock"></div>
     </div>
     <div class="header-divider" id="header-now-divider-2" style="display:none;"></div>
     <div class="header-right">
@@ -565,8 +567,35 @@
         </div>
       </div>
       <div class="modal-row">
+        <span>Preview method</span>
+        <select id="preview-method-select" style="background:var(--bg);border:1px solid var(--line);border-radius:var(--radius-control);padding:7px 10px;color:var(--text);font-size:var(--text-body-sm);">
+          <option value="drag">Drag to preview</option>
+          <option value="button">Tap button only</option>
+        </select>
+      </div>
+      <div class="modal-row">
         <span>Vinyl brake effect</span>
         <label class="switch"><input type="checkbox" id="vinyl-brake-toggle" checked><span class="switch-slider"></span></label>
+      </div>
+      <div class="weights" id="weights-panel" style="margin-top:14px;box-shadow:none;border:1px solid var(--line);">
+        <div class="weights-summary" id="weights-summary"><svg class="weights-tri" viewBox="0 0 10 10" width="9" height="9"><path d="M1,2 L9,2 L5,8 Z" fill="currentColor"/></svg> Suggestion Priorities</div>
+        <div class="content"><div class="content-inner">
+          <p class="weights-hint">Every DJ weighs these differently — set your split below (10–70% each, in steps of 10%). Nothing changes until you hit Save.</p>
+          <div class="wrow-group">
+            <div class="wrow"><span class="lbl">BPM</span><input type="range" id="w-bpm" min="10" max="70" step="10" value="20"><span class="val" id="w-bpm-val">20%</span></div>
+            <div class="tick-row" style="margin-left:96px;"><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div>
+            <div class="wrow"><span class="lbl">Key</span><input type="range" id="w-key" min="10" max="70" step="10" value="30"><span class="val" id="w-key-val">30%</span></div>
+            <div class="tick-row" style="margin-left:96px;"><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div>
+            <div class="wrow"><span class="lbl">Loudness</span><input type="range" id="w-loud" min="10" max="70" step="10" value="10"><span class="val" id="w-loud-val">10%</span></div>
+            <div class="tick-row" style="margin-left:96px;"><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div>
+            <div class="wrow"><span class="lbl">Tonal Balance</span><input type="range" id="w-bands" min="10" max="70" step="10" value="40"><span class="val" id="w-bands-val">40%</span></div>
+            <div class="tick-row" style="margin-left:96px;"><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div>
+          </div>
+          <div class="weights-save-row">
+            <span class="weights-total" id="weights-total">100%</span>
+            <button class="weights-save-btn" id="weights-save-btn"><span class="save-btn-fill"></span><span class="save-btn-label">Save</span></button>
+          </div>
+        </div></div>
       </div>
       <div class="modal-row" style="border-top:1px solid var(--line);padding-top:14px;margin-top:4px;">
         <span style="color:var(--dim);font-size:var(--text-caption);">Version</span>
@@ -640,6 +669,10 @@
 
   <section id="tab-organise" style="display:none;">
     <div id="organise-list-view">
+      <div class="section-lbl">Your Crates</div>
+      <div id="crates-list"></div>
+      <button class="new-crate-btn" id="new-crate-btn">+ New Crate</button>
+      <div class="organise-divider"></div>
       <div class="crate-card flow-crate" id="open-flow-crate">
         <div class="crate-card-info">
           <svg class="graffiti-label" viewBox="0 0 78 26" xmlns="http://www.w3.org/2000/svg">
@@ -674,9 +707,6 @@
         </div>
         <div class="chev">›</div>
       </div>
-      <div class="section-lbl" style="margin-top:16px;">Your Crates</div>
-      <div id="crates-list"></div>
-      <button class="new-crate-btn" id="new-crate-btn">+ New Crate</button>
     </div>
 
     <div id="organise-detail-view" style="display:none;">
@@ -686,26 +716,6 @@
   </section>
 
   <section id="tab-match" style="display:none;">
-    <div class="weights" id="weights-panel">
-      <div class="weights-summary" id="weights-summary"><svg class="weights-tri" viewBox="0 0 10 10" width="9" height="9"><path d="M1,2 L9,2 L5,8 Z" fill="currentColor"/></svg> Suggestion Priorities</div>
-      <div class="content"><div class="content-inner">
-        <p class="weights-hint">Every DJ weighs these differently — set your split below (10–70% each, in steps of 10%). Nothing changes until you hit Save.</p>
-        <div class="wrow-group">
-          <div class="wrow"><span class="lbl">BPM</span><input type="range" id="w-bpm" min="10" max="70" step="10" value="20"><span class="val" id="w-bpm-val">20%</span></div>
-          <div class="tick-row" style="margin-left:96px;"><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div>
-          <div class="wrow"><span class="lbl">Key</span><input type="range" id="w-key" min="10" max="70" step="10" value="30"><span class="val" id="w-key-val">30%</span></div>
-          <div class="tick-row" style="margin-left:96px;"><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div>
-          <div class="wrow"><span class="lbl">Loudness</span><input type="range" id="w-loud" min="10" max="70" step="10" value="10"><span class="val" id="w-loud-val">10%</span></div>
-          <div class="tick-row" style="margin-left:96px;"><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div>
-          <div class="wrow"><span class="lbl">Tonal Balance</span><input type="range" id="w-bands" min="10" max="70" step="10" value="40"><span class="val" id="w-bands-val">40%</span></div>
-          <div class="tick-row" style="margin-left:96px;"><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div>
-        </div>
-        <div class="weights-save-row">
-          <span class="weights-total" id="weights-total">100%</span>
-          <button class="weights-save-btn" id="weights-save-btn"><span class="save-btn-fill"></span><span class="save-btn-label">Save</span></button>
-        </div>
-      </div></div>
-    </div>
     <div class="now-search-row">
       <div class="now-search">
         <input type="text" id="now-playing-input" placeholder="Type a track title or artist…" autocomplete="off">
@@ -721,7 +731,6 @@
     </div>
     <div class="history-and-clock">
       <div id="play-history"></div>
-      <div class="play-clock" id="play-clock"></div>
     </div>
     <div id="now-card-holder"></div>
     <div id="match-section" style="display:none;"><div class="section-lbl">Top matches — tap a row for details, or hit ▶ to play it right away</div></div>
@@ -1376,7 +1385,8 @@ async function analyzeFile(file, onProgress){
   const keyInfo = estimateKey(mono, audioBuffer.sampleRate);
   onProgress(0.9);
 
-  const previewAudio = extractPreviewDataUrl(audioBuffer, findLoudestWindowCenter(mono, audioBuffer.sampleRate, audioBuffer.duration));
+  const previewAudio = await extractPreviewBest(audioBuffer, findLoudestWindowCenter(mono, audioBuffer.sampleRate, audioBuffer.duration),
+    p => onProgress(0.9 + p*0.07));
   onProgress(0.97);
 
   ctx.close();
@@ -1457,16 +1467,76 @@ function extractPreviewDataUrl(audioBuffer, anchorTime){
   for(let i=0;i<bytes.length;i+=chunk){ binary += String.fromCharCode.apply(null, bytes.subarray(i, i+chunk)); }
   return 'data:audio/wav;base64,'+btoa(binary);
 }
+// Better quality than the WAV slice above, at real storage cost savings —
+// but it has to actually play the clip in real time to record it compressed,
+// so this takes as long as the clip itself (~15s), unlike the instant WAV
+// method. Tries AAC first (Safari's native choice), then Opus/WebM, and
+// returns null if neither is supported so the caller can fall back to WAV.
+function extractPreviewCompressed(audioBuffer, anchorTime, onProgress){
+  return new Promise((resolve)=>{
+    if(!window.MediaRecorder){ resolve(null); return; }
+    const mimeCandidates = ['audio/mp4', 'audio/webm;codecs=opus', 'audio/webm'];
+    const mimeType = mimeCandidates.find(m=>MediaRecorder.isTypeSupported && MediaRecorder.isTypeSupported(m));
+    if(!mimeType){ resolve(null); return; }
+    try{
+      const duration = audioBuffer.duration;
+      let start = Math.max(0, anchorTime-5);
+      let end = Math.min(duration, start+15);
+      start = Math.max(0, end-15);
+      const srcRate = audioBuffer.sampleRate;
+      const startSample = Math.floor(start*srcRate), endSample = Math.floor(end*srcRate);
+      const sliceLen = Math.max(1, endSample-startSample);
+      const ch0 = audioBuffer.getChannelData(0);
+      const ch1 = audioBuffer.numberOfChannels>1 ? audioBuffer.getChannelData(1) : null;
+
+      const ctx = new (window.AudioContext||window.webkitAudioContext)();
+      const sliceBuffer = ctx.createBuffer(1, sliceLen, srcRate);
+      const outData = sliceBuffer.getChannelData(0);
+      for(let i=0;i<sliceLen;i++){ const s=startSample+i; outData[i] = ch1 ? (ch0[s]+ch1[s])/2 : (ch0[s]||0); }
+
+      const dest = ctx.createMediaStreamDestination();
+      const source = ctx.createBufferSource();
+      source.buffer = sliceBuffer;
+      source.connect(dest);
+
+      const chunks = [];
+      const recorder = new MediaRecorder(dest.stream, {mimeType, audioBitsPerSecond:64000});
+      const clipMs = sliceLen/srcRate*1000;
+      const startedAt = performance.now();
+      let progTimer = onProgress ? setInterval(()=>onProgress(Math.min(0.98,(performance.now()-startedAt)/clipMs)), 200) : null;
+      recorder.ondataavailable = e=>{ if(e.data.size>0) chunks.push(e.data); };
+      recorder.onstop = ()=>{
+        clearInterval(progTimer);
+        ctx.close();
+        const blob = new Blob(chunks, {type:mimeType});
+        const reader = new FileReader();
+        reader.onload = ()=>resolve(reader.result);
+        reader.onerror = ()=>resolve(null);
+        reader.readAsDataURL(blob);
+      };
+      recorder.start();
+      source.start();
+      source.onended = ()=>setTimeout(()=>{ try{ recorder.stop(); }catch(e){ resolve(null); } }, 80);
+    }catch(e){ console.error('compressed preview failed', e); resolve(null); }
+  });
+}
+async function extractPreviewBest(audioBuffer, anchorTime, onProgress){
+  try{
+    const compressed = await extractPreviewCompressed(audioBuffer, anchorTime, onProgress);
+    if(compressed) return compressed;
+  }catch(e){ console.error('falling back to WAV preview', e); }
+  return extractPreviewDataUrl(audioBuffer, anchorTime);
+}
 // For tracks already in the library from before this feature existed — the
 // original audio was never kept, so a preview can only be (re)built by
 // pointing back at that same file. This skips the full BPM/key/band re-run,
 // it only extracts the preview clip.
-async function generatePreviewFromFile(file){
+async function generatePreviewFromFile(file, onProgress){
   const arrBuf = await file.arrayBuffer();
   const ctx = new (window.AudioContext||window.webkitAudioContext)();
   const audioBuffer = await ctx.decodeAudioData(arrBuf);
   const mono = mixToMono(audioBuffer);
-  const previewAudio = extractPreviewDataUrl(audioBuffer, findLoudestWindowCenter(mono, audioBuffer.sampleRate, audioBuffer.duration));
+  const previewAudio = await extractPreviewBest(audioBuffer, findLoudestWindowCenter(mono, audioBuffer.sampleRate, audioBuffer.duration), onProgress);
   ctx.close();
   return previewAudio;
 }
@@ -1492,7 +1562,8 @@ async function processBulkPreviewFiles(files){
   for(let i=0;i<matches.length;i++){
     setHeaderProgress((i/matches.length)*100, `Preview ${i+1} of ${matches.length} — ${matches[i].track.name}`);
     try{
-      matches[i].track.previewAudio = await generatePreviewFromFile(matches[i].file);
+      matches[i].track.previewAudio = await generatePreviewFromFile(matches[i].file,
+        p => setHeaderProgress(((i+p)/matches.length)*100, `Preview ${i+1} of ${matches.length} — ${matches[i].track.name}`));
       await persistTrackAdd(matches[i].track);
       done++;
     }catch(err){
@@ -2109,6 +2180,7 @@ function dragBeginBrake(state){
   state.brakeTimer = setTimeout(()=>dragFullStop(state), rampMs);
 }
 function dragPointerDown(e){
+  if(previewMethod!=='drag') return;
   if(dragPtr) return;
   const row = e.target.closest('.drag-row');
   if(!row) return;
@@ -2344,7 +2416,7 @@ function renderLibrary(){
       if(!track) return;
       showHeaderProgress('Preparing preview…');
       try{
-        track.previewAudio = await generatePreviewFromFile(file);
+        track.previewAudio = await generatePreviewFromFile(file, p=>setHeaderProgress(p*100, `Recording preview… ${Math.round(p*100)}%`));
         await persistTrackAdd(track);
         setHeaderProgress(100); setTimeout(hideHeaderProgress,300);
         renderLibrary();
@@ -2710,17 +2782,39 @@ function renderPlayHistory(){
 }
 
 let currentNowMatches = [];
+function quickScoreTrack(now, t){
+  const bm=bpmMatchInfo(now.bpm,t.bpm);
+  const bs=Math.round(bm.score);
+  const kd=camelotDistance(now.key.camelot,t.key.camelot);
+  const bandS=bandsScore(now.bands,t.bands);
+  const loudS=loudnessScore(now.loudness,t.loudness);
+  const wBpm=activeWeights['w-bpm'], wKey=activeWeights['w-key'], wBands=activeWeights['w-bands'], wLoud=activeWeights['w-loud'];
+  const parts = [{score:bs,weight:wBpm},{score:kd.score,weight:wKey}];
+  if(bandS!=null) parts.push({score:bandS, weight:wBands});
+  if(loudS!=null) parts.push({score:loudS, weight:wLoud});
+  const total = parts.reduce((s,p)=>s+p.weight,0)||1;
+  return Math.round(parts.reduce((s,p)=>s+p.score*p.weight,0)/total);
+}
 function renderNowSuggestions(query){
   const box = document.getElementById('now-suggestions');
   const q = query.trim().toLowerCase();
   const matches = library.filter(t => !q || t.name.toLowerCase().includes(q) || (t.artist||'').toLowerCase().includes(q)).slice(0,8);
   currentNowMatches = matches;
   if(matches.length===0){ box.innerHTML=''; box.classList.remove('show'); return; }
-  box.innerHTML = matches.map(t=>`
+  const now = library.find(t=>t.id===nowPlayingId);
+  const activeCrate = suggestionsCrateFilterId ? crates.find(c=>c.id===suggestionsCrateFilterId) : null;
+  box.innerHTML = matches.map(t=>{
+    const score = (now && t.id!==now.id) ? quickScoreTrack(now, t) : null;
+    const inCrate = activeCrate ? activeCrate.trackIds.includes(t.id) : null;
+    const scoreHtml = score==null ? '' : `<span class="now-sugg-score" style="color:${pctColor(score)}">${score}%</span>`;
+    const crateHtml = inCrate===null ? '' : `<span class="now-sugg-crate" title="${inCrate?'In current crate':'Not in current crate'}">${inCrate?'✓':'✕'}</span>`;
+    return `
     <div class="now-suggestion-row" data-id="${t.id}">
       <img src="${t.icon}">
       <div><div class="t">${escapeHtml(t.name)}</div><div class="a">${escapeHtml(t.artist||'Unknown artist')}</div></div>
-    </div>`).join('');
+      ${scoreHtml}${crateHtml}
+    </div>`;
+  }).join('');
   box.classList.add('show');
   box.querySelectorAll('[data-id]').forEach(row=>{
     // mousedown (not click) fires before the input's blur, so the tap
@@ -3349,6 +3443,28 @@ async function loadFlowChainSetting(){
   }catch(e){}
   document.getElementById('flowchain-toggle').checked = showFlowChainSuggestions;
 }
+const PREVIEW_METHOD_KEY = 'cratebuddy:preview-method';
+let previewMethod = 'drag';
+async function loadPreviewMethod(){
+  try{
+    if(hasArtifactStorage){
+      const r = await window.storage.get(PREVIEW_METHOD_KEY,false).catch(()=>null);
+      if(r && r.value) previewMethod = r.value;
+    } else {
+      const s = localStorage.getItem(PREVIEW_METHOD_KEY);
+      if(s) previewMethod = s;
+    }
+  }catch(e){}
+  document.getElementById('preview-method-select').value = previewMethod;
+}
+document.getElementById('preview-method-select').addEventListener('change', async e=>{
+  previewMethod = e.target.value;
+  try{
+    if(hasArtifactStorage) await window.storage.set(PREVIEW_METHOD_KEY, previewMethod, false);
+    else localStorage.setItem(PREVIEW_METHOD_KEY, previewMethod);
+  }catch(err){ console.error('preview method save failed', err); }
+});
+
 const VINYL_BRAKE_KEY = 'cratebuddy:vinyl-brake';
 async function loadVinylBrakeSetting(){
   try{
@@ -3924,6 +4040,7 @@ bootPromises.push(loadFavourites());
 document.getElementById('now-undo-btn').addEventListener('click', undoLastSelection);
 bootPromises.push(loadFlowChainSetting());
 bootPromises.push(loadVinylBrakeSetting());
+bootPromises.push(loadPreviewMethod());
 bootPromises.push(loadClockSettings());
 bootPromises.push(loadHistorySessions());
 
@@ -4032,16 +4149,16 @@ function ensurePlayClockSlots(){
   if(!el) return null;
   el.innerHTML = '';
   const s = {
-    hTens: buildDigitSlot(18,32,true), hOnes: buildDigitSlot(18,32,true),
-    mTens: buildDigitSlot(18,32,true), mOnes: buildDigitSlot(18,32,true),
-    sTens: buildDigitSlot(18,32,false), sOnes: buildDigitSlot(18,32,false)
+    hTens: buildDigitSlot(12,20,true), hOnes: buildDigitSlot(12,20,true),
+    mTens: buildDigitSlot(12,20,true), mOnes: buildDigitSlot(12,20,true),
+    sTens: buildDigitSlot(12,20,false), sOnes: buildDigitSlot(12,20,false)
   };
   el.appendChild(s.hTens.el); el.appendChild(s.hOnes.el);
-  el.appendChild(buildColon(6,32));
+  el.appendChild(buildColon(4,20));
   el.appendChild(s.mTens.el); el.appendChild(s.mOnes.el);
   const secsWrap = document.createElement('span');
   secsWrap.className = 'pc-secs';
-  secsWrap.appendChild(buildColon(6,32));
+  secsWrap.appendChild(buildColon(4,20));
   secsWrap.appendChild(s.sTens.el); secsWrap.appendChild(s.sOnes.el);
   el.appendChild(secsWrap);
   const grain = document.createElement('div');
