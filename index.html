@@ -531,6 +531,10 @@
           <span id="clock-drift-val" style="font-size:var(--text-body-sm);color:var(--dim);min-width:30px;text-align:right;">50%</span>
         </div>
       </div>
+      <div class="modal-row" style="border-top:1px solid var(--line);padding-top:14px;margin-top:4px;">
+        <span style="color:var(--dim);font-size:var(--text-caption);">Version</span>
+        <span id="version-display" style="color:var(--dim);font-size:var(--text-caption);"></span>
+      </div>
     </div>
   </div>
 
@@ -3402,15 +3406,21 @@ function renderFlowDetail(){
 /* =========================================================
    INIT
 ========================================================= */
-loadLibrary();
-loadFlows();
-loadChains();
-loadCrates().then(populateCrateFilterSelect);
-loadFavourites();
+const APP_VERSION = '1.0';
+const APP_BUILD = '2026-09-08';
+document.getElementById('version-display').textContent = `${APP_VERSION} · ${APP_BUILD}`;
+let bootPromises = [];
+showHeaderProgress('Loading your crate…');
+
+bootPromises.push(loadLibrary());
+bootPromises.push(loadFlows());
+bootPromises.push(loadChains());
+bootPromises.push(loadCrates().then(populateCrateFilterSelect));
+bootPromises.push(loadFavourites());
 document.getElementById('now-undo-btn').addEventListener('click', undoLastSelection);
-loadFlowChainSetting();
-loadClockSettings();
-loadHistorySessions();
+bootPromises.push(loadFlowChainSetting());
+bootPromises.push(loadClockSettings());
+bootPromises.push(loadHistorySessions());
 
 /* Landscape-only clock next to the play-history strip — CSS handles when
    it's actually visible. Rendered as real 7-segment shapes (not a font)
@@ -3550,8 +3560,8 @@ function tickClock(){
 tickClock();
 setInterval(tickClock, 1000);
 populateManualKeySelect();
-loadActiveWeights();
-loadDarkMode();
+bootPromises.push(loadActiveWeights());
+bootPromises.push(loadDarkMode());
 
 /* ---- Screensaver: fades in after 20s of no interaction anywhere in the app ----
    Persistent digit slots here too — only milliseconds actually need constant
@@ -3638,7 +3648,12 @@ function resetIdleTimer(e){
 ['touchstart','mousedown','keydown','scroll'].forEach(ev=>{
   window.addEventListener(ev, resetIdleTimer, {passive:false, capture:true});
 });
-loadScreensaverSettings().then(resetIdleTimer);
+bootPromises.push(loadScreensaverSettings().then(resetIdleTimer));
+setHeaderProgress(35);
+Promise.all(bootPromises).then(()=>{
+  setHeaderProgress(100);
+  setTimeout(hideHeaderProgress, 300);
+});
 </script>
 </body>
 </html>
