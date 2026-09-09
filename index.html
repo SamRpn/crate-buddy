@@ -434,7 +434,7 @@
   .deck-search-cancel{background:none;border:none;color:var(--dim);font-size:var(--text-caption);font-weight:600;
     padding:4px 2px;cursor:pointer;text-align:left;}
   .deck-card .art-frame{width:100%;aspect-ratio:1;border-radius:var(--radius-thumb);margin-bottom:8px;overflow:hidden;position:relative;}
-  .deck-card .art{width:100%;height:100%;object-fit:contain;display:block;transform:scale(2.2);}
+  .deck-card .art{width:100%;height:100%;object-fit:contain;display:block;}
   .deck-card .t{font-size:var(--text-body);font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin:0 2px;}
   .deck-card .sub{font-size:var(--text-caption);color:color-mix(in srgb, var(--deck-color) 45%, var(--text));margin:2px 2px 4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
   .deck-card.empty{display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;
@@ -629,6 +629,10 @@
       <div class="modal-row">
         <span>Vinyl brake effect</span>
         <label class="switch"><input type="checkbox" id="vinyl-brake-toggle" checked><span class="switch-slider"></span></label>
+      </div>
+      <div class="modal-row">
+        <span>Search only within selected crate</span>
+        <label class="switch"><input type="checkbox" id="search-crate-scope-toggle"><span class="switch-slider"></span></label>
       </div>
       <div class="weights" id="weights-panel" style="margin-top:14px;box-shadow:none;border:1px solid var(--line);">
         <div class="weights-summary" id="weights-summary"><svg class="weights-tri" viewBox="0 0 10 10" width="9" height="9"><path d="M1,2 L9,2 L5,8 Z" fill="currentColor"/></svg> Suggestion Priorities</div>
@@ -2946,7 +2950,7 @@ function quickScoreTrack(now, t){
 function renderNowSuggestions(query){
   const box = document.getElementById('now-suggestions');
   const q = query.trim().toLowerCase();
-  const matches = library.filter(t => !q || t.name.toLowerCase().includes(q) || (t.artist||'').toLowerCase().includes(q)).slice(0,8);
+  const matches = getSearchableLibrary().filter(t => !q || t.name.toLowerCase().includes(q) || (t.artist||'').toLowerCase().includes(q)).slice(0,8);
   currentNowMatches = matches;
   if(matches.length===0){ box.innerHTML=''; box.classList.remove('show'); return; }
   const now = library.find(t=>t.id===nowPlayingId);
@@ -3252,7 +3256,7 @@ function renderDeckSearchResults(letter, query){
   const box = document.getElementById('deck-search-results-'+letter);
   if(!box) return;
   const q = query.trim().toLowerCase();
-  const matches = library.filter(t => !q || t.name.toLowerCase().includes(q) || (t.artist||'').toLowerCase().includes(q)).slice(0,8);
+  const matches = getSearchableLibrary().filter(t => !q || t.name.toLowerCase().includes(q) || (t.artist||'').toLowerCase().includes(q)).slice(0,8);
   if(matches.length===0){ box.innerHTML = q ? `<div class="empty-state" style="padding:14px 0;">No matches</div>` : ''; return; }
   const otherDeck = letter==='A' ? deckB : deckA;
   const otherT = otherDeck ? library.find(t=>t.id===otherDeck.trackId) : null;
@@ -3789,6 +3793,36 @@ document.getElementById('vinyl-brake-toggle').addEventListener('change', async e
     else localStorage.setItem(VINYL_BRAKE_KEY, vinylBrakeEnabled?'1':'0');
   }catch(err){ console.error('vinyl brake setting save failed', err); }
 });
+
+let searchScopedToCrate = false;
+const SEARCH_CRATE_SCOPE_KEY = 'cratebuddy:search-crate-scope';
+async function loadSearchCrateScopeSetting(){
+  try{
+    if(hasArtifactStorage){
+      const r = await window.storage.get(SEARCH_CRATE_SCOPE_KEY,false).catch(()=>null);
+      if(r && r.value!=null) searchScopedToCrate = r.value==='1';
+    } else {
+      const s = localStorage.getItem(SEARCH_CRATE_SCOPE_KEY);
+      if(s!=null) searchScopedToCrate = s==='1';
+    }
+  }catch(e){}
+  document.getElementById('search-crate-scope-toggle').checked = searchScopedToCrate;
+}
+document.getElementById('search-crate-scope-toggle').addEventListener('change', async e=>{
+  searchScopedToCrate = e.target.checked;
+  try{
+    if(hasArtifactStorage) await window.storage.set(SEARCH_CRATE_SCOPE_KEY, searchScopedToCrate?'1':'0', false);
+    else localStorage.setItem(SEARCH_CRATE_SCOPE_KEY, searchScopedToCrate?'1':'0');
+  }catch(err){ console.error('search crate scope setting save failed', err); }
+});
+// Shared by both search entry points (top search bar + deck-specific search)
+// so "search within selected crate" behaves identically everywhere.
+function getSearchableLibrary(){
+  if(!searchScopedToCrate || !suggestionsCrateFilterId) return library;
+  const crate = crates.find(c=>c.id===suggestionsCrateFilterId);
+  if(!crate) return library;
+  return library.filter(t=>crate.trackIds.includes(t.id));
+}
 
 document.getElementById('flowchain-toggle').addEventListener('change', async e=>{
   showFlowChainSuggestions = e.target.checked;
@@ -4342,13 +4376,15 @@ function renderFlowDetail(){
 /* =========================================================
    INIT
 ========================================================= */
-const APP_VERSION = '1.16';
+const APP_VERSION = '1.18';
 const APP_BUILD = '2026-09-08';
 document.getElementById('version-display').textContent = `${APP_VERSION} · ${APP_BUILD}`;
 // Reconstructed from this build session's history — not tracked in real time
 // from the very start, but accurate to the best of what was actually shipped.
 // Add one line here with each future update.
 const CHANGELOG = [
+  {v:'1.18', notes:'Fixed: the 2.2x zoom from 1.16 was being applied to every deck image regardless of whether it actually needed trimming, cropping well-composed square album art that never had padding to begin with. Zoom removed entirely — deck artwork now always renders authentic and uncropped.'},
+  {v:'1.17', notes:'New Settings option: "Search only within selected crate" — when on, both the top search bar and the deck-specific search only show tracks from whichever crate is currently selected for suggestions, instead of your whole library. Off by default.'},
   {v:'1.16', notes:'Deck color tint now washes across the whole card, not just the artwork square, so there is no visible seam between the art and the text below it. Artwork zoom increased from 1.4x to 2.2x for a noticeably bigger icon, and the bpm/key text is now tinted to stay readable against the color wash.'},
   {v:'1.15', notes:'Deck artwork background is now a subtle tint of the deck color instead of a flat dark fill, and the icon itself is zoomed in a bit to look bigger — a deliberate, modest exception to the usual "never crop" rule, specifically to trim excess padding some source images have baked in.'},
   {v:'1.14', notes:'Tap an empty deck to search and load a track directly into it (search bar at top still works too). Clock now always visible on Play, not just when scrolled. Deck artwork is bigger with no more letterbox bars — square frame now matches typical album art. Tonal balance dropdown now also shows BPM/Key/Loudness comparison, not just the spectrum.'},
@@ -4383,6 +4419,7 @@ bootPromises.push(loadFavourites());
 document.getElementById('now-undo-btn').addEventListener('click', undoLastSelection);
 bootPromises.push(loadFlowChainSetting());
 bootPromises.push(loadVinylBrakeSetting());
+bootPromises.push(loadSearchCrateScopeSetting());
 bootPromises.push(loadPreviewMethod());
 bootPromises.push(loadClockSettings());
 bootPromises.push(loadHistorySessions());
