@@ -19,6 +19,8 @@
     --dim: #8a8a90;
     --accent: #007AFF;
     --accent2: #ffa947;
+    --deck-a-color: #e94f9e;
+    --deck-b-color: #2bb3a3;
     --radius: 16px;
     --radius-tight: 6px;
     --radius-thumb: 7px;
@@ -43,6 +45,7 @@
   }
   html.dark body{background:var(--bg);}
   *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  :focus-visible{outline:2px solid var(--accent);outline-offset:2px;}
   html,body{margin:0;padding:0;background:var(--bg);color:var(--text);
     font-family:-apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, sans-serif;
     -webkit-font-smoothing:antialiased;-webkit-text-size-adjust:100%;text-size-adjust:100%;
@@ -93,9 +96,11 @@
   .modal-overlay.show{opacity:1;pointer-events:auto;}
   .modal-sheet{background:var(--card);border-radius:var(--radius-sheet) var(--radius-sheet) 0 0;padding:18px 20px 28px;
     width:100%;max-width:640px;box-shadow:0 -6px 24px rgba(0,0,0,0.2);
+    max-height:85vh;overflow-y:auto;
     transform:translateY(100%);transition:transform 0.32s cubic-bezier(0.32,0.72,0,1);}
   .modal-overlay.show .modal-sheet{transform:translateY(0);}
-  .modal-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;}
+  .modal-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;
+    position:sticky;top:0;background:var(--card);z-index:1;padding-top:2px;margin-top:-2px;}
   .modal-header b{font-size:var(--text-body-lg);}
   .modal-header button{background:none;border:none;font-size:var(--text-body-lg);color:var(--dim);cursor:pointer;padding:4px;}
   .modal-row{display:flex;align-items:center;justify-content:space-between;padding:10px 0;font-size:var(--text-body);}
@@ -163,7 +168,6 @@
   .manual-form{margin-top:10px;background:var(--card);border-radius:var(--radius-card);padding:14px 16px;
     display:flex;flex-direction:column;gap:9px;box-shadow:0 1px 2px rgba(0,0,0,0.04);}
 
-  .queue{margin-top:12px;display:flex;flex-direction:column;gap:8px;}
   .qrow{display:flex;align-items:center;gap:10px;background:var(--card);
     border-radius:var(--radius-panel);padding:10px 12px;font-size:var(--text-body-sm);box-shadow:0 1px 2px rgba(0,0,0,0.04);}
   .qrow .name{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
@@ -282,6 +286,15 @@
   .weights.open .content{max-height:520px;opacity:1;}
   .weights .content-inner{padding:0 14px 14px;}
   .weights-hint{font-size:var(--text-caption);color:var(--dim);line-height:1.4;margin:0 0 10px;}
+  .changelog{margin-top:12px;}
+  .changelog-summary{display:flex;align-items:center;gap:6px;font-size:var(--text-caption);color:var(--dim);cursor:pointer;font-weight:600;}
+  .changelog-summary svg{transition:transform 0.18s ease;}
+  .changelog.open .changelog-summary svg{transform:rotate(180deg);}
+  .changelog-list{max-height:0;overflow:hidden;opacity:0;transition:max-height 0.32s ease, opacity 0.22s ease;}
+  .changelog.open .changelog-list{max-height:400px;opacity:1;overflow-y:auto;}
+  .changelog-entry{padding:8px 0;border-top:1px solid var(--line);font-size:var(--text-caption);}
+  .changelog-entry b{color:var(--text);font-size:var(--text-body-sm);}
+  .changelog-entry div{color:var(--dim);margin-top:2px;line-height:1.4;}
   .wrow{display:flex;align-items:center;gap:10px;margin-bottom:2px;font-size:var(--text-body-sm);color:var(--dim);}
   .wrow span.lbl{width:96px;flex-shrink:0;}
   .wrow span.val{width:34px;text-align:right;color:var(--text);font-weight:600;}
@@ -410,12 +423,18 @@
   .graffiti-label text{font-family:'Rubik Wet Paint', cursive;fill:#fff;stroke:#111;stroke-width:2.6;}
 
   .deck-row{display:grid;grid-template-columns:1fr auto 1fr;gap:8px;align-items:stretch;margin-bottom:14px;}
-  .deck-card{background:var(--card);border-radius:var(--radius-card);padding:14px;
+  .deck-card{background:var(--card);border-radius:var(--radius-card);padding:6px;
     border:2px solid var(--deck-color);box-shadow:0 1px 2px rgba(0,0,0,0.04);min-width:0;}
-  .deck-card .deck-label{font-size:var(--text-micro);font-weight:800;letter-spacing:.5px;color:var(--deck-color);margin-bottom:8px;}
-  .deck-card .art{width:100%;aspect-ratio:5/4;border-radius:var(--radius-thumb);object-fit:contain;margin-bottom:10px;display:block;background:var(--bg);}
-  .deck-card .t{font-size:var(--text-body);font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-  .deck-card .sub{font-size:var(--text-caption);color:var(--dim);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .deck-card .deck-label{font-size:var(--text-micro);font-weight:800;letter-spacing:.5px;color:var(--deck-color);margin:4px 2px 6px;}
+  .deck-card.deck-search-active{min-height:190px;display:flex;flex-direction:column;}
+  .deck-search-input{width:100%;background:var(--bg);border:1px solid var(--line);border-radius:var(--radius-control);
+    padding:8px 10px;font-size:var(--text-body-sm);color:var(--text);margin-bottom:6px;}
+  .deck-search-results{flex:1;overflow-y:auto;max-height:180px;}
+  .deck-search-cancel{background:none;border:none;color:var(--dim);font-size:var(--text-caption);font-weight:600;
+    padding:4px 2px;cursor:pointer;text-align:left;}
+  .deck-card .art{width:100%;aspect-ratio:1;border-radius:var(--radius-thumb);object-fit:contain;margin-bottom:8px;display:block;background:var(--bg);}
+  .deck-card .t{font-size:var(--text-body);font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin:0 2px;}
+  .deck-card .sub{font-size:var(--text-caption);color:var(--dim);margin:2px 2px 4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
   .deck-card.empty{display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;
     border-style:dashed;color:var(--dim);min-height:190px;}
   .deck-card.empty .deck-empty-icon{margin-bottom:8px;opacity:0.6;}
@@ -428,22 +447,12 @@
   .tonal-between-btn.open{background:#8e8e93;color:#fff;}
   .tonal-dropdown{max-height:0;overflow:hidden;opacity:0;
     transition:max-height 0.32s ease, opacity 0.22s ease;margin-bottom:14px;}
-  .tonal-dropdown.open{max-height:320px;opacity:1;}
+  .tonal-dropdown.open{max-height:460px;opacity:1;}
   .tonal-dropdown-inner{background:var(--card);border-radius:var(--radius-card);padding:14px 16px;
     box-shadow:0 1px 2px rgba(0,0,0,0.04);}
   .tonal-dropdown-legend{display:flex;gap:16px;margin-bottom:10px;font-size:var(--text-caption);}
   .tonal-dropdown-legend span{display:flex;align-items:center;gap:5px;}
   .tonal-dropdown-legend i{width:10px;height:10px;border-radius:50%;display:inline-block;}
-
-  .chart-card{background:var(--card);border-radius:var(--radius-card);padding:14px 16px 10px;margin-bottom:16px;
-    box-shadow:0 1px 2px rgba(0,0,0,0.04);}
-  .chart-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;}
-  .chart-title{font-size:var(--text-body-sm);color:var(--dim);font-weight:600;}
-  .chart-compare{display:flex;align-items:center;gap:7px;font-size:var(--text-body-sm);color:var(--dim);min-height:20px;}
-  .chart-compare .swatch{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
-  .chart-compare .pct{font-weight:800;}
-  canvas.spectrum-chart{width:100%;height:130px;display:block;}
-  .chart-labels{display:flex;justify-content:space-between;margin-top:2px;font-size:var(--text-micro);color:#c2c2c8;padding:0 2px;}
 
   .section-lbl{font-size:var(--text-body-sm);color:var(--dim);font-weight:600;margin:2px 2px 8px;}
   .play-reset-btn{display:block;width:100%;margin-top:18px;background:var(--card);
@@ -520,14 +529,22 @@
   .bd-col-right{flex:1;min-width:0;}
   .bl{font-size:var(--text-caption);color:var(--dim);}
   .bd-row{display:flex;align-items:center;gap:10px;}
+  .bd-pitch-note{font-size:var(--text-micro);color:#f59e0b;margin:2px 0 4px;cursor:help;}
   .bd-row .bl{width:44px;flex-shrink:0;}
   .bd-track{flex:1;height:5px;border-radius:3px;background:var(--line);overflow:hidden;}
   .bd-track i{display:block;height:100%;border-radius:3px;}
-  .bd-row .bv{font-size:var(--text-caption);font-weight:700;width:32px;text-align:right;flex-shrink:0;}
   .bd-row .bd-text{font-size:var(--text-body-sm);font-weight:600;}
 
   .note{color:var(--dim);font-size:var(--text-caption);line-height:1.6;margin:18px 20px 0;padding:13px 15px;
     background:var(--card);border-radius:var(--radius-panel);}
+  @media (prefers-reduced-motion: reduce){
+    *, *::before, *::after{
+      animation-duration: 0.001ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.001ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
 </style>
 </head>
 <body ondragover="event.preventDefault();event.stopPropagation();" ondrop="event.preventDefault();event.stopPropagation();">
@@ -547,18 +564,18 @@
     </div>
     <div class="header-divider" id="header-now-divider-1" style="display:none;"></div>
     <div class="header-now" id="header-now">
-      <div class="header-deck-chip" id="header-deck-a" style="--deck-color:#e94f9e">
+      <div class="header-deck-chip" id="header-deck-a" style="--deck-color:var(--deck-a-color)">
         <span class="header-deck-badge">A</span>
         <img id="header-deck-a-art">
         <div class="header-deck-chip-name" id="header-deck-a-name"></div>
       </div>
-      <div class="header-deck-chip" id="header-deck-b" style="--deck-color:#2bb3a3">
+      <div class="header-deck-chip" id="header-deck-b" style="--deck-color:var(--deck-b-color)">
         <span class="header-deck-badge">B</span>
         <img id="header-deck-b-art">
         <div class="header-deck-chip-name" id="header-deck-b-name"></div>
       </div>
-      <div class="play-clock header-clock" id="play-clock"></div>
     </div>
+    <div class="play-clock header-clock" id="play-clock" style="display:none;"></div>
     <div class="header-divider" id="header-now-divider-2" style="display:none;"></div>
     <div class="header-right">
       <button class="settings-btn" id="settings-btn" aria-label="Settings">
@@ -569,7 +586,7 @@
 
   <div class="modal-overlay" id="settings-overlay">
     <div class="modal-sheet">
-      <div class="modal-header"><b>Settings</b><button id="settings-close">✕</button></div>
+      <div class="modal-header"><b>Settings</b><button id="settings-close" aria-label="Close settings">✕</button></div>
       <div class="modal-row">
         <span>Dark Mode</span>
         <label class="switch"><input type="checkbox" id="dark-mode-toggle"><span class="switch-slider"></span></label>
@@ -635,12 +652,16 @@
         <span style="color:var(--dim);font-size:var(--text-caption);">Version</span>
         <span id="version-display" style="color:var(--dim);font-size:var(--text-caption);"></span>
       </div>
+      <div class="changelog" id="changelog-toggle">
+        <div class="changelog-summary">What's changed <svg class="weights-tri" viewBox="0 0 10 10" width="9" height="9"><path d="M1,2 L9,2 L5,8 Z" fill="currentColor"/></svg></div>
+        <div class="changelog-list" id="changelog-list"></div>
+      </div>
     </div>
   </div>
 
   <div class="tabs">
-    <div class="tab-indicator" id="tab-indicator"></div>
-    <button data-tab="import" class="active">
+    <div class="tab-indicator" id="tab-indicator" style="transform:translateX(200%);"></div>
+    <button data-tab="import">
       <svg class="tab-logo" viewBox="0 0 118 26" xmlns="http://www.w3.org/2000/svg">
         <text x="59" y="20" font-size="19" text-anchor="middle" stroke-linejoin="round" paint-order="stroke fill"
           letter-spacing="-0.5" rotate="-4,3,-2,4,-3,2,-1" transform="rotate(-2 59 13)">IMPORT</text>
@@ -652,7 +673,7 @@
           letter-spacing="-2.2" rotate="-4,3,-2,4,-3,2,-1,3" transform="rotate(-1 66 13)">ORGANISE</text>
       </svg>
     </button>
-    <button data-tab="match">
+    <button data-tab="match" class="active">
       <svg class="tab-logo" viewBox="0 0 66 26" xmlns="http://www.w3.org/2000/svg">
         <text x="33" y="20" font-size="19" text-anchor="middle" stroke-linejoin="round" paint-order="stroke fill"
           letter-spacing="-0.5" rotate="-4,3,-3,4" transform="rotate(2 33 13)">PLAY</text>
@@ -660,7 +681,7 @@
     </button>
   </div>
 
-  <section id="tab-import">
+  <section id="tab-import" style="display:none;">
     <div class="drop" id="drop">
       <b>Tap to choose tracks</b>
       or drag them in — MP3, WAV, M4A, AIFF, FLAC
@@ -703,6 +724,8 @@
 
   <section id="tab-organise" style="display:none;">
     <div id="organise-list-view">
+      <div class="lib-empty" id="organise-empty-library" style="display:none;">Nothing to organise yet — import some tracks first, then Crates, Flow, Chains, Favourites, and History will all show up here.</div>
+      <div id="organise-populated-content">
       <div class="section-lbl">Your Crates</div>
       <div id="crates-list"></div>
       <button class="new-crate-btn" id="new-crate-btn">+ New Crate</button>
@@ -741,6 +764,7 @@
         </div>
         <div class="chev">›</div>
       </div>
+      </div>
     </div>
 
     <div id="organise-detail-view" style="display:none;">
@@ -749,13 +773,13 @@
     </div>
   </section>
 
-  <section id="tab-match" style="display:none;">
+  <section id="tab-match">
     <div class="now-search-row">
       <div class="now-search">
         <input type="text" id="now-playing-input" placeholder="Type a track title or artist…" autocomplete="off">
         <div class="now-suggestions" id="now-suggestions"></div>
       </div>
-      <button class="settings-btn now-undo-btn" id="now-undo-btn" title="Undo last selection" style="display:none;">
+      <button class="settings-btn now-undo-btn" id="now-undo-btn" title="Undo last selection" aria-label="Undo last selection" style="display:none;">
         <svg viewBox="0 0 24 24" width="19" height="19"><path fill="currentColor" d="M12.5 8V4.5L6 10l6.5 5.5V12c3.3 0 6 2.7 6 6 0 .7-.1 1.4-.4 2 1.5-1.1 2.4-2.9 2.4-4.9 0-3.3-2.7-6-6-6Z"/></svg>
       </button>
     </div>
@@ -769,7 +793,7 @@
     <div id="now-card-holder"></div>
     <div id="match-section" style="display:none;"><div class="section-lbl">Top matches — tap a row for details, or hit ▶ to play it right away</div></div>
     <div id="match-list"></div>
-    <button class="play-reset-btn" id="save-history-btn">💾 Save this session's history</button>
+    <button class="play-reset-btn" id="save-history-btn">Save this session's history</button>
     <button class="play-reset-btn" id="play-reset-btn">↺ Reset — clear played history &amp; start a clean slate</button>
   </section>
 
@@ -904,7 +928,7 @@ function updateCount(){
 /* =========================================================
    TABS
 ========================================================= */
-let currentTab = 'import';
+let currentTab = 'match';
 const TAB_ORDER = ['import','organise','match'];
 let wakeLock = null;
 async function requestWakeLock(){
@@ -1986,22 +2010,6 @@ function pctColorSoft(p){
 ========================================================= */
 function fmtDuration(s){ s=Math.round(s); return Math.floor(s/60)+':'+String(s%60).padStart(2,'0'); }
 
-function miniLineChartSvg(bands){
-  const w=46, h=30, colW=w/4;
-  if(!bands){
-    // No spectrum data (e.g. a manually-added vinyl-only entry) — show a flat placeholder.
-    return `<svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}">
-      <line x1="3" y1="${h/2}" x2="${w-3}" y2="${h/2}" stroke="#e2e2e8" stroke-width="2" stroke-dasharray="2,3"/>
-    </svg>`;
-  }
-  const yFor = db => h - Math.max(0,Math.min(1,(db-CHART_DB_MIN)/(CHART_DB_MAX-CHART_DB_MIN)))*h;
-  const dividers = [1,2,3].map(i=>`<line x1="${i*colW}" y1="2" x2="${i*colW}" y2="${h-2}" stroke="#eee" stroke-width="1"/>`).join('');
-  const lines = BAND_KEYS.map((k,i)=>{
-    const y=yFor(bands[k]); const x0=i*colW+2, x1=(i+1)*colW-2;
-    return `<line x1="${x0}" y1="${y}" x2="${x1}" y2="${y}" stroke="#adadb5" stroke-width="2.6" stroke-linecap="round"/>`;
-  }).join('');
-  return `<svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}">${dividers}${lines}</svg>`;
-}
 // A tiny at-a-glance comparison: the Now Playing track's bands in flat grey,
 // the suggestion's bands colored per-band by how close they sit (same
 // green-to-orange-to-red scale, same dB tolerance as the row shape).
@@ -2048,8 +2056,8 @@ function trackRowHtml(t, opts){
   const removeAttr = opts.removeAttr || null;
   const selected = selectedTrackIds.has(t.id);
   const delBtn = removeAttr
-    ? `<button class="del" ${removeAttr}="${t.id}" title="Remove from this list">✕</button>`
-    : `<button class="del" data-del="${t.id}" title="Delete from your collection">✕</button>`;
+    ? `<button class="del" ${removeAttr}="${t.id}" title="Remove from this list" aria-label="Remove ${escapeHtml(t.name)} from this list">✕</button>`
+    : `<button class="del" data-del="${t.id}" title="Delete from your collection" aria-label="Delete ${escapeHtml(t.name)} from your collection">✕</button>`;
   return `<div class="track-row drag-row${freshlyAddedIds.has(t.id)?' row-fresh':''}${selected?' selected':''}" data-id="${t.id}">
     <div class="head drag-content">
       <div class="select-check${selected?' checked':''}">${selected?'✓':''}</div>
@@ -2063,24 +2071,24 @@ function trackRowHtml(t, opts){
       <div class="meta"><span class="meta-bpm"><b>${t.bpm}</b> bpm</span><br><span class="meta-key">${t.key.camelot} ${t.key.name}</span></div>
       <div class="row-actions">
         ${t.previewAudio ? `
-        <button class="match-play-btn" data-preview="${t.id}" title="Play 15s preview">
+        <button class="match-play-btn" data-preview="${t.id}" title="Play 15s preview" aria-label="Play 15 second preview of ${escapeHtml(t.name)}">
           <svg viewBox="0 0 34 34" width="30" height="30">
             <circle class="play-fill" cx="17" cy="17" r="16" style="fill:var(--accent)" opacity="0"></circle>
             <circle cx="17" cy="17" r="15" fill="none" style="stroke:var(--accent)" stroke-width="2"></circle>
             <path class="play-tri" d="M13.5 9.5 L24 17 L13.5 24.5 Z" fill="none" style="stroke:var(--accent)" stroke-width="1.8" stroke-linejoin="round"></path>
           </svg>
         </button>` : `
-        <button class="add-preview-btn" data-add-preview="${t.id}" title="Add a 15s preview clip">
+        <button class="add-preview-btn" data-add-preview="${t.id}" title="Add a 15s preview clip" aria-label="Add a preview clip for ${escapeHtml(t.name)}">
           <svg viewBox="0 0 24 24" width="16" height="16"><path fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" d="M12 5v14M5 12h14"/></svg>
         </button>
         <input type="file" accept="audio/*" class="add-preview-input" id="add-preview-input-${t.id}" style="display:none;">`}
-        <button class="fav-star${favourites.includes(t.id)?' is-fav':''}" data-fav="${t.id}" title="Add to Favourites">
+        <button class="fav-star${favourites.includes(t.id)?' is-fav':''}" data-fav="${t.id}" title="Add to Favourites" aria-label="${favourites.includes(t.id)?'Remove':'Add'} ${escapeHtml(t.name)} ${favourites.includes(t.id)?'from':'to'} Favourites">
           <svg viewBox="0 0 24 24" width="17" height="17">
             <path d="M12 2 L14.9 8.6 L22 9.3 L16.7 14.1 L18.2 21 L12 17.4 L5.8 21 L7.3 14.1 L2 9.3 L9.1 8.6 Z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
             <path class="star-fill" d="M12 2 L14.9 8.6 L22 9.3 L16.7 14.1 L18.2 21 L12 17.4 L5.8 21 L7.3 14.1 L2 9.3 L9.1 8.6 Z" fill="#eab308" opacity="${favourites.includes(t.id)?'1':'0'}"/>
           </svg>
         </button>
-        ${showEdit ? `<button class="edit-toggle" data-edit="${t.id}">✎</button>` : ''}
+        ${showEdit ? `<button class="edit-toggle" data-edit="${t.id}" aria-label="Edit ${escapeHtml(t.name)}">✎</button>` : ''}
         ${delBtn}
       </div>
     </div>
@@ -2156,7 +2164,7 @@ function dragSpinLoop(state){
     : state.speedDir===-1 ? Math.max(0, 1-elapsed/DRAG_RAMP_MS) : 1;
   if(state.audio && !state.audio.paused) state.audio.playbackRate = Math.max(0.05, rate);
   state.rot = (state.rot + 3*Math.max(0.05,rate)) % 360;
-  if(state.els.vinylSvg) state.els.vinylSvg.style.transform = 'rotate('+state.rot+'deg)';
+  if(state.els.vinylSvg && !prefersReducedMotion) state.els.vinylSvg.style.transform = 'rotate('+state.rot+'deg)';
   if(state.speedDir===1 && rate>=1 && !state.eqShown){
     state.eqShown = true;
     state.els.eq.style.transition=''; state.els.eq.style.opacity='1'; state.els.eq.classList.add('playing');
@@ -2406,6 +2414,7 @@ function alignLogoToTrackIcons(){
   const crateText = logo ? logo.querySelector('text') : null;
   const rowArt = document.querySelector('#library-list .drag-sleeve, #library-list .art');
   if(!logo || !crateText || !rowArt) return;
+  if(rowArt.offsetParent===null) return; // Import (or an ancestor) is currently display:none — nothing real to measure, leave the last good margin alone
   logo.style.marginLeft = LOGO_BASE_MARGIN + 'px'; // reset to the known baseline before measuring, so repeated calls don't compound
   const textBox = crateText.getBoundingClientRect();
   const artBox = rowArt.getBoundingClientRect();
@@ -2425,7 +2434,7 @@ function renderLibrary(){
   updateBulkPreviewBtn();
   const el = document.getElementById('library-list');
   renderLibToolbar();
-  if(library.length===0){ el.innerHTML = `<div class="lib-empty">No tracks yet — add some from Import.</div>`; return; }
+  if(library.length===0){ el.innerHTML = `<div class="lib-empty">Your imported tracks will show up here.</div>`; return; }
   const visibleCount = Math.min(Math.max(importRenderedCount, LIBRARY_BATCH_SIZE), library.length);
   el.innerHTML = library.slice(0, visibleCount).map(trackRowHtml).join('');
   freshlyAddedIds.clear();
@@ -2602,9 +2611,12 @@ let nowPlayingId = '';
 let playedTrackIds = new Set();
 let playHistory = []; // ordered track ids, in the order they were set as Now Playing this session
 let pendingFlowAnchorId = null; // track awaiting a neighbor tap to complete a Flow pairing
+const DECK_A_COLOR = '#e94f9e', DECK_B_COLOR = '#2bb3a3'; // single source of truth — matches --deck-a-color/--deck-b-color in CSS
+const prefersReducedMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 let deckA = null, deckB = null; // {trackId, insertedAt} or null — insertedAt drives Flow direction
 let activeDeck = 'A'; // whichever deck most recently received a track — this is what suggestions score against
 let tonalDropdownOpen = false;
+let deckSearchOpen = null; // null | 'A' | 'B' — which deck's inline search is currently open
 
 // Keeps the search box's text in sync with the library (e.g. after an edit
 // renames the current track, or the current track gets deleted). Kept under
@@ -2707,20 +2719,24 @@ function renderNowChip(){
   const div1 = document.getElementById('header-now-divider-1');
   const div2 = document.getElementById('header-now-divider-2');
   const undoBtn = document.getElementById('now-undo-btn');
+  const clockEl = document.getElementById('play-clock');
   if(!el) return;
   const deckAT = deckA ? library.find(x=>x.id===deckA.trackId) : null;
   const deckBT = deckB ? library.find(x=>x.id===deckB.trackId) : null;
-  const show = (deckAT || deckBT) && currentTab==='match' && headerScrolled;
+  const onPlay = currentTab==='match';
+  const show = (deckAT || deckBT) && onPlay && headerScrolled;
+  clockEl.style.display = onPlay ? 'flex' : 'none';
   clearTimeout(headerNowHideTimer);
   if(show){
-    el.style.display='flex'; div1.style.display='block'; div2.style.display='block';
+    el.style.display='flex'; div1.style.display='block';
     requestAnimationFrame(()=>el.classList.add('show'));
   } else {
     el.classList.remove('show');
     headerNowHideTimer = setTimeout(()=>{
-      el.style.display='none'; div1.style.display='none'; div2.style.display='none';
+      el.style.display='none'; div1.style.display='none';
     }, 260);
   }
+  div2.style.display = onPlay ? 'block' : 'none';
   undoBtn.style.display =
     (currentTab==='match' && previousNowPlayingId && library.some(x=>x.id===previousNowPlayingId)) ? 'flex' : 'none';
   if(!show) return;
@@ -3125,10 +3141,24 @@ let selectedMatchId = null;
 
 function renderDecks(){
   const holder=document.getElementById('now-card-holder');
+  if(library.length===0){
+    holder.innerHTML = `<div class="lib-empty">Import some tracks first, then load them into Deck A and Deck B here.</div>`;
+    return;
+  }
   const deckAT = deckA ? library.find(t=>t.id===deckA.trackId) : null;
   const deckBT = deckB ? library.find(t=>t.id===deckB.trackId) : null;
-  const deckCard = (t, label, colorVar, empty) => empty ? `
-    <div class="deck-card empty" style="--deck-color:${colorVar}">
+  const deckCard = (t, label, colorVar, empty, letter) => {
+    if(deckSearchOpen===letter){
+      return `
+      <div class="deck-card deck-search-active" style="--deck-color:${colorVar}">
+        <div class="deck-label">${label}</div>
+        <input type="text" class="deck-search-input" id="deck-search-input-${letter}" placeholder="Search a track…" autocomplete="off">
+        <div class="deck-search-results" id="deck-search-results-${letter}"></div>
+        <button class="deck-search-cancel" data-deck-search-cancel="${letter}">Cancel</button>
+      </div>`;
+    }
+    return empty ? `
+    <div class="deck-card empty" style="--deck-color:${colorVar}" data-deck-tap="${letter}">
       <div class="deck-label">${label}</div>
       <svg viewBox="0 0 24 24" width="26" height="26" class="deck-empty-icon"><path fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" d="M12 5v14M5 12h14"/></svg>
       <div class="deck-empty-text">Tap a track to load it here</div>
@@ -3139,25 +3169,49 @@ function renderDecks(){
       <div class="t">${escapeHtml(t.name)}</div>
       <div class="sub">${t.bpm} bpm · ${t.key.camelot} ${t.key.name}</div>
     </div>`;
+  };
   holder.innerHTML = `<div class="deck-row">
-    ${deckCard(deckAT, 'DECK A', '#e94f9e', !deckAT)}
+    ${deckCard(deckAT, 'DECK A', DECK_A_COLOR, !deckAT, 'A')}
     <div class="deck-mid-col">
-      <button class="flow-between-btn${(deckA&&deckB)?' ready':''}" id="flow-between-btn" title="Save a Flow between the decks">
+      <button class="flow-between-btn${(deckA&&deckB)?' ready':''}" id="flow-between-btn" title="Save a Flow between the decks" aria-label="Save a Flow between the decks">
         <svg viewBox="0 0 24 24" width="18" height="18"><path d="M2 14c2.5-5 5.5-5 8 0s5.5 5 8 0s5.5-5 8 0" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg>
       </button>
-      <button class="tonal-between-btn${tonalDropdownOpen?' open':''}" id="tonal-between-btn" title="Compare tonal balance">
+      <button class="tonal-between-btn${tonalDropdownOpen?' open':''}" id="tonal-between-btn" title="Compare tonal balance" aria-label="Compare tonal balance of both decks" aria-expanded="${tonalDropdownOpen?'true':'false'}">
         <svg viewBox="0 0 24 24" width="18" height="18"><path d="M4 16 L4 12 M9 16 L9 8 M14 16 L14 11 M19 16 L19 6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>
       </button>
     </div>
-    ${deckCard(deckBT, 'DECK B', '#2bb3a3', !deckBT)}
+    ${deckCard(deckBT, 'DECK B', DECK_B_COLOR, !deckBT, 'B')}
   </div>
   <div class="tonal-dropdown${tonalDropdownOpen?' open':''}" id="tonal-dropdown">
     <div class="tonal-dropdown-inner">
-      <div class="tonal-dropdown-legend">
-        <span><i style="background:#e94f9e"></i>Deck A</span>
-        <span><i style="background:#2bb3a3"></i>Deck B</span>
-      </div>
-      ${(deckAT&&deckBT) ? bandCompareChartSvg(deckAT.bands, deckBT.bands, true, ['#e94f9e','#2bb3a3']) : `<div class="empty-state" style="padding:10px 0;">Load a track into both decks to compare.</div>`}
+      ${(deckAT&&deckBT) ? (()=>{
+        const bm = bpmMatchInfo(deckAT.bpm, deckBT.bpm);
+        const rounded = Math.round(bm.absDiff);
+        const arrow = bm.diff>0 ? '▲' : (bm.diff<0 ? '▼' : '');
+        const tempoNote = bm.mult===2 ? ' · half-time' : (bm.mult===0.5 ? ' · double-time' : '');
+        const bpmText = rounded===0 ? 'Exact tempo'+tempoNote : `${arrow} ${rounded} bpm${tempoNote}`;
+        const kd = camelotDistance(deckAT.key.camelot, deckBT.key.camelot);
+        const keyCompatible = kd.score>=40;
+        const keyText = deckAT.key.camelot===deckBT.key.camelot ? 'Exact key match' : (keyCompatible ? '✓ Harmonically Compatible' : '✕ Not Harmonically Compatible');
+        let loudRow;
+        if(deckAT.loudness==null || deckBT.loudness==null){
+          loudRow = `<span class="bd-text" style="color:var(--dim);font-weight:500;">No loudness data</span>`;
+        } else {
+          const loudDiff = Math.abs(deckAT.loudness-deckBT.loudness);
+          const loudArrow = (deckAT.loudness-deckBT.loudness)>0 ? '▼' : ((deckAT.loudness-deckBT.loudness)<0 ? '▲' : '');
+          const loudText = loudDiff<0.3 ? 'Exact loudness' : `${loudArrow} ${loudDiff.toFixed(1)} dB ${deckBT.loudness<deckAT.loudness?'quieter':'louder'}`;
+          loudRow = `<span class="bd-text" style="color:${pctColor(loudnessScore(deckAT.loudness,deckBT.loudness))}">${loudText}</span>`;
+        }
+        return `
+        <div class="bd-row"><span class="bl">BPM</span><span class="bd-text" style="color:${bpmDiffColor(bm.absDiff)}">${bpmText}</span></div>
+        <div class="bd-row"><span class="bl">Key</span><span class="bd-text" style="color:${keyColor(kd.score)}">${keyText}</span></div>
+        <div class="bd-row"><span class="bl">Loudness</span>${loudRow}</div>
+        <div class="tonal-dropdown-legend" style="margin-top:12px;padding-top:12px;border-top:1px solid var(--line);">
+          <span><i style="background:${DECK_A_COLOR}"></i>Deck A</span>
+          <span><i style="background:${DECK_B_COLOR}"></i>Deck B</span>
+        </div>
+        ${bandCompareChartSvg(deckAT.bands, deckBT.bands, true, [DECK_A_COLOR, DECK_B_COLOR])}`;
+      })() : `<div class="empty-state" style="padding:10px 0;">Load a track into both decks to compare.</div>`}
     </div>
   </div>`;
   if(deckA && deckB){
@@ -3172,6 +3226,48 @@ function renderDecks(){
     document.getElementById('tonal-between-btn').classList.toggle('open', tonalDropdownOpen);
     document.getElementById('tonal-dropdown').classList.toggle('open', tonalDropdownOpen);
     hapticTap(10);
+  });
+
+  holder.querySelectorAll('[data-deck-tap]').forEach(card=>{
+    card.addEventListener('click', ()=>{
+      deckSearchOpen = card.dataset.deckTap;
+      renderDecks();
+      const input = document.getElementById('deck-search-input-'+deckSearchOpen);
+      if(input) input.focus();
+    });
+  });
+  holder.querySelectorAll('[data-deck-search-cancel]').forEach(btn=>{
+    btn.addEventListener('click', ()=>{ deckSearchOpen = null; renderDecks(); });
+  });
+  ['A','B'].forEach(letter=>{
+    const input = document.getElementById('deck-search-input-'+letter);
+    if(!input) return;
+    input.addEventListener('input', ()=>renderDeckSearchResults(letter, input.value));
+    renderDeckSearchResults(letter, '');
+  });
+}
+function renderDeckSearchResults(letter, query){
+  const box = document.getElementById('deck-search-results-'+letter);
+  if(!box) return;
+  const q = query.trim().toLowerCase();
+  const matches = library.filter(t => !q || t.name.toLowerCase().includes(q) || (t.artist||'').toLowerCase().includes(q)).slice(0,8);
+  if(matches.length===0){ box.innerHTML = q ? `<div class="empty-state" style="padding:14px 0;">No matches</div>` : ''; return; }
+  const otherDeck = letter==='A' ? deckB : deckA;
+  const otherT = otherDeck ? library.find(t=>t.id===otherDeck.trackId) : null;
+  box.innerHTML = matches.map(t=>{
+    const score = otherT ? quickScoreTrack(otherT, t) : null;
+    const scoreHtml = score==null ? '' : `<span class="now-sugg-score" style="color:${pctColor(score)}">${score}%</span>`;
+    return `<div class="now-suggestion-row" data-deck-search-pick="${t.id}">
+      <img src="${t.icon}">
+      <div><div class="t">${escapeHtml(t.name)}</div><div class="a">${escapeHtml(t.artist||'Unknown artist')}</div></div>
+      ${scoreHtml}
+    </div>`;
+  }).join('');
+  box.querySelectorAll('[data-deck-search-pick]').forEach(row=>{
+    row.addEventListener('click', ()=>{
+      deckSearchOpen = null;
+      selectNowPlayingDebounced(row.dataset.deckSearchPick, letter);
+    });
   });
 }
 
@@ -3208,7 +3304,7 @@ function renderMatches(animateNew){
 
   if(!now){
     sectionLbl.style.display='none';
-    list.innerHTML = `<div class="empty-state">Pick your current track above to see your top 10 matches.</div>`;
+    list.innerHTML = library.length===0 ? '' : `<div class="empty-state">Pick your current track above to see your top 10 matches.</div>`;
     lastRenderedResultsKey = '';
     return;
   }
@@ -3288,7 +3384,11 @@ function renderMatches(animateNew){
     const rounded = Math.round(r.bm.absDiff);
     const arrow = r.bm.diff>0 ? '▲' : (r.bm.diff<0 ? '▼' : '');
     const tempoNote = r.bm.mult===2 ? ' · half-time' : (r.bm.mult===0.5 ? ' · double-time' : '');
+    const pitchPct = (r.bm.absDiff/now.bpm)*100;
+    const beyondPitchRange = pitchPct>8;
     const bpmText = rounded===0 ? 'Exact tempo'+tempoNote : `${arrow} ${rounded} bpm${tempoNote}`;
+    const pitchNote = beyondPitchRange
+      ? `<div class="bd-pitch-note" title="Most controllers max out around ±8% pitch adjustment — this gap may need a key change to bridge">Beyond a typical ±8% pitch range</div>` : '';
     const compatible = r.kd.score>=40;
     const keyText = compatible ? '✓ Harmonically Compatible' : '✕ Not Harmonically Compatible';
     let loudRow;
@@ -3325,8 +3425,8 @@ function renderMatches(animateNew){
         </div>
         <div class="match-score" style="color:${pctColor(r.overall)}">${r.overall}%</div>
         <div class="deck-allocate-btns">
-          <button class="deck-allocate-btn" style="--deck-color:#e94f9e" data-allocate="${r.t.id}" data-deck="A" title="Load into Deck A">A</button>
-          <button class="deck-allocate-btn" style="--deck-color:#2bb3a3" data-allocate="${r.t.id}" data-deck="B" title="Load into Deck B">B</button>
+          <button class="deck-allocate-btn" style="--deck-color:${DECK_A_COLOR}" data-allocate="${r.t.id}" data-deck="A" title="Load into Deck A" aria-label="Load ${escapeHtml(r.t.name)} into Deck A">A</button>
+          <button class="deck-allocate-btn" style="--deck-color:${DECK_B_COLOR}" data-allocate="${r.t.id}" data-deck="B" title="Load into Deck B" aria-label="Load ${escapeHtml(r.t.name)} into Deck B">B</button>
         </div>
         <div class="chev" title="Show details">▾</div>
       </div>
@@ -3334,6 +3434,7 @@ function renderMatches(animateNew){
         <div class="bd-cols">
           <div class="bd-col-left">
             <div class="bd-row"><span class="bl">BPM</span><span class="bd-text" style="color:${bpmDiffColor(r.bm.absDiff)}">${bpmText}</span></div>
+            ${pitchNote}
             <div class="bd-row"><span class="bl">Key</span><span class="bd-text" style="color:${keyColor(r.kd.score)};font-weight:700;">${keyText}</span></div>
             <div class="bd-row"><span class="bl">Loudness</span>${loudRow}</div>
           </div>
@@ -3356,11 +3457,25 @@ function renderMatches(animateNew){
   });
 
   list.querySelectorAll('.match-row').forEach(row=>{
-    row.querySelector('.match-main').addEventListener('click', e=>{
-      if(e.target.closest('.deck-allocate-btns')) return; // allocate buttons handle themselves, don't also toggle details
+    const main = row.querySelector('.match-main');
+    main.setAttribute('tabindex', '0');
+    main.setAttribute('role', 'button');
+    main.setAttribute('aria-expanded', row.dataset.id===selectedMatchId ? 'true' : 'false');
+    function toggleOpen(){
       const id = row.dataset.id;
       selectedMatchId = (selectedMatchId===id) ? null : id;
-      list.querySelectorAll('.match-row').forEach(r2=>r2.classList.toggle('open', r2.dataset.id===selectedMatchId));
+      list.querySelectorAll('.match-row').forEach(r2=>{
+        r2.classList.toggle('open', r2.dataset.id===selectedMatchId);
+        r2.querySelector('.match-main').setAttribute('aria-expanded', r2.dataset.id===selectedMatchId ? 'true' : 'false');
+      });
+    }
+    main.addEventListener('click', e=>{
+      if(e.target.closest('.deck-allocate-btns')) return; // allocate buttons handle themselves, don't also toggle details
+      toggleOpen();
+    });
+    main.addEventListener('keydown', e=>{
+      if(e.target.closest('.deck-allocate-btns')) return;
+      if(e.key==='Enter' || e.key===' '){ e.preventDefault(); toggleOpen(); }
     });
   });
   }); // end scoreChunked callback
@@ -3570,7 +3685,7 @@ document.getElementById('dark-mode-toggle').addEventListener('change', async e=>
 const SCREENSAVER_ON_KEY = 'cratebuddy:screensaver-on';
 const SCREENSAVER_DELAY_KEY = 'cratebuddy:screensaver-delay';
 let screensaverEnabled = true;
-let screensaverDelaySec = 20;
+let screensaverDelaySec = 60;
 async function loadScreensaverSettings(){
   try{
     if(hasArtifactStorage){
@@ -3897,6 +4012,15 @@ function renderOrganise(skipAnim){
 }
 
 function renderOrganiseList(){
+  const emptyLib = document.getElementById('organise-empty-library');
+  const populated = document.getElementById('organise-populated-content');
+  if(library.length===0){
+    emptyLib.style.display = 'block';
+    populated.style.display = 'none';
+    return;
+  }
+  emptyLib.style.display = 'none';
+  populated.style.display = 'block';
   document.getElementById('flow-crate-count').textContent =
     flows.length + (flows.length===1 ? ' saved transition' : ' saved transitions');
   document.getElementById('chain-crate-count').textContent =
@@ -4216,9 +4340,34 @@ function renderFlowDetail(){
 /* =========================================================
    INIT
 ========================================================= */
-const APP_VERSION = '1.10';
+const APP_VERSION = '1.14';
 const APP_BUILD = '2026-09-08';
 document.getElementById('version-display').textContent = `${APP_VERSION} · ${APP_BUILD}`;
+// Reconstructed from this build session's history — not tracked in real time
+// from the very start, but accurate to the best of what was actually shipped.
+// Add one line here with each future update.
+const CHANGELOG = [
+  {v:'1.14', notes:'Tap an empty deck to search and load a track directly into it (search bar at top still works too). Clock now always visible on Play, not just when scrolled. Deck artwork is bigger with no more letterbox bars — square frame now matches typical album art. Tonal balance dropdown now also shows BPM/Key/Loudness comparison, not just the spectrum.'},
+  {v:'1.13', notes:'Fixed a real bug: the logo could shift to a wrong position when tracks were loaded and you were on Play, because the alignment logic tried to measure a hidden element. Also: Play is now the default tab on launch, screensaver defaults to 60s, and the save-history button no longer has a distracting emoji.'},
+  {v:'1.12', notes:'Found via automated testing: Settings could grow taller than the screen with nothing to scroll, trapping the close button off-screen. Sheet now caps at 85% viewport height with its own scroll, header stays pinned.'},
+  {v:'1.11', notes:'Deck colors centralized to one source of truth, accessibility pass (aria-labels + reduced-motion support), dead code removed, this changelog added'},
+  {v:'1.10', notes:'Logo alignment fixed using live on-device measurement instead of a guessed CSS value'},
+  {v:'1.09', notes:'Import now loads large libraries progressively as you scroll, instead of all at once'},
+  {v:'1.08', notes:'Removed the per-row spectrum chart for performance; BPM restored on its own in portrait'},
+  {v:'1.07', notes:'Suggestion scoring now runs in chunks and skips redundant rebuilds — Play tab stays responsive'},
+  {v:'1.06', notes:'Fixed a real performance regression: drag-preview markup now loads lazily instead of on every row upfront'},
+  {v:'1.05', notes:'Fixed Flow/Chain pattern visibility bug; tonal balance comparison now uses deck colors, not a quality gradient'},
+  {v:'1.04', notes:'Bigger rectangular decks, smaller Flow button, new Tonal Balance comparison dropdown'},
+  {v:'1.03', notes:'Fixed header notch spacing, tab label sizing/centering, and Organise/Import tab-switch speed'},
+  {v:'1.02', notes:'Dual-deck system introduced — Deck A/B replacing the single Now Playing slot'},
+  {v:'1.01', notes:'Version tracking added to Settings'},
+  {v:'1.0', notes:'First fully reliable export/import round-trip — crates, chains, favourites and preferences all included'},
+];
+document.getElementById('changelog-list').innerHTML = CHANGELOG.map(c=>
+  `<div class="changelog-entry"><b>${c.v}</b><div>${c.notes}</div></div>`).join('');
+document.getElementById('changelog-toggle').addEventListener('click', ()=>{
+  document.getElementById('changelog-toggle').classList.toggle('open');
+});
 let bootPromises = [];
 showHeaderProgress('Loading your crate…');
 
@@ -4465,6 +4614,14 @@ setHeaderProgress(35);
 Promise.all(bootPromises).then(()=>{
   setHeaderProgress(100);
   setTimeout(hideHeaderProgress, 300);
+  // Play is now the default landing tab — run the same initialization the
+  // tab-switch handler would normally do on a click into it.
+  document.getElementById('footnote').style.display = 'none';
+  requestWakeLock();
+  renderNowChip();
+  populateCrateFilterSelect();
+  renderMatches();
+  updateHeaderScrollState();
 });
 </script>
 </body>
