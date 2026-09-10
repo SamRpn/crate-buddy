@@ -70,18 +70,6 @@
     gap:12px;background:rgba(255,255,255,0.86);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);}
   html.dark header.top{background:rgba(16,17,20,0.82);}
   .logo{width:134px;height:52px;overflow:visible;flex-shrink:0;margin-left:-15px;transition:opacity 0.15s ease;}
-  header.top.scrolled .logo{display:none;}
-  .header-divider{width:1px;align-self:stretch;background:var(--line);flex-shrink:0;}
-  .header-now{flex:1;min-width:0;display:none;align-items:center;gap:10px;
-    opacity:0;transform:translateY(-4px);transition:opacity 0.25s ease, transform 0.25s ease;}
-  .header-now.show{opacity:1;transform:translateY(0);}
-  .header-deck-chip{display:flex;align-items:center;gap:5px;min-width:0;flex:1;}
-  .header-deck-badge{width:15px;height:15px;border-radius:50%;background:var(--deck-color);color:#fff;
-    font-size:9px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0;line-height:1;}
-  .header-deck-chip img{width:24px;height:24px;border-radius:var(--radius-tight);object-fit:contain;flex-shrink:0;
-    background:var(--bg);}
-  .header-deck-chip-name{font-size:var(--text-caption);font-weight:600;color:var(--text);overflow:hidden;
-    text-overflow:ellipsis;white-space:nowrap;}
   .header-progress{flex:1;min-width:0;display:flex;flex-direction:column;justify-content:center;gap:4px;}
   .header-progress-label{font-size:var(--text-micro);color:var(--dim);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
   .header-progress-track{height:4px;border-radius:2px;background:var(--line);overflow:hidden;}
@@ -302,12 +290,10 @@
   .tick-row{display:flex;justify-content:space-between;margin:2px 0 10px;padding:0 8px;}
   .tick-row span{width:2px;height:8px;border-radius:1px;background:#9ca3af;}
 
-  .now-search-row{display:flex;align-items:center;gap:8px;margin-bottom:14px;}
   .crate-filter-row{display:flex;align-items:center;gap:8px;margin-bottom:14px;font-size:var(--text-body-sm);color:var(--dim);}
   .crate-filter-row select{flex:1;background:var(--card);border:1px solid var(--line);border-radius:var(--radius-control);
     padding:9px 10px;font-size:var(--text-body-sm);color:var(--text);}
   .now-search{position:relative;flex:1;min-width:0;}
-  .now-undo-btn{flex-shrink:0;}
   .now-search input{width:100%;background:var(--card);color:var(--text);border:1px solid var(--line);border-radius:var(--radius-control);
     padding:9px 11px;font-size:var(--text-body);box-shadow:none;}
   .now-suggestions{position:absolute;left:0;right:0;top:calc(100% + 6px);background:var(--card);
@@ -316,6 +302,7 @@
     transition:max-height 0.22s ease, opacity 0.18s ease, transform 0.18s ease;}
   .now-suggestions.show{max-height:280px;opacity:1;transform:translateY(0);pointer-events:auto;}
   .now-suggestion-row{display:flex;align-items:center;gap:10px;padding:9px 12px;cursor:pointer;}
+  .now-sugg-info{flex:1;min-width:0;}
   .now-suggestion-row:active{background:var(--bg);}
   .now-suggestion-row img{width:32px;height:32px;border-radius:var(--radius-tight);object-fit:cover;flex-shrink:0;}
   .now-sugg-score{font-size:var(--text-caption);font-weight:800;flex-shrink:0;}
@@ -340,7 +327,7 @@
   html.clock-hidden .play-clock{display:none !important;}
   html:not(.dark) .play-clock{border:1.5px solid #fff;
     box-shadow:0 0 0 1px rgba(0,0,0,0.85), 0 4px 12px rgba(0,0,0,0.14);}
-  .header-clock{margin-left:10px;}
+  .header-clock{margin-left:8px;}
   .pc-secs{display:inline-flex;align-items:center;opacity:0.5;}
 
   .screensaver{position:fixed;inset:0;background:#000;z-index:900;
@@ -376,6 +363,7 @@
     100%{transform:translate(0,0) scale(1);filter:blur(0px);}
   }
   .seg-digit{position:relative;z-index:1;animation-name:digit-float;animation-timing-function:ease-in-out;animation-iteration-count:infinite;}
+  .header-clock .seg-digit{animation:none;} /* drift is a screensaver-only effect, not appropriate for the compact header clock */
 
   /* 135bpm glow, on its own element sitting behind each digit (not the whole
      clock face), so it never fights the digit's own float/blur animation on
@@ -385,6 +373,7 @@
     background:radial-gradient(circle, rgba(255,40,40,0.4) 0%, rgba(255,40,40,0) 72%);
     filter:blur(5px);animation-name:digit-beat-glow;animation-duration:0.4444s;
     animation-timing-function:ease-in-out;animation-iteration-count:infinite;}
+  .header-clock .digit-glow{inset:-3px;background:radial-gradient(circle, rgba(255,40,40,0.22) 0%, rgba(255,40,40,0) 72%);}
   @keyframes digit-beat-glow{
     0%{opacity:0.25;transform:scale(1);}
     18%{opacity:0.425;transform:scale(1.1);}
@@ -424,13 +413,40 @@
 
   .deck-row{display:grid;grid-template-columns:1fr auto 1fr;gap:8px;align-items:stretch;margin-bottom:14px;}
   .deck-card{background:linear-gradient(135deg, color-mix(in srgb, var(--deck-color) 35%, var(--card)), color-mix(in srgb, var(--deck-color) 12%, var(--card)));
-    border-radius:var(--radius-card);padding:6px;
+    border-radius:var(--radius-card);padding:6px;min-height:280px;
     border:2px solid var(--deck-color);box-shadow:0 1px 2px rgba(0,0,0,0.04);min-width:0;}
+  .deck-card.inactive{border-style:dashed;}
+
+  @media (orientation: landscape){
+    .deck-row{margin-bottom:8px;}
+    .deck-card{min-height:0;padding:5px;}
+    .deck-card.deck-search-active{min-height:0;max-height:170px;}
+    .deck-card.empty{min-height:64px;}
+    .deck-label-row{margin-bottom:0;}
+    .deck-card .deck-label{margin:2px 2px 3px;}
+    .deck-card:not(.empty):not(.deck-search-active) .art-frame{
+      width:44px;height:44px;flex-shrink:0;margin-bottom:0;}
+    .deck-card:not(.empty):not(.deck-search-active){
+      display:flex;align-items:center;flex-wrap:wrap;gap:0 8px;}
+    .deck-card:not(.empty):not(.deck-search-active) .deck-label-row{width:100%;}
+    .deck-card:not(.empty):not(.deck-search-active) .t{font-size:11.5px;}
+    .deck-card:not(.empty):not(.deck-search-active) .sub{margin:0;}
+    .flow-between-btn,.tonal-between-btn{width:30px;height:30px;}
+    .deck-mid-col{gap:5px;}
+  }
+  .deck-label-row{display:flex;align-items:center;justify-content:space-between;}
+  .deck-eject-btn{background:none;border:none;color:var(--deck-color);padding:2px;margin:2px 2px 4px 0;cursor:pointer;
+    display:flex;align-items:center;justify-content:center;opacity:0.75;}
+  .deck-eject-btn:active{opacity:1;}
   .deck-card .deck-label{font-size:var(--text-micro);font-weight:800;letter-spacing:.5px;color:var(--deck-color);margin:4px 2px 6px;}
-  .deck-card.deck-search-active{min-height:190px;display:flex;flex-direction:column;}
+  .deck-card.deck-search-active{min-height:280px;display:flex;flex-direction:column;}
+  .deck-browse-header{display:flex;gap:6px;margin-bottom:6px;}
   .deck-search-input{width:100%;background:var(--bg);border:1px solid var(--line);border-radius:var(--radius-control);
-    padding:8px 10px;font-size:var(--text-body-sm);color:var(--text);margin-bottom:6px;}
-  .deck-search-results{flex:1;overflow-y:auto;max-height:180px;}
+    padding:8px 10px;font-size:var(--text-body-sm);color:var(--text);margin-bottom:0;}
+  .deck-sort-btn{flex-shrink:0;background:var(--bg);border:1px solid var(--line);border-radius:var(--radius-control);
+    padding:8px 9px;font-size:var(--text-caption);font-weight:700;color:var(--dim);cursor:pointer;white-space:nowrap;}
+  .deck-sort-btn.active{border-color:var(--deck-color);color:var(--deck-color);}
+  .deck-search-results{flex:1;overflow-y:auto;overflow-x:hidden;max-height:180px;touch-action:pan-y;}
   .deck-search-cancel{background:none;border:none;color:var(--dim);font-size:var(--text-caption);font-weight:600;
     padding:4px 2px;cursor:pointer;text-align:left;}
   .deck-card .art-frame{width:100%;aspect-ratio:1;border-radius:var(--radius-thumb);margin-bottom:8px;overflow:hidden;position:relative;}
@@ -438,7 +454,7 @@
   .deck-card .t{font-size:var(--text-body);font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin:0 2px;}
   .deck-card .sub{font-size:var(--text-caption);color:color-mix(in srgb, var(--deck-color) 45%, var(--text));margin:2px 2px 4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
   .deck-card.empty{display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;
-    border-style:dashed;color:var(--dim);min-height:190px;}
+    border-style:dashed;color:var(--dim);min-height:280px;}
   .deck-card.empty .deck-empty-icon{margin-bottom:8px;opacity:0.6;}
   .deck-card.empty .deck-empty-text{font-size:var(--text-caption);}
   .deck-mid-col{display:flex;flex-direction:column;gap:8px;align-items:center;justify-content:center;flex-shrink:0;}
@@ -564,21 +580,7 @@
       <div class="header-progress-label" id="header-progress-label"></div>
       <div class="header-progress-track"><div class="header-progress-fill" id="header-progress-fill"></div></div>
     </div>
-    <div class="header-divider" id="header-now-divider-1" style="display:none;"></div>
-    <div class="header-now" id="header-now">
-      <div class="header-deck-chip" id="header-deck-a" style="--deck-color:var(--deck-a-color)">
-        <span class="header-deck-badge">A</span>
-        <img id="header-deck-a-art">
-        <div class="header-deck-chip-name" id="header-deck-a-name"></div>
-      </div>
-      <div class="header-deck-chip" id="header-deck-b" style="--deck-color:var(--deck-b-color)">
-        <span class="header-deck-badge">B</span>
-        <img id="header-deck-b-art">
-        <div class="header-deck-chip-name" id="header-deck-b-name"></div>
-      </div>
-    </div>
     <div class="play-clock header-clock" id="play-clock" style="display:none;"></div>
-    <div class="header-divider" id="header-now-divider-2" style="display:none;"></div>
     <div class="header-right">
       <button class="settings-btn" id="settings-btn" aria-label="Settings">
         <svg viewBox="0 0 24 24" width="20" height="20"><path fill="currentColor" d="M19.4 13a7.4 7.4 0 0 0 .07-1 7.4 7.4 0 0 0-.07-1l2.1-1.6a.5.5 0 0 0 .12-.65l-2-3.4a.5.5 0 0 0-.6-.22l-2.5 1a7.6 7.6 0 0 0-1.7-1l-.38-2.6a.5.5 0 0 0-.5-.43h-4a.5.5 0 0 0-.5.43l-.38 2.6a7.6 7.6 0 0 0-1.7 1l-2.5-1a.5.5 0 0 0-.6.22l-2 3.4a.5.5 0 0 0 .12.65L4.5 11a7.4 7.4 0 0 0-.07 1 7.4 7.4 0 0 0 .07 1l-2.1 1.6a.5.5 0 0 0-.12.65l2 3.4a.5.5 0 0 0 .6.22l2.5-1a7.6 7.6 0 0 0 1.7 1l.38 2.6a.5.5 0 0 0 .5.43h4a.5.5 0 0 0 .5-.43l.38-2.6a7.6 7.6 0 0 0 1.7-1l2.5 1a.5.5 0 0 0 .6-.22l2-3.4a.5.5 0 0 0-.12-.65Zm-7.4 2.5a3.5 3.5 0 1 1 0-7 3.5 3.5 0 0 1 0 7Z"/></svg>
@@ -780,15 +782,6 @@
   </section>
 
   <section id="tab-match">
-    <div class="now-search-row">
-      <div class="now-search">
-        <input type="text" id="now-playing-input" placeholder="Type a track title or artist…" autocomplete="off">
-        <div class="now-suggestions" id="now-suggestions"></div>
-      </div>
-      <button class="settings-btn now-undo-btn" id="now-undo-btn" title="Undo last selection" aria-label="Undo last selection" style="display:none;">
-        <svg viewBox="0 0 24 24" width="19" height="19"><path fill="currentColor" d="M12.5 8V4.5L6 10l6.5 5.5V12c3.3 0 6 2.7 6 6 0 .7-.1 1.4-.4 2 1.5-1.1 2.4-2.9 2.4-4.9 0-3.3-2.7-6-6-6Z"/></svg>
-      </button>
-    </div>
     <div class="crate-filter-row">
       <span class="crate-filter-label">Suggest from</span>
       <select id="crate-filter-select"><option value="">All Tracks</option></select>
@@ -969,7 +962,6 @@ document.querySelectorAll('.tabs button').forEach(btn=>{
     if(currentTab==='organise') renderOrganise(true);
     if(currentTab==='match'){ requestWakeLock(); renderNowChip(); populateCrateFilterSelect(); if(suggestionsEverRendered) renderDecks(); else renderMatches(); }
     else{ releaseWakeLock(); renderNowChip(); }
-    updateHeaderScrollState();
   });
 });
 document.getElementById('footnote').innerHTML =
@@ -2623,16 +2615,13 @@ let deckA = null, deckB = null; // {trackId, insertedAt} or null — insertedAt 
 let activeDeck = 'A'; // whichever deck most recently received a track — this is what suggestions score against
 let tonalDropdownOpen = false;
 let deckSearchOpen = null; // null | 'A' | 'B' — which deck's inline search is currently open
+let deckSearchSort = {A: null, B: null}; // null | 'asc' | 'desc' — BPM sort, per deck
 
-// Keeps the search box's text in sync with the library (e.g. after an edit
-// renames the current track, or the current track gets deleted). Kept under
-// its original name since it's called from all the same places as before.
+// Clears nowPlayingId if that track no longer exists in the library (e.g.
+// it was just deleted). Kept under its original name since it's called from
+// all the same places as before.
 function renderNowPlayingSelect(){
   if(nowPlayingId && !library.some(t=>t.id===nowPlayingId)) nowPlayingId='';
-  const input = document.getElementById('now-playing-input');
-  if(!input) return;
-  const t = nowPlayingId ? library.find(x=>x.id===nowPlayingId) : null;
-  if(t) input.value = t.name + (t.artist ? ' — '+t.artist : '');
 }
 
 let currentChainId = null, currentChainIndex = -1;
@@ -2653,7 +2642,6 @@ function updateChainProgress(id){
   }
   currentChainId=null; currentChainIndex=-1;
 }
-let previousNowPlayingId = null;
 let historyJustGrew = false;
 let selectLock = false;
 function hapticTap(ms){
@@ -2665,7 +2653,6 @@ function selectNowPlaying(id, deck){
   // future suggestions until you hit Reset.
   if(nowPlayingId && nowPlayingId!==id) playedTrackIds.add(nowPlayingId);
   if(nowPlayingId !== id){
-    previousNowPlayingId = nowPlayingId || null;
     playHistory.push(id);
     historyJustGrew = true;
     if(playHistory.length>50) playHistory.shift(); // only the last 9 are ever shown; this just bounds memory
@@ -2677,7 +2664,6 @@ function selectNowPlaying(id, deck){
   pendingFlowAnchorId = null;
   updateChainProgress(id);
   renderNowPlayingSelect();
-  document.getElementById('now-suggestions').classList.remove('show');
   selectedMatchId = null;
   renderPlayHistory();
   renderMatches(true);
@@ -2692,65 +2678,29 @@ function selectNowPlayingDebounced(id, deck){
   selectNowPlaying(id, deck);
   setTimeout(()=>{ selectLock=false; }, 500);
 }
-function undoLastSelection(){
-  if(!previousNowPlayingId || !library.some(t=>t.id===previousNowPlayingId)) return;
-  const mistakenId = nowPlayingId;
-  const idx = playHistory.lastIndexOf(mistakenId);
-  if(idx !== -1) playHistory.splice(idx, 1); // that selection never really happened
-  playedTrackIds.delete(previousNowPlayingId); // it's playing again, not "played and moved on from"
-  nowPlayingId = previousNowPlayingId;
-  previousNowPlayingId = null; // one-shot — no undoing an undo
+function ejectDeck(letter){
+  if(letter==='A') deckA = null; else deckB = null;
+  const other = letter==='A' ? deckB : deckA;
+  if(activeDeck===letter){
+    if(other){
+      activeDeck = letter==='A' ? 'B' : 'A';
+      nowPlayingId = other.trackId;
+    } else {
+      nowPlayingId = '';
+    }
+  }
   pendingFlowAnchorId = null;
   updateChainProgress(nowPlayingId);
   renderNowPlayingSelect();
-  document.getElementById('now-suggestions').classList.remove('show');
   selectedMatchId = null;
-  renderPlayHistory();
   renderMatches(true);
   renderNowChip();
-  hapticTap();
+  hapticTap(15);
 }
-let headerScrolled = false;
-function updateHeaderScrollState(){
-  const scrolled = currentTab==='match' && window.scrollY > 160;
-  if(scrolled === headerScrolled) return;
-  headerScrolled = scrolled;
-  document.querySelector('header.top').classList.toggle('scrolled', scrolled);
-  renderNowChip();
-}
-window.addEventListener('scroll', updateHeaderScrollState, {passive:true});
-let headerNowHideTimer = null;
 function renderNowChip(){
-  const el = document.getElementById('header-now');
-  const div1 = document.getElementById('header-now-divider-1');
-  const div2 = document.getElementById('header-now-divider-2');
-  const undoBtn = document.getElementById('now-undo-btn');
   const clockEl = document.getElementById('play-clock');
-  if(!el) return;
-  const deckAT = deckA ? library.find(x=>x.id===deckA.trackId) : null;
-  const deckBT = deckB ? library.find(x=>x.id===deckB.trackId) : null;
-  const onPlay = currentTab==='match';
-  const show = (deckAT || deckBT) && onPlay && headerScrolled;
-  clockEl.style.display = onPlay ? 'flex' : 'none';
-  clearTimeout(headerNowHideTimer);
-  if(show){
-    el.style.display='flex'; div1.style.display='block';
-    requestAnimationFrame(()=>el.classList.add('show'));
-  } else {
-    el.classList.remove('show');
-    headerNowHideTimer = setTimeout(()=>{
-      el.style.display='none'; div1.style.display='none';
-    }, 260);
-  }
-  div2.style.display = onPlay ? 'block' : 'none';
-  undoBtn.style.display =
-    (currentTab==='match' && previousNowPlayingId && library.some(x=>x.id===previousNowPlayingId)) ? 'flex' : 'none';
-  if(!show) return;
-  const aChip = document.getElementById('header-deck-a'), bChip = document.getElementById('header-deck-b');
-  aChip.style.display = deckAT ? 'flex' : 'none';
-  bChip.style.display = deckBT ? 'flex' : 'none';
-  if(deckAT){ document.getElementById('header-deck-a-art').src = deckAT.icon; document.getElementById('header-deck-a-name').textContent = deckAT.name; }
-  if(deckBT){ document.getElementById('header-deck-b-art').src = deckBT.icon; document.getElementById('header-deck-b-name').textContent = deckBT.name; }
+  if(!clockEl) return;
+  clockEl.style.display = currentTab==='match' ? 'flex' : 'none';
 }
 
 /* =========================================================
@@ -2933,7 +2883,6 @@ function renderPlayHistory(){
   });
 }
 
-let currentNowMatches = [];
 function quickScoreTrack(now, t){
   const bm=bpmMatchInfo(now.bpm,t.bpm);
   const bs=Math.round(bm.score);
@@ -2947,51 +2896,6 @@ function quickScoreTrack(now, t){
   const total = parts.reduce((s,p)=>s+p.weight,0)||1;
   return Math.round(parts.reduce((s,p)=>s+p.score*p.weight,0)/total);
 }
-function renderNowSuggestions(query){
-  const box = document.getElementById('now-suggestions');
-  const q = query.trim().toLowerCase();
-  const matches = getSearchableLibrary().filter(t => !q || t.name.toLowerCase().includes(q) || (t.artist||'').toLowerCase().includes(q)).slice(0,8);
-  currentNowMatches = matches;
-  if(matches.length===0){ box.innerHTML=''; box.classList.remove('show'); return; }
-  const now = library.find(t=>t.id===nowPlayingId);
-  const activeCrate = suggestionsCrateFilterId ? crates.find(c=>c.id===suggestionsCrateFilterId) : null;
-  box.innerHTML = matches.map(t=>{
-    const score = (now && t.id!==now.id) ? quickScoreTrack(now, t) : null;
-    const inCrate = activeCrate ? activeCrate.trackIds.includes(t.id) : null;
-    const scoreHtml = score==null ? '' : `<span class="now-sugg-score" style="color:${pctColor(score)}">${score}%</span>`;
-    const crateHtml = inCrate===null ? '' : `<span class="now-sugg-crate" title="${inCrate?'In current crate':'Not in current crate'}">${inCrate?'✓':'✕'}</span>`;
-    return `
-    <div class="now-suggestion-row" data-id="${t.id}">
-      <img src="${t.icon}">
-      <div><div class="t">${escapeHtml(t.name)}</div><div class="a">${escapeHtml(t.artist||'Unknown artist')}</div></div>
-      ${scoreHtml}${crateHtml}
-    </div>`;
-  }).join('');
-  box.classList.add('show');
-  box.querySelectorAll('[data-id]').forEach(row=>{
-    // mousedown (not click) fires before the input's blur, so the tap
-    // registers before the suggestion list gets hidden.
-    row.addEventListener('mousedown', e=>{
-      e.preventDefault();
-      selectNowPlayingDebounced(row.dataset.id);
-      nowInput.value = '';
-      box.classList.remove('show');
-    });
-  });
-}
-const nowInput = document.getElementById('now-playing-input');
-nowInput.addEventListener('input', ()=>renderNowSuggestions(nowInput.value));
-nowInput.addEventListener('focus', ()=>renderNowSuggestions(nowInput.value));
-nowInput.addEventListener('blur', ()=>setTimeout(()=>document.getElementById('now-suggestions').classList.remove('show'),150));
-nowInput.addEventListener('keydown', e=>{
-  if(e.key!=='Enter') return;
-  e.preventDefault();
-  if(currentNowMatches.length===0) return;
-  selectNowPlayingDebounced(currentNowMatches[0].id);
-  nowInput.value = ''; // ready for the next search right away, nothing to clear first
-  document.getElementById('now-suggestions').classList.remove('show');
-  nowInput.blur();
-});
 
 const WEIGHT_IDS = ['w-bpm','w-key','w-loud','w-bands'];
 const WEIGHTS_KEY = 'cratebuddy:active-weights';
@@ -3155,10 +3059,15 @@ function renderDecks(){
   const deckBT = deckB ? library.find(t=>t.id===deckB.trackId) : null;
   const deckCard = (t, label, colorVar, empty, letter) => {
     if(deckSearchOpen===letter){
+      const sort = deckSearchSort[letter];
+      const sortLabel = sort==='asc' ? 'BPM ▲' : (sort==='desc' ? 'BPM ▼' : 'BPM ⇅');
       return `
       <div class="deck-card deck-search-active" style="--deck-color:${colorVar}">
         <div class="deck-label">${label}</div>
-        <input type="text" class="deck-search-input" id="deck-search-input-${letter}" placeholder="Search a track…" autocomplete="off">
+        <div class="deck-browse-header">
+          <input type="text" class="deck-search-input" id="deck-search-input-${letter}" placeholder="Browse tracks…" autocomplete="off">
+          <button class="deck-sort-btn${sort?' active':''}" data-deck-sort="${letter}" id="deck-sort-btn-${letter}" title="Sort by BPM">${sortLabel}</button>
+        </div>
         <div class="deck-search-results" id="deck-search-results-${letter}"></div>
         <button class="deck-search-cancel" data-deck-search-cancel="${letter}">Cancel</button>
       </div>`;
@@ -3167,10 +3076,15 @@ function renderDecks(){
     <div class="deck-card empty" style="--deck-color:${colorVar}" data-deck-tap="${letter}">
       <div class="deck-label">${label}</div>
       <svg viewBox="0 0 24 24" width="26" height="26" class="deck-empty-icon"><path fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" d="M12 5v14M5 12h14"/></svg>
-      <div class="deck-empty-text">Tap a track to load it here</div>
+      <div class="deck-empty-text">Tap to browse tracks/crates</div>
     </div>` : `
-    <div class="deck-card" style="--deck-color:${colorVar}">
-      <div class="deck-label">${label}</div>
+    <div class="deck-card${letter!==activeDeck?' inactive':''}" style="--deck-color:${colorVar}">
+      <div class="deck-label-row">
+        <div class="deck-label">${label}</div>
+        <button class="deck-eject-btn" data-deck-eject="${letter}" title="Eject" aria-label="Eject ${label}">
+          <svg viewBox="0 0 24 24" width="12" height="12"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M12 4l6 8H6z M6 17h12"/></svg>
+        </button>
+      </div>
       <div class="art-frame"><img class="art" src="${t.icon}"></div>
       <div class="t">${escapeHtml(t.name)}</div>
       <div class="sub">${t.bpm} bpm · ${t.key.camelot} ${t.key.name}</div>
@@ -3234,6 +3148,13 @@ function renderDecks(){
     hapticTap(10);
   });
 
+  holder.querySelectorAll('[data-deck-eject]').forEach(btn=>{
+    btn.addEventListener('click', e=>{
+      e.stopPropagation();
+      ejectDeck(btn.dataset.deckEject);
+    });
+  });
+
   holder.querySelectorAll('[data-deck-tap]').forEach(card=>{
     card.addEventListener('click', ()=>{
       deckSearchOpen = card.dataset.deckTap;
@@ -3244,6 +3165,19 @@ function renderDecks(){
   });
   holder.querySelectorAll('[data-deck-search-cancel]').forEach(btn=>{
     btn.addEventListener('click', ()=>{ deckSearchOpen = null; renderDecks(); });
+  });
+  holder.querySelectorAll('[data-deck-sort]').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const letter = btn.dataset.deckSort;
+      const cur = deckSearchSort[letter];
+      deckSearchSort[letter] = cur===null ? 'asc' : (cur==='asc' ? 'desc' : null);
+      const input = document.getElementById('deck-search-input-'+letter);
+      const sortLabel = deckSearchSort[letter]==='asc' ? 'BPM ▲' : (deckSearchSort[letter]==='desc' ? 'BPM ▼' : 'BPM ⇅');
+      btn.textContent = sortLabel;
+      btn.classList.toggle('active', !!deckSearchSort[letter]);
+      renderDeckSearchResults(letter, input ? input.value : '');
+      hapticTap(10);
+    });
   });
   ['A','B'].forEach(letter=>{
     const input = document.getElementById('deck-search-input-'+letter);
@@ -3256,8 +3190,12 @@ function renderDeckSearchResults(letter, query){
   const box = document.getElementById('deck-search-results-'+letter);
   if(!box) return;
   const q = query.trim().toLowerCase();
-  const matches = getSearchableLibrary().filter(t => !q || t.name.toLowerCase().includes(q) || (t.artist||'').toLowerCase().includes(q)).slice(0,8);
-  if(matches.length===0){ box.innerHTML = q ? `<div class="empty-state" style="padding:14px 0;">No matches</div>` : ''; return; }
+  let matches = getSearchableLibrary().filter(t => !q || t.name.toLowerCase().includes(q) || (t.artist||'').toLowerCase().includes(q));
+  const sort = deckSearchSort[letter];
+  if(sort==='asc') matches = [...matches].sort((a,b)=>a.bpm-b.bpm);
+  else if(sort==='desc') matches = [...matches].sort((a,b)=>b.bpm-a.bpm);
+  matches = matches.slice(0,60);
+  if(matches.length===0){ box.innerHTML = `<div class="empty-state" style="padding:14px 0;">No tracks to browse</div>`; return; }
   const otherDeck = letter==='A' ? deckB : deckA;
   const otherT = otherDeck ? library.find(t=>t.id===otherDeck.trackId) : null;
   box.innerHTML = matches.map(t=>{
@@ -3265,7 +3203,7 @@ function renderDeckSearchResults(letter, query){
     const scoreHtml = score==null ? '' : `<span class="now-sugg-score" style="color:${pctColor(score)}">${score}%</span>`;
     return `<div class="now-suggestion-row" data-deck-search-pick="${t.id}">
       <img src="${t.icon}">
-      <div><div class="t">${escapeHtml(t.name)}</div><div class="a">${escapeHtml(t.artist||'Unknown artist')}</div></div>
+      <div class="now-sugg-info"><div class="t">${escapeHtml(t.name)}</div><div class="a">${t.bpm} bpm · ${escapeHtml(t.artist||'Unknown artist')}</div></div>
       ${scoreHtml}
     </div>`;
   }).join('');
@@ -3505,7 +3443,7 @@ function showInfoToast(message, isError){
 
 function exportLibrary(){
   const payload = { app:'cratebuddy', version:2, exportedAt:Date.now(),
-    library, flows, crates, chains, favourites, activeWeights };
+    library, flows, crates, chains, favourites, activeWeights, historySessions };
   const blob = new Blob([JSON.stringify(payload)], {type:'application/json'});
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
@@ -3524,7 +3462,7 @@ function importLibraryFile(file){
     catch(e){ showInfoToast("Couldn't read that file — is it a Crate Buddy backup?", true); return; }
 
     const importedTracks = Array.isArray(payload.library) ? payload.library : [];
-    const hasAnyData = importedTracks.length || payload.flows || payload.crates || payload.chains || payload.favourites;
+    const hasAnyData = importedTracks.length || payload.flows || payload.crates || payload.chains || payload.favourites || payload.historySessions;
     if(!hasAnyData){
       showInfoToast("That file doesn't look like a Crate Buddy backup", true);
       return;
@@ -3609,6 +3547,23 @@ function importLibraryFile(file){
         if(local && !favourites.includes(local)){ favourites.push(local); favChanged=true; }
       });
       if(favChanged) await saveFavourites();
+    }
+
+    // History sessions — each one is a snapshot of a specific moment, so
+    // these get appended as-is (remapped) rather than merged by name the
+    // way Crates are; two sessions can share a name and still both matter.
+    if(Array.isArray(payload.historySessions)){
+      let historyChanged=false;
+      for(const h of payload.historySessions){
+        if(!h || !Array.isArray(h.trackIds)) continue;
+        const remapped = h.trackIds.map(id=>idRemap[id]).filter(Boolean);
+        if(remapped.length===0) continue;
+        if(historySessions.some(x=>x.id===h.id)) continue; // already imported this exact session before
+        historySessions.push({id:h.id || ('h_'+Date.now()+'_'+Math.random().toString(36).slice(2,7)),
+          name:h.name||'Imported session', savedAt:h.savedAt||Date.now(), trackIds:remapped});
+        historyChanged = true;
+      }
+      if(historyChanged) await saveHistorySessions();
     }
 
     // Weight preferences — these fully replace the local split, since
@@ -3896,7 +3851,6 @@ document.getElementById('play-reset-btn').addEventListener('click', ()=>{
   nowPlayingId='';
   deckA = null; deckB = null; activeDeck = 'A';
   selectedMatchId=null;
-  document.getElementById('now-playing-input').value='';
   renderPlayHistory();
   renderMatches();
 });
@@ -3994,7 +3948,7 @@ function wireTrackPicker(idPrefix, excludeIds, onPick, singleSelect){
     box.innerHTML = matches.map(t=>`
       <div class="now-suggestion-row" data-id="${t.id}">
         <img src="${t.icon}">
-        <div><div class="t">${escapeHtml(t.name)}</div><div class="a">${escapeHtml(t.artist||'Unknown artist')}</div></div>
+        <div class="now-sugg-info"><div class="t">${escapeHtml(t.name)}</div><div class="a">${escapeHtml(t.artist||'Unknown artist')}</div></div>
       </div>`).join('');
     box.classList.add('show');
     box.querySelectorAll('[data-id]').forEach(row=>{
@@ -4292,7 +4246,7 @@ function renderHistorySessionDetail(){
       <div class="organise-row">
         <span style="color:var(--dim);font-size:var(--text-caption);width:16px;flex-shrink:0;">${i+1}</span>
         <img src="${t.icon}">
-        <div><div class="t">${escapeHtml(t.name)}</div><div class="a">${escapeHtml(t.artist||'Unknown artist')}</div></div>
+        <div class="now-sugg-info"><div class="t">${escapeHtml(t.name)}</div><div class="a">${escapeHtml(t.artist||'Unknown artist')}</div></div>
       </div>`).join(''));
 }
 
@@ -4376,13 +4330,16 @@ function renderFlowDetail(){
 /* =========================================================
    INIT
 ========================================================= */
-const APP_VERSION = '1.18';
+const APP_VERSION = '1.21';
 const APP_BUILD = '2026-09-08';
 document.getElementById('version-display').textContent = `${APP_VERSION} · ${APP_BUILD}`;
 // Reconstructed from this build session's history — not tracked in real time
 // from the very start, but accurate to the best of what was actually shipped.
 // Add one line here with each future update.
 const CHANGELOG = [
+  {v:'1.21', notes:'Checked the backup export/import against everything it should cover. Preview audio was already included (it lives on each track record). History sessions were genuinely missing and are now included, with the same track-id remapping treatment as Flows and Crates so they survive moving between devices correctly.'},
+  {v:'1.20', notes:'Top search bar removed from Play entirely (deck-specific browse covers this now). Undo button replaced with a per-deck Eject button. Header simplified to logo, clock, and settings only, no more scroll-triggered deck info. Decks are now noticeably smaller and laid out horizontally in landscape. The currently-active deck now shows a solid outline; the other deck shows a dashed one, so it is finally clear at a glance which deck suggestions are scoring against.'},
+  {v:'1.19', notes:'Empty deck now says "Tap to browse tracks/crates" instead of implying search. Fixed a real flexbox bug where long track names could force the deck browse list to need horizontal scrolling on the narrower deck width. Deck cards now stay the same height across empty/filled/browsing states instead of jumping. Clock position no longer shifts depending on scroll state. Clock drift effect is now screensaver-only, and its glow is toned down specifically in the header.'},
   {v:'1.18', notes:'Fixed: the 2.2x zoom from 1.16 was being applied to every deck image regardless of whether it actually needed trimming, cropping well-composed square album art that never had padding to begin with. Zoom removed entirely — deck artwork now always renders authentic and uncropped.'},
   {v:'1.17', notes:'New Settings option: "Search only within selected crate" — when on, both the top search bar and the deck-specific search only show tracks from whichever crate is currently selected for suggestions, instead of your whole library. Off by default.'},
   {v:'1.16', notes:'Deck color tint now washes across the whole card, not just the artwork square, so there is no visible seam between the art and the text below it. Artwork zoom increased from 1.4x to 2.2x for a noticeably bigger icon, and the bpm/key text is now tinted to stay readable against the color wash.'},
@@ -4416,7 +4373,6 @@ bootPromises.push(loadFlows());
 bootPromises.push(loadChains());
 bootPromises.push(loadCrates().then(populateCrateFilterSelect));
 bootPromises.push(loadFavourites());
-document.getElementById('now-undo-btn').addEventListener('click', undoLastSelection);
 bootPromises.push(loadFlowChainSetting());
 bootPromises.push(loadVinylBrakeSetting());
 bootPromises.push(loadSearchCrateScopeSetting());
@@ -4662,7 +4618,6 @@ Promise.all(bootPromises).then(()=>{
   renderNowChip();
   populateCrateFilterSelect();
   renderMatches();
-  updateHeaderScrollState();
 });
 </script>
 </body>
