@@ -1461,8 +1461,8 @@ async function analyzeFile(file, onProgress){
   const keyInfo = estimateKey(mono, audioBuffer.sampleRate);
   onProgress(0.9);
 
-  const previewAudio = await extractPreviewBest(audioBuffer, findLoudestWindowCenter(mono, audioBuffer.sampleRate, audioBuffer.duration),
-    p => onProgress(0.9 + p*0.07));
+  const previewAnchor = findLoudestWindowCenter(mono, audioBuffer.sampleRate, audioBuffer.duration);
+  const previewAudio = extractPreviewDataUrl(audioBuffer, previewAnchor); // fast, instant — never blocks import
   onProgress(0.97);
 
   ctx.close();
@@ -1472,7 +1472,7 @@ async function analyzeFile(file, onProgress){
   let icon = id3?.pic ? await pictureToThumbDataUrl(id3.pic) : null;
   if(!icon) icon = monogramDataUrl(name);
 
-  return {
+  const track = {
     id:'t_'+Date.now()+'_'+Math.random().toString(36).slice(2,7),
     addedAt: Date.now(),
     name, artist: id3?.artist||'',
@@ -1482,6 +1482,8 @@ async function analyzeFile(file, onProgress){
     bands, loudness, peaks, icon, previewAudio,
     sourceFile: {name: file.name, size: file.size}
   };
+  queuePreviewUpgrade(track, audioBuffer, previewAnchor);
+  return track;
 }
 
 // Scans the middle 60% of the track (skipping intros/outros) for the loudest
@@ -1602,6 +1604,40 @@ async function extractPreviewBest(audioBuffer, anchorTime, onProgress){
     if(compressed) return compressed;
   }catch(e){ console.error('falling back to WAV preview', e); }
   return extractPreviewDataUrl(audioBuffer, anchorTime);
+}
+function withTimeout(promise, ms){
+  return Promise.race([
+    promise,
+    new Promise(resolve=>setTimeout(()=>resolve(null), ms))
+  ]);
+}
+// Upgrades a track's fast WAV preview to a smaller, better-quality compressed
+// one in the background, after import has already moved on — never blocks
+// the batch loop, and a timeout means one stuck track (real-time recording
+// is genuinely fragile, especially on iOS Safari) can't hang anything,
+// including its own upgrade attempt.
+let previewUpgradeQueue = [];
+let previewUpgradeRunning = false;
+const PREVIEW_UPGRADE_QUEUE_CAP = 8; // caps how many full decoded audio buffers we hold in memory at once
+function queuePreviewUpgrade(track, audioBuffer, anchorTime){
+  if(previewUpgradeQueue.length >= PREVIEW_UPGRADE_QUEUE_CAP) return; // large batch — this one just keeps its WAV preview, which is fine
+  previewUpgradeQueue.push({track, audioBuffer, anchorTime});
+  runPreviewUpgradeQueue();
+}
+async function runPreviewUpgradeQueue(){
+  if(previewUpgradeRunning) return;
+  previewUpgradeRunning = true;
+  while(previewUpgradeQueue.length>0){
+    const {track, audioBuffer, anchorTime} = previewUpgradeQueue.shift();
+    try{
+      const compressed = await withTimeout(extractPreviewCompressed(audioBuffer, anchorTime), 20000);
+      if(compressed && library.some(t=>t.id===track.id)){ // guard: track might have been deleted while this was upgrading
+        track.previewAudio = compressed;
+        await persistTrackAdd(track);
+      }
+    }catch(e){ console.error('background preview upgrade failed', e); }
+  }
+  previewUpgradeRunning = false;
 }
 // For tracks already in the library from before this feature existed — the
 // original audio was never kept, so a preview can only be (re)built by
@@ -4347,13 +4383,14 @@ function renderFlowDetail(){
 /* =========================================================
    INIT
 ========================================================= */
-const APP_VERSION = '1.22';
+const APP_VERSION = '1.23';
 const APP_BUILD = '2026-09-08';
 document.getElementById('version-display').textContent = `${APP_VERSION} · ${APP_BUILD}`;
 // Reconstructed from this build session's history — not tracked in real time
 // from the very start, but accurate to the best of what was actually shipped.
 // Add one line here with each future update.
 const CHANGELOG = [
+  {v:'1.23', notes:'Found the real cause of import being extremely slow (and sometimes appearing to hang entirely): every track was waiting on a real-time, ~15-second audio recording step for its preview, one at a time, with no timeout — a single stuck one could freeze the whole batch. Import now uses the fast instant preview immediately, then upgrades each track to better quality in the background afterward, one at a time, with a hard timeout so a stuck track can never block anything again.'},
   {v:'1.22', notes:'Import already sorted newest-first (unchanged). New fix: batch-importing a bunch of tracks now shows each one appearing at the top of the list the moment it finishes analyzing, instead of the whole list staying empty-looking until the entire batch completes.'},
   {v:'1.21', notes:'Checked the backup export/import against everything it should cover. Preview audio was already included (it lives on each track record). History sessions were genuinely missing and are now included, with the same track-id remapping treatment as Flows and Crates so they survive moving between devices correctly.'},
   {v:'1.20', notes:'Top search bar removed from Play entirely (deck-specific browse covers this now). Undo button replaced with a per-deck Eject button. Header simplified to logo, clock, and settings only, no more scroll-triggered deck info. Decks are now noticeably smaller and laid out horizontally in landscape. The currently-active deck now shows a solid outline; the other deck shows a dashed one, so it is finally clear at a glance which deck suggestions are scoring against.'},
