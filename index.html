@@ -1223,6 +1223,7 @@ async function processBatch(){
       }
       library.unshift(track);
       freshlyAddedIds.add(track.id);
+      prependLibraryRow(track);
       await persistTrackAdd(track);
       done++;
     }catch(err){
@@ -1230,13 +1231,29 @@ async function processBatch(){
       fail++;
     }
   }
-  renderLibrary(); renderNowPlayingSelect(); updateCount();
+  renderLibToolbar(); renderNowPlayingSelect(); updateCount(); updateBulkPreviewBtn(); alignLogoToTrackIcons();
+  freshlyAddedIds.clear();
   finishBatchToast(done, fail, dupes);
   setHeaderProgress(100);
   setTimeout(hideHeaderProgress, 400);
   isProcessingBatch = false;
 }
 function escapeHtml(s){ const d=document.createElement('div'); d.textContent=s||''; return d.innerHTML; }
+// Inserts one newly-analyzed track at the very top of the visible list
+// immediately, instead of waiting for the whole batch to finish before
+// showing anything. Keeps importRenderedCount in sync so the progressive
+// scroll-loading window still makes sense afterward.
+function prependLibraryRow(track){
+  const el = document.getElementById('library-list');
+  if(!el) return;
+  const emptyState = el.querySelector('.lib-empty');
+  if(emptyState) emptyState.remove();
+  importRenderedCount++;
+  const wrapper = document.createElement('div');
+  wrapper.innerHTML = trackRowHtml(track);
+  wireLibraryRows(wrapper);
+  el.insertBefore(wrapper.firstElementChild, el.firstChild);
+}
 // Shrinks and fades a row/card before it actually leaves the DOM, so
 // deletions read as intentional rather than an abrupt pop.
 function animateRemoveEl(el, cb){
@@ -4330,13 +4347,14 @@ function renderFlowDetail(){
 /* =========================================================
    INIT
 ========================================================= */
-const APP_VERSION = '1.21';
+const APP_VERSION = '1.22';
 const APP_BUILD = '2026-09-08';
 document.getElementById('version-display').textContent = `${APP_VERSION} · ${APP_BUILD}`;
 // Reconstructed from this build session's history — not tracked in real time
 // from the very start, but accurate to the best of what was actually shipped.
 // Add one line here with each future update.
 const CHANGELOG = [
+  {v:'1.22', notes:'Import already sorted newest-first (unchanged). New fix: batch-importing a bunch of tracks now shows each one appearing at the top of the list the moment it finishes analyzing, instead of the whole list staying empty-looking until the entire batch completes.'},
   {v:'1.21', notes:'Checked the backup export/import against everything it should cover. Preview audio was already included (it lives on each track record). History sessions were genuinely missing and are now included, with the same track-id remapping treatment as Flows and Crates so they survive moving between devices correctly.'},
   {v:'1.20', notes:'Top search bar removed from Play entirely (deck-specific browse covers this now). Undo button replaced with a per-deck Eject button. Header simplified to logo, clock, and settings only, no more scroll-triggered deck info. Decks are now noticeably smaller and laid out horizontally in landscape. The currently-active deck now shows a solid outline; the other deck shows a dashed one, so it is finally clear at a glance which deck suggestions are scoring against.'},
   {v:'1.19', notes:'Empty deck now says "Tap to browse tracks/crates" instead of implying search. Fixed a real flexbox bug where long track names could force the deck browse list to need horizontal scrolling on the narrower deck width. Deck cards now stay the same height across empty/filled/browsing states instead of jumping. Clock position no longer shifts depending on scroll state. Clock drift effect is now screensaver-only, and its glow is toned down specifically in the header.'},
