@@ -247,6 +247,7 @@
   .edit-pic-btn{background:var(--bg);border:1px solid var(--line);border-radius:var(--radius-control);padding:8px 10px;
     font-size:var(--text-body-sm);font-weight:600;color:var(--dim);cursor:pointer;}
   .edit-input{background:var(--bg);border:1px solid var(--line);border-radius:var(--radius-control);padding:9px 10px;font-size:var(--text-body-lg);color:var(--text);}
+  .edit-energy-row{font-size:var(--text-body-sm);color:var(--text);padding:6px 2px;}
   .edit-actions{display:flex;gap:8px;}
   .edit-save{flex:1;background:var(--accent);color:#fff;border:none;border-radius:var(--radius-control);padding:9px;font-weight:700;font-size:var(--text-body-sm);cursor:pointer;}
   .edit-cancel{background:var(--bg);border:1px solid var(--line);border-radius:var(--radius-control);padding:9px 14px;font-size:var(--text-body-sm);color:var(--dim);cursor:pointer;}
@@ -1196,6 +1197,7 @@ async function processBatch(){
   isProcessingBatch = true;
   let done=0, fail=0, dupes=0;
   const norm = s => (s||'').trim().toLowerCase();
+  const upgradeQueueItems = []; // {trackId, file} — upgraded to compressed audio in the background after import finishes
   showHeaderProgress('Analyzing tracks…');
   while(pendingQueue.length>0){
     const file = pendingQueue.shift();
@@ -1225,6 +1227,7 @@ async function processBatch(){
       freshlyAddedIds.add(track.id);
       prependLibraryRow(track);
       await persistTrackAdd(track);
+      upgradeQueueItems.push({trackId: track.id, file});
       done++;
     }catch(err){
       console.error(err);
@@ -1237,6 +1240,43 @@ async function processBatch(){
   setHeaderProgress(100);
   setTimeout(hideHeaderProgress, 400);
   isProcessingBatch = false;
+  if(upgradeQueueItems.length>0) queueBackgroundPreviewUpgrades(upgradeQueueItems);
+}
+// Import stays fast because every track's preview starts as the instant WAV
+// version — but we still have the original File objects in memory right
+// after a batch finishes, which is the only time we ever will (the app never
+// keeps source audio around afterward). So each batch hands its files off
+// here to upgrade previews to better-quality compressed audio one at a time,
+// quietly, while the user is already free to browse what just imported.
+let backgroundUpgradeQueue = [];
+let backgroundUpgradeActive = false;
+function queueBackgroundPreviewUpgrades(items){
+  backgroundUpgradeQueue.push(...items);
+  if(!backgroundUpgradeActive) runBackgroundUpgradeWorker();
+}
+async function runBackgroundUpgradeWorker(){
+  backgroundUpgradeActive = true;
+  const startingCount = backgroundUpgradeQueue.length;
+  let processed = 0;
+  while(backgroundUpgradeQueue.length>0){
+    const {trackId, file} = backgroundUpgradeQueue.shift();
+    processed++;
+    const track = library.find(t=>t.id===trackId);
+    if(track){
+      try{
+        const compressed = await generatePreviewFromFile(file);
+        if(compressed){
+          track.previewAudio = compressed;
+          await persistTrackAdd(track);
+        }
+      }catch(e){ console.error('background preview upgrade failed for', trackId, e); }
+    }
+    // else: track was deleted before we got to it — nothing to upgrade, move on
+  }
+  backgroundUpgradeActive = false;
+  if(processed>0){
+    showInfoToast(`Improved preview quality for ${processed} track${processed===1?'':'s'} in the background`, false);
+  }
 }
 function escapeHtml(s){ const d=document.createElement('div'); d.textContent=s||''; return d.innerHTML; }
 // Inserts one newly-analyzed track at the very top of the visible list
@@ -1461,6 +1501,9 @@ async function analyzeFile(file, onProgress){
   const keyInfo = estimateKey(mono, audioBuffer.sampleRate);
   onProgress(0.9);
 
+  const onsetDensity = estimateOnsetDensity(mono, audioBuffer.sampleRate, bpm);
+  const energyLevel = computeEnergyLevel(bpm, loudness, bands, onsetDensity);
+
   const previewAnchor = findLoudestWindowCenter(mono, audioBuffer.sampleRate, audioBuffer.duration);
   const previewAudio = extractPreviewDataUrl(audioBuffer, previewAnchor); // fast, instant — never blocks import
   onProgress(0.97);
@@ -1479,7 +1522,7 @@ async function analyzeFile(file, onProgress){
     duration: audioBuffer.duration,
     bpm: Math.round(bpm),
     key: keyInfo,
-    bands, loudness, peaks, icon, previewAudio,
+    bands, loudness, peaks, icon, previewAudio, energyLevel,
     sourceFile: {name: file.name, size: file.size}
   };
   queuePreviewUpgrade(track, audioBuffer, previewAnchor);
@@ -1652,30 +1695,53 @@ async function generatePreviewFromFile(file, onProgress){
   ctx.close();
   return previewAudio;
 }
+// "Re-analyse" for tracks imported before Energy Level (and/or the
+// compressed preview) existed. Decodes the file once and backfills whatever
+// this specific track is actually missing, reusing its already-stored
+// bpm/loudness/bands rather than recomputing everything from scratch.
+async function reanalyzeTrackFromFile(file, track, onProgress){
+  const arrBuf = await file.arrayBuffer();
+  const ctx = new (window.AudioContext||window.webkitAudioContext)();
+  const audioBuffer = await ctx.decodeAudioData(arrBuf);
+  const mono = mixToMono(audioBuffer);
+  const result = {};
+  if(!track.previewAudio){
+    result.previewAudio = await extractPreviewBest(audioBuffer, findLoudestWindowCenter(mono, audioBuffer.sampleRate, audioBuffer.duration), onProgress);
+  }
+  if(track.energyLevel==null){
+    const onsetDensity = estimateOnsetDensity(mono, audioBuffer.sampleRate, track.bpm);
+    result.energyLevel = computeEnergyLevel(track.bpm, track.loudness, track.bands, onsetDensity);
+  }
+  ctx.close();
+  return result;
+}
 
 // Matches a batch of re-selected files back to their existing track records
 // by filename+size (stored on every track since it was first imported), so
-// previews can be backfilled for many tracks in one go instead of one at a
-// time — no need for the user to know or care which track is which.
+// missing data (preview audio, Energy Level) can be backfilled for many
+// tracks in one go instead of one at a time — no need for the user to know
+// or care which track is which.
 async function processBulkPreviewFiles(files){
-  const candidates = library.filter(t=>!t.previewAudio && t.sourceFile);
-  if(candidates.length===0){ showInfoToast('No tracks are missing a preview', false); return; }
+  const candidates = library.filter(t=>(!t.previewAudio || t.energyLevel==null) && t.sourceFile);
+  if(candidates.length===0){ showInfoToast('Nothing needs re-analysing', false); return; }
   const matches = [];
   for(const file of files){
     const track = candidates.find(t=>t.sourceFile.name===file.name && t.sourceFile.size===file.size && !matches.some(m=>m.track.id===t.id));
     if(track) matches.push({file, track});
   }
   if(matches.length===0){
-    showInfoToast("None of those files matched a track that's missing a preview", true);
+    showInfoToast("None of those files matched a track that needs re-analysing", true);
     return;
   }
-  showHeaderProgress(`Preview 1 of ${matches.length}…`);
+  showHeaderProgress(`Re-analysing 1 of ${matches.length}…`);
   let done=0, failed=0;
   for(let i=0;i<matches.length;i++){
-    setHeaderProgress((i/matches.length)*100, `Preview ${i+1} of ${matches.length} — ${matches[i].track.name}`);
+    setHeaderProgress((i/matches.length)*100, `Re-analysing ${i+1} of ${matches.length} — ${matches[i].track.name}`);
     try{
-      matches[i].track.previewAudio = await generatePreviewFromFile(matches[i].file,
-        p => setHeaderProgress(((i+p)/matches.length)*100, `Preview ${i+1} of ${matches.length} — ${matches[i].track.name}`));
+      const result = await reanalyzeTrackFromFile(matches[i].file, matches[i].track,
+        p => setHeaderProgress(((i+p)/matches.length)*100, `Re-analysing ${i+1} of ${matches.length} — ${matches[i].track.name}`));
+      if(result.previewAudio) matches[i].track.previewAudio = result.previewAudio;
+      if(result.energyLevel!=null) matches[i].track.energyLevel = result.energyLevel;
       await persistTrackAdd(matches[i].track);
       done++;
     }catch(err){
@@ -1693,10 +1759,10 @@ async function processBulkPreviewFiles(files){
 function updateBulkPreviewBtn(){
   const btn = document.getElementById('bulk-preview-btn');
   if(!btn) return;
-  const missing = library.filter(t=>!t.previewAudio).length;
+  const missing = library.filter(t=>!t.previewAudio || t.energyLevel==null).length;
   if(missing===0){ btn.style.display='none'; return; }
   btn.style.display = 'block';
-  btn.textContent = `🎵 Add previews for ${missing} track${missing===1?'':'s'} without one`;
+  btn.textContent = `🎵 Re-analyse ${missing} track${missing===1?'':'s'} (preview / Energy Level)`;
 }
 document.getElementById('bulk-preview-btn').addEventListener('click', ()=>{
   document.getElementById('bulk-preview-input').click();
@@ -1725,6 +1791,52 @@ function computePeaks(mono, buckets){
   }
   const m=Math.max(...peaks,0.0001);
   return peaks.map(p=>Math.round((p/m)*100)/100);
+}
+// A simple, honest onset-rate detector — not full source separation, just a
+// well-established MIR baseline: track a short-time energy envelope, look
+// for sudden upward jumps (onsets), count how many happen per beat. This is
+// the "onset density" ingredient real energy-rating tools (including
+// Spotify's, before it was deprecated) use as one input, not the whole
+// story — deliberately kept simple rather than pretending to isolate drums
+// specifically, which this data doesn't support doing reliably.
+function estimateOnsetDensity(mono, sampleRate, bpm){
+  const winSize = Math.floor(sampleRate*0.02); // ~20ms windows
+  const envelope = [];
+  for(let i=0; i+winSize<=mono.length; i+=winSize){
+    let sum=0;
+    for(let j=i;j<i+winSize;j++) sum += mono[j]*mono[j];
+    envelope.push(Math.sqrt(sum/winSize));
+  }
+  if(envelope.length<3) return 0;
+  const flux = [];
+  for(let i=1;i<envelope.length;i++) flux.push(Math.max(0, envelope[i]-envelope[i-1]));
+  const mean = flux.reduce((a,b)=>a+b,0)/flux.length;
+  const variance = flux.reduce((a,b)=>a+(b-mean)*(b-mean),0)/flux.length;
+  const threshold = mean + Math.sqrt(variance)*1.2; // adaptive — a fixed number would misfire on quiet vs loud tracks alike
+  let onsets=0;
+  for(let i=1;i<flux.length-1;i++){
+    if(flux[i]>threshold && flux[i]>=flux[i-1] && flux[i]>=flux[i+1]) onsets++;
+  }
+  const durationSec = mono.length/sampleRate;
+  const onsetsPerSec = onsets/durationSec;
+  const beatsPerSec = (bpm||120)/60;
+  return onsetsPerSec/beatsPerSec; // onsets per beat — comparable across different tempos, not just raw onsets/sec
+}
+// A reasonable, honestly-approximate composite in the spirit of "Energy
+// Level" ratings from Mixed In Key / Spotify's now-deprecated audio
+// features — tempo, loudness, brightness, and onset density combined. This
+// has NOT been tuned against a large labeled dataset the way those were;
+// it's a defensible heuristic, not a validated model. Scale: 1 (calmest) to
+// 10 (most intense), matching the convention DJs already know from Mixed In Key.
+function computeEnergyLevel(bpm, loudness, bands, onsetDensity){
+  const clamp01 = v => Math.max(0, Math.min(1, v));
+  const bpmNorm = clamp01((bpm-70)/(175-70));
+  const loudNorm = (loudness==null) ? 0.5 : clamp01((loudness+16)/10); // roughly -16 to -6 LUFS covers most mastered club material
+  const brightness = ((bands.himid+bands.high)/2) - ((bands.low+bands.lowmid)/2);
+  const brightNorm = clamp01((brightness+10)/20);
+  const onsetNorm = clamp01(onsetDensity/3);
+  const composite = bpmNorm*0.25 + loudNorm*0.20 + brightNorm*0.25 + onsetNorm*0.30;
+  return Math.max(1, Math.min(10, Math.round(composite*9)+1));
 }
 
 async function computeBands(audioBuffer){
@@ -2121,7 +2233,7 @@ function trackRowHtml(t, opts){
       </div>
       <div class="meta"><span class="meta-bpm"><b>${t.bpm}</b> bpm</span><br><span class="meta-key">${t.key.camelot} ${t.key.name}</span></div>
       <div class="row-actions">
-        ${t.previewAudio ? `
+        ${(t.previewAudio && t.energyLevel!=null) ? `
         <button class="match-play-btn" data-preview="${t.id}" title="Play 15s preview" aria-label="Play 15 second preview of ${escapeHtml(t.name)}">
           <svg viewBox="0 0 34 34" width="30" height="30">
             <circle class="play-fill" cx="17" cy="17" r="16" style="fill:var(--accent)" opacity="0"></circle>
@@ -2129,7 +2241,7 @@ function trackRowHtml(t, opts){
             <path class="play-tri" d="M13.5 9.5 L24 17 L13.5 24.5 Z" fill="none" style="stroke:var(--accent)" stroke-width="1.8" stroke-linejoin="round"></path>
           </svg>
         </button>` : `
-        <button class="add-preview-btn" data-add-preview="${t.id}" title="Add a 15s preview clip" aria-label="Add a preview clip for ${escapeHtml(t.name)}">
+        <button class="add-preview-btn" data-add-preview="${t.id}" title="Re-analyse (preview and/or Energy Level)" aria-label="Re-analyse ${escapeHtml(t.name)}">
           <svg viewBox="0 0 24 24" width="16" height="16"><path fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" d="M12 5v14M5 12h14"/></svg>
         </button>
         <input type="file" accept="audio/*" class="add-preview-input" id="add-preview-input-${t.id}" style="display:none;">`}
@@ -2153,6 +2265,7 @@ function trackRowHtml(t, opts){
       <input class="edit-input" id="edit-artist-${t.id}" placeholder="Artist" value="${escapeHtml(t.artist||'')}">
       <input class="edit-input" id="edit-bpm-${t.id}" type="number" inputmode="decimal" placeholder="BPM" value="${t.bpm}">
       <select class="edit-input" id="edit-key-${t.id}">${camelotOptionsHtml(t.key.camelot)}</select>
+      <div class="edit-energy-row">Energy Level: ${t.energyLevel!=null ? `<b>${t.energyLevel}/10</b>` : `<span style="color:var(--dim);">not analysed yet — use the re-analyse button on this row</span>`}</div>
       <div class="edit-actions">
         <button class="edit-save" data-save="${t.id}">Save</button>
         <button class="edit-cancel" data-cancel="${t.id}">Cancel</button>
@@ -2560,17 +2673,22 @@ function wireLibraryRows(scopeEl){
       const id = input.id.replace('add-preview-input-','');
       const track = library.find(t=>t.id===id);
       if(!track) return;
-      showHeaderProgress('Preparing preview…');
+      showHeaderProgress('Re-analysing…');
       try{
-        track.previewAudio = await generatePreviewFromFile(file, p=>setHeaderProgress(p*100, `Recording preview… ${Math.round(p*100)}%`));
+        const result = await reanalyzeTrackFromFile(file, track, p=>setHeaderProgress(p*100, `Re-analysing… ${Math.round(p*100)}%`));
+        if(result.previewAudio) track.previewAudio = result.previewAudio;
+        if(result.energyLevel!=null) track.energyLevel = result.energyLevel;
         await persistTrackAdd(track);
         setHeaderProgress(100); setTimeout(hideHeaderProgress,300);
         renderLibrary();
-        showInfoToast('Preview added', false);
+        const parts = [];
+        if(result.previewAudio) parts.push('preview');
+        if(result.energyLevel!=null) parts.push('Energy Level');
+        showInfoToast(parts.length ? `Added ${parts.join(' and ')}` : 'Already up to date', false);
       }catch(err){
         console.error(err);
         hideHeaderProgress();
-        showInfoToast("Couldn't read that file for a preview", true);
+        showInfoToast("Couldn't read that file", true);
       }
     });
   });
@@ -4383,13 +4501,14 @@ function renderFlowDetail(){
 /* =========================================================
    INIT
 ========================================================= */
-const APP_VERSION = '1.23';
+const APP_VERSION = '1.24';
 const APP_BUILD = '2026-09-08';
 document.getElementById('version-display').textContent = `${APP_VERSION} · ${APP_BUILD}`;
 // Reconstructed from this build session's history — not tracked in real time
 // from the very start, but accurate to the best of what was actually shipped.
 // Add one line here with each future update.
 const CHANGELOG = [
+  {v:'1.24', notes:'New: Energy Level (1-10), a composite of tempo, loudness, tonal brightness, and rhythmic onset density, in the spirit of Mixed In Key\u2019s Energy rating. Computed automatically for new imports. Existing tracks can be caught up via the re-analyse button (per-track or in bulk) already used for backfilling preview audio \u2014 same flow now covers both. Not yet factored into suggestion scoring, deliberately, until there is a real sense of whether it earns its place.'},
   {v:'1.23', notes:'Found the real cause of import being extremely slow (and sometimes appearing to hang entirely): every track was waiting on a real-time, ~15-second audio recording step for its preview, one at a time, with no timeout — a single stuck one could freeze the whole batch. Import now uses the fast instant preview immediately, then upgrades each track to better quality in the background afterward, one at a time, with a hard timeout so a stuck track can never block anything again.'},
   {v:'1.22', notes:'Import already sorted newest-first (unchanged). New fix: batch-importing a bunch of tracks now shows each one appearing at the top of the list the moment it finishes analyzing, instead of the whole list staying empty-looking until the entire batch completes.'},
   {v:'1.21', notes:'Checked the backup export/import against everything it should cover. Preview audio was already included (it lives on each track record). History sessions were genuinely missing and are now included, with the same track-id remapping treatment as Flows and Crates so they survive moving between devices correctly.'},
