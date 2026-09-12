@@ -466,12 +466,14 @@
   .tonal-between-btn.open{background:#8e8e93;color:#fff;}
   .tonal-dropdown{max-height:0;overflow:hidden;opacity:0;
     transition:max-height 0.32s ease, opacity 0.22s ease;margin-bottom:14px;}
-  .tonal-dropdown.open{max-height:460px;opacity:1;}
+  .tonal-dropdown.open{max-height:220px;opacity:1;}
   .tonal-dropdown-inner{background:var(--card);border-radius:var(--radius-card);padding:14px 16px;
     box-shadow:0 1px 2px rgba(0,0,0,0.04);}
-  .tonal-dropdown-legend{display:flex;gap:16px;margin-bottom:10px;font-size:var(--text-caption);}
-  .tonal-dropdown-legend span{display:flex;align-items:center;gap:5px;}
-  .tonal-dropdown-legend i{width:10px;height:10px;border-radius:50%;display:inline-block;}
+  .tonal-side-by-side{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+  .tonal-side-panel{min-width:0;}
+  .tonal-side-label{font-size:var(--text-micro);font-weight:800;letter-spacing:.5px;margin-bottom:6px;}
+  .tonal-side-stat{font-size:var(--text-caption);color:var(--text);margin-bottom:2px;}
+  .tonal-side-stat .bl{color:var(--dim);margin-right:4px;}
 
   .section-lbl{font-size:var(--text-body-sm);color:var(--dim);font-weight:600;margin:2px 2px 8px;}
   .play-reset-btn{display:block;width:100%;margin-top:18px;background:var(--card);
@@ -642,14 +644,16 @@
         <div class="content"><div class="content-inner">
           <p class="weights-hint">Every DJ weighs these differently — set your split below (10–70% each, in steps of 10%). Nothing changes until you hit Save.</p>
           <div class="wrow-group">
-            <div class="wrow"><span class="lbl">BPM</span><input type="range" id="w-bpm" min="10" max="70" step="10" value="20"><span class="val" id="w-bpm-val">20%</span></div>
-            <div class="tick-row" style="margin-left:96px;"><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div>
-            <div class="wrow"><span class="lbl">Key</span><input type="range" id="w-key" min="10" max="70" step="10" value="30"><span class="val" id="w-key-val">30%</span></div>
-            <div class="tick-row" style="margin-left:96px;"><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div>
-            <div class="wrow"><span class="lbl">Loudness</span><input type="range" id="w-loud" min="10" max="70" step="10" value="10"><span class="val" id="w-loud-val">10%</span></div>
-            <div class="tick-row" style="margin-left:96px;"><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div>
-            <div class="wrow"><span class="lbl">Tonal Balance</span><input type="range" id="w-bands" min="10" max="70" step="10" value="40"><span class="val" id="w-bands-val">40%</span></div>
-            <div class="tick-row" style="margin-left:96px;"><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div>
+            <div class="wrow"><span class="lbl">BPM</span><input type="range" id="w-bpm" min="0" max="100" step="5" value="20"><span class="val" id="w-bpm-val">20%</span></div>
+            <div class="tick-row" style="margin-left:96px;"><span></span><span></span><span></span><span></span><span></span></div>
+            <div class="wrow"><span class="lbl">Key</span><input type="range" id="w-key" min="0" max="100" step="5" value="25"><span class="val" id="w-key-val">25%</span></div>
+            <div class="tick-row" style="margin-left:96px;"><span></span><span></span><span></span><span></span><span></span></div>
+            <div class="wrow"><span class="lbl">Loudness</span><input type="range" id="w-loud" min="0" max="100" step="5" value="10"><span class="val" id="w-loud-val">10%</span></div>
+            <div class="tick-row" style="margin-left:96px;"><span></span><span></span><span></span><span></span><span></span></div>
+            <div class="wrow"><span class="lbl">Tonal Balance</span><input type="range" id="w-bands" min="0" max="100" step="5" value="30"><span class="val" id="w-bands-val">30%</span></div>
+            <div class="tick-row" style="margin-left:96px;"><span></span><span></span><span></span><span></span><span></span></div>
+            <div class="wrow"><span class="lbl">Energy Level</span><input type="range" id="w-energy" min="0" max="100" step="5" value="15"><span class="val" id="w-energy-val">15%</span></div>
+            <div class="tick-row" style="margin-left:96px;"><span></span><span></span><span></span><span></span><span></span></div>
           </div>
           <div class="weights-save-row">
             <span class="weights-total" id="weights-total">100%</span>
@@ -2178,6 +2182,35 @@ function fmtDuration(s){ s=Math.round(s); return Math.floor(s/60)+':'+String(s%6
 // green-to-orange-to-red scale, same dB tolerance as the row shape).
 // detailed=true renders much bigger with a real dB axis and band-name labels,
 // for the row breakdown.
+// A single deck's own tonal balance, sized for a side-by-side panel rather
+// than the full-width two-series comparison chart — shorter vertically
+// specifically so two of these can sit next to each other without needing
+// much screen height.
+function bandSingleChartSvg(bands, color){
+  const w = 140, h = 92, padL = 22, padB = 14;
+  const plotW = w-padL, colW = plotW/4;
+  if(!bands){
+    return `<svg width="100%" style="display:block;" viewBox="0 0 ${w} ${h}">
+      <line x1="3" y1="${h/2}" x2="${w-3}" y2="${h/2}" stroke="#e2e2e8" stroke-width="2" stroke-dasharray="2,3"/>
+    </svg>`;
+  }
+  const chartH = h-padB;
+  const yFor = db => chartH - Math.max(0,Math.min(1,(db-CHART_DB_MIN)/(CHART_DB_MAX-CHART_DB_MIN)))*chartH;
+  const labelNames = {low:'low', lowmid:'l-m', himid:'h-m', high:'high'};
+  let marks='';
+  for(let db=Math.ceil(CHART_DB_MIN/6)*6; db<=CHART_DB_MAX; db+=6){
+    const y = yFor(db);
+    marks += `<line x1="${padL}" y1="${y}" x2="${w}" y2="${y}" stroke="#e5e7eb" stroke-width="1"/>`;
+    marks += `<text x="${padL-4}" y="${y}" font-size="7" text-anchor="end" dominant-baseline="middle" fill="#9ca3af">${db}</text>`;
+  }
+  BAND_KEYS.forEach((k,i)=>{
+    const x0=padL+i*colW+2, x1=padL+(i+1)*colW-2;
+    const y = yFor(bands[k]);
+    marks += `<line x1="${x0}" y1="${y}" x2="${x1}" y2="${y}" stroke="${color}" stroke-width="4" stroke-linecap="round"/>`;
+    marks += `<text x="${(x0+x1)/2}" y="${chartH+11}" font-size="7" text-anchor="middle" fill="#9ca3af">${labelNames[k]}</text>`;
+  });
+  return `<svg width="100%" style="display:block;" viewBox="0 0 ${w} ${h}">${marks}</svg>`;
+}
 function bandCompareChartSvg(nowBands, suggBands, detailed, colors){
   const w = detailed?250:50, h = detailed?150:26;
   const padL = detailed?26:0, padB = detailed?16:0;
@@ -2231,7 +2264,7 @@ function trackRowHtml(t, opts){
         <div class="t">${escapeHtml(t.name)}</div>
         <div class="a">${escapeHtml(t.artist||'Unknown artist')}</div>
       </div>
-      <div class="meta"><span class="meta-bpm"><b>${t.bpm}</b> bpm</span><br><span class="meta-key">${t.key.camelot} ${t.key.name}</span></div>
+      <div class="meta"><span class="meta-bpm"><b>${t.bpm}</b> bpm${t.energyLevel!=null?` · <b>${t.energyLevel}</b>⚡`:''}</span><br><span class="meta-key">${t.key.camelot} ${t.key.name}</span></div>
       <div class="row-actions">
         ${(t.previewAudio && t.energyLevel!=null) ? `
         <button class="match-play-btn" data-preview="${t.id}" title="Play 15s preview" aria-label="Play 15 second preview of ${escapeHtml(t.name)}">
@@ -3054,23 +3087,29 @@ function renderPlayHistory(){
   });
 }
 
+function energyLevelScore(a, b){
+  if(a==null || b==null) return null; // one or both tracks haven't been (re-)analysed for Energy Level yet
+  return Math.round(Math.max(0, 100*(1-Math.abs(a-b)/9)));
+}
 function quickScoreTrack(now, t){
   const bm=bpmMatchInfo(now.bpm,t.bpm);
   const bs=Math.round(bm.score);
   const kd=camelotDistance(now.key.camelot,t.key.camelot);
   const bandS=bandsScore(now.bands,t.bands);
   const loudS=loudnessScore(now.loudness,t.loudness);
-  const wBpm=activeWeights['w-bpm'], wKey=activeWeights['w-key'], wBands=activeWeights['w-bands'], wLoud=activeWeights['w-loud'];
+  const energyS=energyLevelScore(now.energyLevel,t.energyLevel);
+  const wBpm=activeWeights['w-bpm'], wKey=activeWeights['w-key'], wBands=activeWeights['w-bands'], wLoud=activeWeights['w-loud'], wEnergy=activeWeights['w-energy']||0;
   const parts = [{score:bs,weight:wBpm},{score:kd.score,weight:wKey}];
   if(bandS!=null) parts.push({score:bandS, weight:wBands});
   if(loudS!=null) parts.push({score:loudS, weight:wLoud});
+  if(energyS!=null) parts.push({score:energyS, weight:wEnergy});
   const total = parts.reduce((s,p)=>s+p.weight,0)||1;
   return Math.round(parts.reduce((s,p)=>s+p.score*p.weight,0)/total);
 }
 
-const WEIGHT_IDS = ['w-bpm','w-key','w-loud','w-bands'];
+const WEIGHT_IDS = ['w-bpm','w-key','w-loud','w-bands','w-energy'];
 const WEIGHTS_KEY = 'cratebuddy:active-weights';
-let activeWeights = {'w-bpm':20, 'w-key':30, 'w-loud':10, 'w-bands':40}; // last-saved, actually-applied split
+let activeWeights = {'w-bpm':20, 'w-key':25, 'w-loud':10, 'w-bands':30, 'w-energy':15}; // last-saved, actually-applied split
 
 function getDraftWeights(){
   const w={};
@@ -3258,7 +3297,7 @@ function renderDecks(){
       </div>
       <div class="art-frame"><img class="art" src="${t.icon}"></div>
       <div class="t">${escapeHtml(t.name)}</div>
-      <div class="sub">${t.bpm} bpm · ${t.key.camelot} ${t.key.name}</div>
+      <div class="sub">${t.bpm} bpm · ${t.key.camelot} ${t.key.name}${t.energyLevel!=null?` · ${t.energyLevel}⚡`:''}</div>
     </div>`;
   };
   holder.innerHTML = `<div class="deck-row">
@@ -3275,34 +3314,25 @@ function renderDecks(){
   </div>
   <div class="tonal-dropdown${tonalDropdownOpen?' open':''}" id="tonal-dropdown">
     <div class="tonal-dropdown-inner">
-      ${(deckAT&&deckBT) ? (()=>{
-        const bm = bpmMatchInfo(deckAT.bpm, deckBT.bpm);
-        const rounded = Math.round(bm.absDiff);
-        const arrow = bm.diff>0 ? '▲' : (bm.diff<0 ? '▼' : '');
-        const tempoNote = bm.mult===2 ? ' · half-time' : (bm.mult===0.5 ? ' · double-time' : '');
-        const bpmText = rounded===0 ? 'Exact tempo'+tempoNote : `${arrow} ${rounded} bpm${tempoNote}`;
-        const kd = camelotDistance(deckAT.key.camelot, deckBT.key.camelot);
-        const keyCompatible = kd.score>=40;
-        const keyText = deckAT.key.camelot===deckBT.key.camelot ? 'Exact key match' : (keyCompatible ? '✓ Harmonically Compatible' : '✕ Not Harmonically Compatible');
-        let loudRow;
-        if(deckAT.loudness==null || deckBT.loudness==null){
-          loudRow = `<span class="bd-text" style="color:var(--dim);font-weight:500;">No loudness data</span>`;
-        } else {
-          const loudDiff = Math.abs(deckAT.loudness-deckBT.loudness);
-          const loudArrow = (deckAT.loudness-deckBT.loudness)>0 ? '▼' : ((deckAT.loudness-deckBT.loudness)<0 ? '▲' : '');
-          const loudText = loudDiff<0.3 ? 'Exact loudness' : `${loudArrow} ${loudDiff.toFixed(1)} dB ${deckBT.loudness<deckAT.loudness?'quieter':'louder'}`;
-          loudRow = `<span class="bd-text" style="color:${pctColor(loudnessScore(deckAT.loudness,deckBT.loudness))}">${loudText}</span>`;
-        }
-        return `
-        <div class="bd-row"><span class="bl">BPM</span><span class="bd-text" style="color:${bpmDiffColor(bm.absDiff)}">${bpmText}</span></div>
-        <div class="bd-row"><span class="bl">Key</span><span class="bd-text" style="color:${keyColor(kd.score)}">${keyText}</span></div>
-        <div class="bd-row"><span class="bl">Loudness</span>${loudRow}</div>
-        <div class="tonal-dropdown-legend" style="margin-top:12px;padding-top:12px;border-top:1px solid var(--line);">
-          <span><i style="background:${DECK_A_COLOR}"></i>Deck A</span>
-          <span><i style="background:${DECK_B_COLOR}"></i>Deck B</span>
-        </div>
-        ${bandCompareChartSvg(deckAT.bands, deckBT.bands, true, [DECK_A_COLOR, DECK_B_COLOR])}`;
-      })() : `<div class="empty-state" style="padding:10px 0;">Load a track into both decks to compare.</div>`}
+      ${(deckAT&&deckBT) ? `
+        <div class="tonal-side-by-side">
+          <div class="tonal-side-panel">
+            <div class="tonal-side-label" style="color:${DECK_A_COLOR}">DECK A</div>
+            <div class="tonal-side-stat"><span class="bl">BPM</span> ${deckAT.bpm}</div>
+            <div class="tonal-side-stat"><span class="bl">Key</span> ${deckAT.key.camelot} ${deckAT.key.name}</div>
+            <div class="tonal-side-stat"><span class="bl">Loud</span> ${deckAT.loudness!=null?deckAT.loudness.toFixed(1)+' dB':'—'}</div>
+            <div class="tonal-side-stat"><span class="bl">Energy</span> ${deckAT.energyLevel!=null?deckAT.energyLevel+'/10':'—'}</div>
+            ${bandSingleChartSvg(deckAT.bands, DECK_A_COLOR)}
+          </div>
+          <div class="tonal-side-panel">
+            <div class="tonal-side-label" style="color:${DECK_B_COLOR}">DECK B</div>
+            <div class="tonal-side-stat"><span class="bl">BPM</span> ${deckBT.bpm}</div>
+            <div class="tonal-side-stat"><span class="bl">Key</span> ${deckBT.key.camelot} ${deckBT.key.name}</div>
+            <div class="tonal-side-stat"><span class="bl">Loud</span> ${deckBT.loudness!=null?deckBT.loudness.toFixed(1)+' dB':'—'}</div>
+            <div class="tonal-side-stat"><span class="bl">Energy</span> ${deckBT.energyLevel!=null?deckBT.energyLevel+'/10':'—'}</div>
+            ${bandSingleChartSvg(deckBT.bands, DECK_B_COLOR)}
+          </div>
+        </div>` : `<div class="empty-state" style="padding:10px 0;">Load a track into both decks to compare.</div>`}
     </div>
   </div>`;
   if(deckA && deckB){
@@ -3415,7 +3445,8 @@ function renderMatches(animateNew){
   const wKey=activeWeights['w-key'];
   const wBands=activeWeights['w-bands'];
   const wLoud=activeWeights['w-loud'];
-  const wTotal=(wBpm+wKey+wBands+wLoud)||1;
+  const wEnergy=activeWeights['w-energy']||0;
+  const wTotal=(wBpm+wKey+wBands+wLoud+wEnergy)||1;
 
   if(!now){
     sectionLbl.style.display='none';
@@ -3431,15 +3462,18 @@ function renderMatches(animateNew){
     const bandS=bandsScore(now.bands,t.bands); // null if either track has no spectrum data
     const loudDiff = (now.loudness==null||t.loudness==null) ? null : Math.abs(now.loudness-t.loudness);
     const loudS = loudnessScore(now.loudness,t.loudness); // null if either track has no loudness data
+    const energyDiff = (now.energyLevel==null||t.energyLevel==null) ? null : Math.abs(now.energyLevel-t.energyLevel);
+    const energyS = energyLevelScore(now.energyLevel,t.energyLevel); // null if either track hasn't been (re-)analysed yet
     // Only weigh the categories that actually have data for this pair, so a
     // manually-added vinyl entry (no bands/loudness) still ranks sensibly on
     // BPM + key instead of being penalized for data it was never given.
     const parts = [{score:bs,weight:wBpm},{score:kd.score,weight:wKey}];
     if(bandS!=null) parts.push({score:bandS, weight:wBands});
     if(loudS!=null) parts.push({score:loudS, weight:wLoud});
+    if(energyS!=null) parts.push({score:energyS, weight:wEnergy});
     const activeTotal = parts.reduce((s,p)=>s+p.weight,0)||1;
     const overall=Math.round(parts.reduce((s,p)=>s+p.score*p.weight,0)/activeTotal);
-    return {t,bs,bm,kd,bandS,loudDiff,loudS,overall};
+    return {t,bs,bm,kd,bandS,loudDiff,loudS,energyDiff,energyS,overall};
   }
 
   const activeCrateFilter = suggestionsCrateFilterId ? crates.find(c=>c.id===suggestionsCrateFilterId) : null;
@@ -3514,6 +3548,15 @@ function renderMatches(animateNew){
       const loudText = r.loudDiff<0.3 ? 'Exact loudness' : `${loudArrow} ${r.loudDiff.toFixed(1)} dB ${r.t.loudness<now.loudness?'quieter':'louder'}`;
       loudRow = `<span class="bd-text" style="color:${loudnessDiffColor(r.loudDiff)}">${loudText}</span>`;
     }
+    let energyRow;
+    if(r.energyDiff==null){
+      energyRow = `<span class="bd-text" style="color:var(--dim);font-weight:500;">Not analysed yet</span>`;
+    } else if(r.energyDiff===0){
+      energyRow = `<span class="bd-text" style="color:${pctColor(r.energyS)}">Same Energy Level (${now.energyLevel}/10)</span>`;
+    } else {
+      const eArrow = (now.energyLevel - r.t.energyLevel) > 0 ? '▼' : '▲';
+      energyRow = `<span class="bd-text" style="color:${pctColor(r.energyS)}">${eArrow} ${r.energyDiff} (${r.t.energyLevel}/10 vs ${now.energyLevel}/10)</span>`;
+    }
     const isChain = r.t.id===chainPickId;
     const isFlow = !isChain && flowToIds.has(r.t.id);
     const startsChain = showFlowChainSuggestions && !isChain && chains.some(c=>c.trackIds[0]===r.t.id);
@@ -3552,6 +3595,7 @@ function renderMatches(animateNew){
             ${pitchNote}
             <div class="bd-row"><span class="bl">Key</span><span class="bd-text" style="color:${keyColor(r.kd.score)};font-weight:700;">${keyText}</span></div>
             <div class="bd-row"><span class="bl">Loudness</span>${loudRow}</div>
+            <div class="bd-row"><span class="bl">Energy</span>${energyRow}</div>
           </div>
           <div class="bd-col-right">
             <div class="bl" style="margin-bottom:8px;">Tonal Balance</div>
@@ -4501,13 +4545,15 @@ function renderFlowDetail(){
 /* =========================================================
    INIT
 ========================================================= */
-const APP_VERSION = '1.24';
+const APP_VERSION = '1.26';
 const APP_BUILD = '2026-09-08';
 document.getElementById('version-display').textContent = `${APP_VERSION} · ${APP_BUILD}`;
 // Reconstructed from this build session's history — not tracked in real time
 // from the very start, but accurate to the best of what was actually shipped.
 // Add one line here with each future update.
 const CHANGELOG = [
+  {v:'1.26', notes:'Redesigned the deck-comparison dropdown: instead of pre-computed difference text and one combined chart, it now shows two side-by-side panels (one per deck) with each deck\u2019s own raw info and its own tonal balance chart, so you can compare them yourself. Chart height reduced to keep the whole dropdown compact.'},
+  {v:'1.25', notes:'Energy Level now shown next to every track (Import rows and deck cards), and factored into suggestion scoring via a new fifth slider in Suggestion Priorities. All sliders switched from 10% steps (10-70% range) to 5% steps (0-100% range), so any single category can now be turned fully off or maxed out.'},
   {v:'1.24', notes:'New: Energy Level (1-10), a composite of tempo, loudness, tonal brightness, and rhythmic onset density, in the spirit of Mixed In Key\u2019s Energy rating. Computed automatically for new imports. Existing tracks can be caught up via the re-analyse button (per-track or in bulk) already used for backfilling preview audio \u2014 same flow now covers both. Not yet factored into suggestion scoring, deliberately, until there is a real sense of whether it earns its place.'},
   {v:'1.23', notes:'Found the real cause of import being extremely slow (and sometimes appearing to hang entirely): every track was waiting on a real-time, ~15-second audio recording step for its preview, one at a time, with no timeout — a single stuck one could freeze the whole batch. Import now uses the fast instant preview immediately, then upgrades each track to better quality in the background afterward, one at a time, with a hard timeout so a stuck track can never block anything again.'},
   {v:'1.22', notes:'Import already sorted newest-first (unchanged). New fix: batch-importing a bunch of tracks now shows each one appearing at the top of the list the moment it finishes analyzing, instead of the whole list staying empty-looking until the entire batch completes.'},
