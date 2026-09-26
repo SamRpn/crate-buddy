@@ -289,11 +289,22 @@
   .tick-row{display:flex;justify-content:space-between;margin:2px 0 10px;padding:0 8px;}
   .tick-row span{width:2px;height:8px;border-radius:1px;background:#9ca3af;}
 
-  .crate-filter-row{display:flex;align-items:center;margin-bottom:14px;}
+  .crate-filter-row{display:flex;align-items:center;gap:8px;margin-bottom:14px;}
   .filters-pill{display:inline-flex;align-items:center;gap:6px;background:#1c1d21;border:1px solid var(--line);
     border-radius:999px;padding:8px 14px;color:var(--text);cursor:pointer;}
   .filters-pill select{background:none;border:none;color:var(--text);font-size:var(--text-caption);font-weight:700;
     letter-spacing:0.4px;text-transform:uppercase;appearance:none;-webkit-appearance:none;padding:0;}
+  button.filters-pill{font-family:inherit;}
+  button.filters-pill span{font-size:var(--text-caption);font-weight:700;letter-spacing:0.4px;text-transform:uppercase;}
+  .filter-icon-btn{width:34px;height:34px;border-radius:50%;background:#1c1d21;border:1px solid var(--line);
+    color:var(--dim);display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0;flex-shrink:0;}
+  .filter-icon-btn:not(:disabled):active{color:var(--accent);border-color:var(--accent);}
+  .filter-icon-btn:disabled{opacity:0.35;cursor:default;}
+  .priorities-wrap{position:relative;margin-left:auto;}
+  .priorities-dropdown{position:absolute;top:calc(100% + 8px);right:0;width:min(300px, 80vw);
+    background:var(--card);border-radius:var(--radius-card);box-shadow:0 6px 20px rgba(0,0,0,0.18);
+    padding:14px;z-index:60;display:none;}
+  .priorities-dropdown.open{display:block;}
   .now-search{position:relative;flex:1;min-width:0;}
   .now-search input{width:100%;background:var(--card);color:var(--text);border:1px solid var(--line);border-radius:var(--radius-control);
     padding:9px 11px;font-size:var(--text-body);box-shadow:none;}
@@ -414,27 +425,20 @@
 
   .deck-row{display:grid;grid-template-columns:1fr auto 1fr;gap:8px;align-items:stretch;margin-bottom:14px;}
   .deck-card{background:linear-gradient(135deg, color-mix(in srgb, var(--deck-color) 35%, var(--card)), color-mix(in srgb, var(--deck-color) 12%, var(--card)));
-    border-radius:var(--radius-card);padding:8px;min-height:96px;
+    border-radius:var(--radius-card);padding:8px;min-height:280px;
     border:2px solid var(--deck-color);box-shadow:0 1px 2px rgba(0,0,0,0.04);min-width:0;}
   .deck-card.inactive{border-style:dashed;}
-  .deck-card:not(.empty):not(.deck-search-active){display:flex;align-items:center;flex-wrap:wrap;gap:0 10px;}
-  .deck-card:not(.empty):not(.deck-search-active) .deck-label-row{width:100%;margin-bottom:4px;}
-  .deck-card:not(.empty):not(.deck-search-active) .art-frame{width:72px;height:72px;flex-shrink:0;margin-bottom:0;}
-  .deck-card:not(.empty):not(.deck-search-active) .t{font-size:var(--text-body-lg);}
-  .deck-card:not(.empty):not(.deck-search-active) .sub{margin:2px 0 0;}
 
   @media (orientation: landscape){
     .deck-row{margin-bottom:8px;}
-    .deck-card{min-height:0;padding:5px;}
+    .deck-card{min-height:0;padding:6px;}
     .deck-card.deck-search-active{min-height:0;max-height:170px;}
     .deck-card.empty{min-height:64px;}
     .deck-label-row{margin-bottom:0;}
     .deck-card .deck-label{margin:2px 2px 3px;}
-    .deck-card:not(.empty):not(.deck-search-active) .art-frame{
-      width:44px;height:44px;flex-shrink:0;margin-bottom:0;}
-    .deck-card:not(.empty):not(.deck-search-active) .deck-label-row{width:100%;margin-bottom:0;}
-    .deck-card:not(.empty):not(.deck-search-active) .t{font-size:11.5px;}
-    .deck-card:not(.empty):not(.deck-search-active) .sub{margin:0;}
+    .deck-card .art-frame{margin-bottom:4px;}
+    .deck-card .t{font-size:11.5px;}
+    .deck-card .sub{margin:0;}
     .flow-between-btn,.tonal-between-btn{width:30px;height:30px;}
     .deck-mid-col{gap:5px;}
   }
@@ -450,6 +454,9 @@
   .deck-sort-btn{flex-shrink:0;background:var(--bg);border:1px solid var(--line);border-radius:var(--radius-control);
     padding:8px 9px;font-size:var(--text-caption);font-weight:700;color:var(--dim);cursor:pointer;white-space:nowrap;}
   .deck-sort-btn.active{border-color:var(--deck-color);color:var(--deck-color);}
+  .organise-sort-row{display:flex;align-items:center;gap:8px;margin:10px 0;}
+  .organise-sort-lbl{font-size:var(--text-caption);color:var(--dim);font-weight:600;}
+  .organise-sort-row .deck-sort-btn{--deck-color:var(--accent);}
   .deck-search-results{flex:1;overflow-y:auto;overflow-x:hidden;max-height:180px;touch-action:pan-y;}
   .deck-search-cancel{background:none;border:none;color:var(--dim);font-size:var(--text-caption);font-weight:600;
     padding:4px 2px;cursor:pointer;text-align:left;}
@@ -458,7 +465,7 @@
   .deck-card .t{font-size:var(--text-body);font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin:0 2px;}
   .deck-card .sub{font-size:var(--text-caption);color:color-mix(in srgb, var(--deck-color) 45%, var(--text));margin:2px 2px 4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
   .deck-card.empty{display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;
-    border-style:dashed;color:var(--dim);min-height:96px;}
+    border-style:dashed;color:var(--dim);min-height:280px;}
   .deck-card.empty .deck-empty-icon{margin-bottom:8px;opacity:0.6;}
   .deck-card.empty .deck-empty-text{font-size:var(--text-caption);}
   .deck-mid-col{display:flex;flex-direction:column;gap:8px;align-items:center;justify-content:center;flex-shrink:0;}
@@ -542,9 +549,9 @@
   .play-fill{transition:opacity 0.3s ease;}
   .play-fill.filling{opacity:1;}
   .play-tri{transition:fill 0.3s ease, stroke 0.3s ease;}
-  .deck-allocate-btns{display:flex;flex-direction:column;gap:3px;flex-shrink:0;}
-  .deck-allocate-btn{width:26px;height:22px;border-radius:6px;background:none;border:1.5px solid var(--deck-color);
-    color:var(--deck-color);font-size:10px;font-weight:800;cursor:pointer;padding:0;}
+  .deck-allocate-btns{display:flex;flex-direction:row;gap:6px;flex-shrink:0;}
+  .deck-allocate-btn{width:40px;height:36px;border-radius:9px;background:none;border:2px solid var(--deck-color);
+    color:var(--deck-color);font-size:14px;font-weight:800;cursor:pointer;padding:0;}
   .deck-allocate-btn:active{background:var(--deck-color);color:#fff;}
   .play-tri.filling{fill:#fff;stroke:#fff;}
   .chev{width:14px;text-align:center;color:#c2c2c8;font-size:var(--text-caption);transition:transform .15s;flex-shrink:0;}
@@ -646,25 +653,9 @@
         <span>Search only within selected crate</span>
         <label class="switch"><input type="checkbox" id="search-crate-scope-toggle"><span class="switch-slider"></span></label>
       </div>
-      <div class="weights" id="weights-panel" style="margin-top:14px;box-shadow:none;border:1px solid var(--line);">
-        <div class="weights-summary" id="weights-summary"><svg class="weights-tri" viewBox="0 0 10 10" width="9" height="9"><path d="M1,2 L9,2 L5,8 Z" fill="currentColor"/></svg> Suggestion Priorities</div>
-        <div class="content"><div class="content-inner">
-          <p class="weights-hint">Every DJ weighs these differently — set your split below (10–70% each, in steps of 10%). Nothing changes until you hit Save.</p>
-          <div class="wrow-group">
-            <div class="wrow"><span class="lbl">BPM</span><input type="range" id="w-bpm" min="0" max="100" step="5" value="20"><span class="val" id="w-bpm-val">20%</span></div>
-            <div class="tick-row" style="margin-left:96px;"><span></span><span></span><span></span><span></span><span></span></div>
-            <div class="wrow"><span class="lbl">Key</span><input type="range" id="w-key" min="0" max="100" step="5" value="30"><span class="val" id="w-key-val">30%</span></div>
-            <div class="tick-row" style="margin-left:96px;"><span></span><span></span><span></span><span></span><span></span></div>
-            <div class="wrow"><span class="lbl">Loudness</span><input type="range" id="w-loud" min="0" max="100" step="5" value="10"><span class="val" id="w-loud-val">10%</span></div>
-            <div class="tick-row" style="margin-left:96px;"><span></span><span></span><span></span><span></span><span></span></div>
-            <div class="wrow"><span class="lbl">Tonal Balance</span><input type="range" id="w-bands" min="0" max="100" step="5" value="40"><span class="val" id="w-bands-val">40%</span></div>
-            <div class="tick-row" style="margin-left:96px;"><span></span><span></span><span></span><span></span><span></span></div>
-          </div>
-          <div class="weights-save-row">
-            <span class="weights-total" id="weights-total">100%</span>
-            <button class="weights-save-btn" id="weights-save-btn"><span class="save-btn-fill"></span><span class="save-btn-label">Save</span></button>
-          </div>
-        </div></div>
+      <div class="modal-row" style="margin-top:14px;">
+        <span>Suggestion Priorities</span>
+        <span style="color:var(--dim);font-size:var(--text-caption);text-align:right;">Now under Filters in Play</span>
       </div>
       <div class="modal-row" style="border-top:1px solid var(--line);padding-top:14px;margin-top:4px;">
         <span style="color:var(--dim);font-size:var(--text-caption);">Version</span>
@@ -797,6 +788,28 @@
         <svg viewBox="0 0 24 24" width="14" height="14"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M4 6h16M8 12h12M4 18h16M8 6a2 2 0 100-4 2 2 0 000 4zM16 14a2 2 0 100-4 2 2 0 000 4z"/></svg>
         <select id="crate-filter-select"><option value="">All Tracks</option></select>
       </label>
+      <button class="filter-icon-btn" id="deck-undo-btn" title="Undo last deck load" aria-label="Undo last deck load" disabled>
+        <svg viewBox="0 0 24 24" width="16" height="16"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M9 15 4 10l5-5M4 10h10a6 6 0 016 6v1"/></svg>
+      </button>
+      <div class="priorities-wrap">
+        <button class="filters-pill priorities-toggle-btn" id="priorities-toggle-btn" aria-expanded="false" aria-controls="priorities-dropdown">
+          <svg viewBox="0 0 24 24" width="14" height="14"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M4 7h10M4 12h16M4 17h7"/><circle cx="17" cy="7" r="2" fill="currentColor"/><circle cx="9" cy="17" r="2" fill="currentColor"/></svg>
+          <span>Filters</span>
+        </button>
+        <div class="priorities-dropdown" id="priorities-dropdown">
+          <p class="weights-hint">Every DJ weighs these differently — set your split below, in steps of 5%. Nothing changes until you hit Save.</p>
+          <div class="wrow-group">
+            <div class="wrow"><span class="lbl">BPM</span><input type="range" id="w-bpm" min="0" max="100" step="5" value="20"><span class="val" id="w-bpm-val">20%</span></div>
+            <div class="wrow"><span class="lbl">Key</span><input type="range" id="w-key" min="0" max="100" step="5" value="30"><span class="val" id="w-key-val">30%</span></div>
+            <div class="wrow"><span class="lbl">Loudness</span><input type="range" id="w-loud" min="0" max="100" step="5" value="10"><span class="val" id="w-loud-val">10%</span></div>
+            <div class="wrow"><span class="lbl">Tonal Balance</span><input type="range" id="w-bands" min="0" max="100" step="5" value="40"><span class="val" id="w-bands-val">40%</span></div>
+          </div>
+          <div class="weights-save-row">
+            <span class="weights-total" id="weights-total">100%</span>
+            <button class="weights-save-btn" id="weights-save-btn"><span class="save-btn-fill"></span><span class="save-btn-label">Save</span></button>
+          </div>
+        </div>
+      </div>
     </div>
     <div class="history-and-clock">
       <div id="play-history"></div>
@@ -2222,7 +2235,9 @@ function trackRowHtml(t, opts){
           <svg viewBox="0 0 34 34" width="30" height="30">
             <circle class="play-fill" cx="17" cy="17" r="16" style="fill:var(--accent)" opacity="0"></circle>
             <circle cx="17" cy="17" r="15" fill="none" style="stroke:var(--accent)" stroke-width="2"></circle>
-            <path class="play-tri" d="M13.5 9.5 L24 17 L13.5 24.5 Z" fill="none" style="stroke:var(--accent)" stroke-width="1.8" stroke-linejoin="round"></path>
+            <path class="play-tri" d="M11.5 13.5h3l4.2-3.6v14.2l-4.2-3.6h-3z" fill="var(--accent)" stroke="var(--accent)" stroke-width="1" stroke-linejoin="round"></path>
+            <path class="play-tri" d="M21.3 13.7a5 5 0 010 6.6" fill="none" stroke="var(--accent)" stroke-width="1.7" stroke-linecap="round"></path>
+            <path class="play-tri" d="M23.7 11.2a8.4 8.4 0 010 11.6" fill="none" stroke="var(--accent)" stroke-width="1.7" stroke-linecap="round" opacity="0.7"></path>
           </svg>
         </button>` : `
         <button class="add-preview-btn" data-add-preview="${t.id}" title="Add a 15s preview clip" aria-label="Add a preview clip for ${escapeHtml(t.name)}">
@@ -2765,6 +2780,40 @@ const DECK_A_COLOR = '#e94f9e', DECK_B_COLOR = '#2bb3a3'; // single source of tr
 const prefersReducedMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 let deckA = null, deckB = null; // {trackId, insertedAt} or null — insertedAt drives Flow direction
 let activeDeck = 'A'; // whichever deck most recently received a track — this is what suggestions score against
+let deckLoadHistory = []; // stack of pre-change snapshots, for undoing an accidental deck load/eject mid-set
+function snapshotDeckState(){
+  return {
+    deckA: deckA ? {...deckA} : null,
+    deckB: deckB ? {...deckB} : null,
+    activeDeck, nowPlayingId,
+    playHistory: [...playHistory],
+    playedTrackIds: new Set(playedTrackIds),
+  };
+}
+function pushDeckHistory(){
+  deckLoadHistory.push(snapshotDeckState());
+  if(deckLoadHistory.length>20) deckLoadHistory.shift();
+  updateDeckUndoBtn();
+}
+function undoDeckLoad(){
+  const s = deckLoadHistory.pop();
+  if(!s) return;
+  deckA = s.deckA; deckB = s.deckB; activeDeck = s.activeDeck;
+  nowPlayingId = s.nowPlayingId; playHistory = s.playHistory; playedTrackIds = s.playedTrackIds;
+  pendingFlowAnchorId = null;
+  updateChainProgress(nowPlayingId);
+  renderNowPlayingSelect();
+  selectedMatchId = null;
+  renderPlayHistory();
+  renderMatches(true);
+  renderNowChip();
+  updateDeckUndoBtn();
+  hapticTap(15);
+}
+function updateDeckUndoBtn(){
+  const btn = document.getElementById('deck-undo-btn');
+  if(btn) btn.disabled = deckLoadHistory.length===0;
+}
 let tonalDropdownOpen = false;
 let deckSearchOpen = null; // null | 'A' | 'B' — which deck's inline search is currently open
 let deckSearchSort = {A: null, B: null}; // null | 'asc' | 'desc' — BPM sort, per deck
@@ -2801,6 +2850,7 @@ function hapticTap(ms){
 }
 function selectNowPlaying(id, deck){
   deck = deck || activeDeck;
+  pushDeckHistory();
   // The track you're moving away from just got played — keep it out of
   // future suggestions until you hit Reset.
   if(nowPlayingId && nowPlayingId!==id) playedTrackIds.add(nowPlayingId);
@@ -2831,6 +2881,7 @@ function selectNowPlayingDebounced(id, deck){
   setTimeout(()=>{ selectLock=false; }, 500);
 }
 function ejectDeck(letter){
+  pushDeckHistory();
   if(letter==='A') deckA = null; else deckB = null;
   const other = letter==='A' ? deckB : deckA;
   if(activeDeck===letter){
@@ -3111,12 +3162,24 @@ document.getElementById('weights-save-btn').addEventListener('click', async ()=>
   const fill = document.querySelector('#weights-save-btn .save-btn-fill');
   fill.classList.add('filling');
   setTimeout(()=>{
-    document.getElementById('weights-panel').classList.remove('open');
+    document.getElementById('priorities-dropdown').classList.remove('open');
+    document.getElementById('priorities-toggle-btn').setAttribute('aria-expanded','false');
     fill.classList.remove('filling');
   }, 550);
 });
-document.getElementById('weights-summary').addEventListener('click', ()=>{
-  document.getElementById('weights-panel').classList.toggle('open');
+document.getElementById('priorities-toggle-btn').addEventListener('click', e=>{
+  e.stopPropagation();
+  const dd = document.getElementById('priorities-dropdown');
+  const open = dd.classList.toggle('open');
+  document.getElementById('priorities-toggle-btn').setAttribute('aria-expanded', open?'true':'false');
+});
+document.addEventListener('click', e=>{
+  const wrap = document.querySelector('.priorities-wrap');
+  if(wrap && !wrap.contains(e.target)) document.getElementById('priorities-dropdown').classList.remove('open');
+});
+document.getElementById('deck-undo-btn').addEventListener('click', e=>{
+  e.stopPropagation();
+  undoDeckLoad();
 });
 
 function bpmMatchInfo(nowBpm, suggBpm){
@@ -4020,9 +4083,11 @@ document.getElementById('play-reset-btn').addEventListener('click', ()=>{
   currentChainId = null; currentChainIndex = -1;
   nowPlayingId='';
   deckA = null; deckB = null; activeDeck = 'A';
+  deckLoadHistory = [];
   selectedMatchId=null;
   renderPlayHistory();
   renderMatches();
+  updateDeckUndoBtn();
 });
 
 /* =========================================================
@@ -4233,7 +4298,7 @@ document.getElementById('organise-back-btn').addEventListener('click', ()=>{
     openHistorySessionId = null; // step back to the session list, not all the way out
   } else {
     openCrateId=null; manualFlowFrom=null; manualFlowTo=null; openHistorySessionId=null;
-    generatedChainCandidates=[];
+    generatedChainCandidates=[]; organiseSortDir=null;
   }
   renderOrganise();
 });
@@ -4293,10 +4358,11 @@ function wireTrackRowActions(el, opts){
 
 function renderFavDetail(){
   const el = document.getElementById('organise-detail-content');
-  const tracks = favourites.map(id=>library.find(t=>t.id===id)).filter(Boolean);
+  const tracks = sortTracksByBpm(favourites.map(id=>library.find(t=>t.id===id)).filter(Boolean));
   el.innerHTML = `<div class="section-lbl">Favourites</div>` +
     (tracks.length===0 ? `<div class="lib-empty">No favourites yet — tap the ☆ on any track in Import.</div>` :
-     `<div id="fav-tracks-list">${tracks.map(t=>trackRowHtml(t, {showEdit:false, removeAttr:'data-remove-fav'})).join('')}</div>`);
+     bpmSortControlHtml() + `<div id="fav-tracks-list">${tracks.map(t=>trackRowHtml(t, {showEdit:false, removeAttr:'data-remove-fav'})).join('')}</div>`);
+  wireBpmSortControl(el, renderFavDetail);
   wireTrackRowActions(el, {
     onRemoveFav: async (id)=>{
       favourites = favourites.filter(fid=>fid!==id);
@@ -4428,14 +4494,37 @@ document.getElementById('new-crate-btn').addEventListener('click', async ()=>{
   renderOrganiseList();
 });
 
+let organiseSortDir = null; // null | 'asc' | 'desc' — BPM sort for the currently open Organise list
+function sortTracksByBpm(tracks){
+  if(!organiseSortDir) return tracks;
+  return [...tracks].sort((a,b)=> organiseSortDir==='asc' ? a.bpm-b.bpm : b.bpm-a.bpm);
+}
+function bpmSortControlHtml(){
+  return `<div class="organise-sort-row">
+    <span class="organise-sort-lbl">Sort</span>
+    <button class="deck-sort-btn${organiseSortDir==='asc'?' active':''}" data-org-sort="asc" title="Sort by BPM, lowest first" aria-label="Sort by BPM ascending">BPM ▲</button>
+    <button class="deck-sort-btn${organiseSortDir==='desc'?' active':''}" data-org-sort="desc" title="Sort by BPM, highest first" aria-label="Sort by BPM descending">BPM ▼</button>
+  </div>`;
+}
+function wireBpmSortControl(el, onSortChange){
+  el.querySelectorAll('[data-org-sort]').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const dir = btn.dataset.orgSort;
+      organiseSortDir = organiseSortDir===dir ? null : dir; // tap the active one again to clear
+      onSortChange();
+    });
+  });
+}
+
 function renderCrateDetail(){
   const crate = crates.find(c=>c.id===openCrateId);
   const el = document.getElementById('organise-detail-content');
   if(!crate){ openCrateId=null; renderOrganise(); return; }
-  const tracks = crate.trackIds.map(id=>library.find(t=>t.id===id)).filter(Boolean);
+  const tracks = sortTracksByBpm(crate.trackIds.map(id=>library.find(t=>t.id===id)).filter(Boolean));
   el.innerHTML = `
     <div class="section-lbl">${escapeHtml(crate.name)}</div>
     ${trackPickerHtml('crate-add','Add a track to this crate…')}
+    ${tracks.length===0 ? '' : bpmSortControlHtml()}
     <div id="crate-tracks-list">
       ${tracks.length===0 ? `<div class="lib-empty">No tracks yet.</div>` :
         tracks.map(t=>trackRowHtml(t, {showEdit:false, removeAttr:'data-remove-crate'})).join('')}
@@ -4445,6 +4534,7 @@ function renderCrateDetail(){
     await saveCrates();
     renderCrateDetail();
   }, false);
+  wireBpmSortControl(el, renderCrateDetail);
   wireTrackRowActions(el, {
     onRemoveCrate: async (id)=>{
       crate.trackIds = crate.trackIds.filter(tid=>tid!==id);
@@ -4500,14 +4590,15 @@ function renderFlowDetail(){
 /* =========================================================
    INIT
 ========================================================= */
-const APP_VERSION = '1.28';
+const APP_VERSION = '1.29';
 const APP_BUILD = '2026-09-08';
 document.getElementById('version-display').textContent = `${APP_VERSION} · ${APP_BUILD}`;
 // Reconstructed from this build session's history — not tracked in real time
 // from the very start, but accurate to the best of what was actually shipped.
 // Add one line here with each future update.
 const CHANGELOG = [
-  {v:'1.28', notes:'Export/import now compressed with native gzip (previously uncompressed JSON with base64 audio bloat) \u2014 old uncompressed backups still import fine. Deck cards in Play are now horizontal (thumbnail beside info, not stacked) and bigger for easier thumb taps. 15 suggestions shown instead of 10. Match score redesigned \u2014 big number, small %, colored underline, MATCH label. \u201cSuggest from\u201d crate picker restyled as a filter pill with an icon. Import, Organise, and Play now show bpm and track length in list rows instead of key (key is still fully used for harmonic matching, just not shown in the compact row anymore).'},
+  {v:'1.29', notes:'Corrected a misread from last round \u2014 the main deck cards are back to their original, taller vertical layout (that request was actually about the small A/B buttons on suggestion rows, which are now horizontal and bigger for easier thumb taps). Preview button icon changed from a play-triangle to a speaker/soundwave icon so it reads clearly as \u201cpreview\u201d rather than \u201cplay\u201d. Added an Undo button next to the crate filter in Play, for reversing an accidental deck load or eject mid-set. Suggestion Priorities sliders moved out of Settings into a new Filters dropdown right there in Play. Organise: crates and Favourites can now be sorted by BPM (ascending or descending) so you can scan a crate\u2019s tempo range at a glance.'},
+  {v:'1.28', notes:'Export/import now compressed with native gzip (previously uncompressed JSON with base64 audio bloat) \u2014 old uncompressed backups still import fine. 15 suggestions shown instead of 10. Match score redesigned \u2014 big number, small %, colored underline, MATCH label. \u201cSuggest from\u201d crate picker restyled as a filter pill with an icon. Import, Organise, and Play now show bpm and track length in list rows instead of key (key is still fully used for harmonic matching, just not shown in the compact row anymore).'},
   {v:'1.27', notes:'Energy Level removed entirely \u2014 the composite formula wasn\u2019t reading accurately against real tracks (a track that should have scored 8+ was landing at 5), and rather than patch a heuristic that clearly needed real diagnosis, it\u2019s been pulled out completely. Suggestion Priorities back to 4 sliders (BPM/Key/Loudness/Tonal Balance) at the original 20/30/10/40 split. The re-analyse button on tracks now only backfills preview audio, its original purpose.'},
   {v:'1.26', notes:'Redesigned the deck-comparison dropdown: instead of pre-computed difference text and one combined chart, it now shows two side-by-side panels (one per deck) with each deck\u2019s own raw info and its own tonal balance chart, so you can compare them yourself. Chart height reduced to keep the whole dropdown compact.'},
   {v:'1.25', notes:'Energy Level now shown next to every track (Import rows and deck cards), and factored into suggestion scoring via a new fifth slider in Suggestion Priorities. All sliders switched from 10% steps (10-70% range) to 5% steps (0-100% range), so any single category can now be turned fully off or maxed out.'},
