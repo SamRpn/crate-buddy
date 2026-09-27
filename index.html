@@ -328,6 +328,7 @@
   .history-card-new{animation:history-card-slide 0.28s ease both;}
   .history-card img{width:100%;aspect-ratio:1;border-radius:6px;object-fit:cover;box-shadow:0 1px 3px rgba(0,0,0,0.15);display:block;}
   .wavy-btn{background:none;border:none;padding:1px;cursor:pointer;color:#c7c7cf;}
+  .wavy-btn.wavy-saved{color:var(--accent);}
   .wavy-btn.wavy-anchor{color:#2563eb;}
   .wavy-btn.wavy-neighbor{color:#93c5fd;}
   .history-hint{font-size:var(--text-micro);color:var(--dim);text-align:center;margin:-2px 0 10px;}
@@ -471,6 +472,7 @@
   .deck-mid-col{display:flex;flex-direction:column;gap:8px;align-items:center;justify-content:center;flex-shrink:0;}
   .flow-between-btn,.tonal-between-btn{width:38px;height:38px;border-radius:50%;background:var(--card);border:2px solid var(--line);
     color:var(--dim);display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;padding:0;}
+  .flow-between-btn{color:#8e8e93;border-color:#8e8e93;}
   .flow-between-btn.ready{border-color:var(--accent);color:var(--accent);}
   .tonal-between-btn{color:#8e8e93;border-color:#8e8e93;}
   .tonal-between-btn.open{background:#8e8e93;color:#fff;}
@@ -560,6 +562,8 @@
   .match-row.open .breakdown{max-height:260px;}
   .breakdown-inner{padding:2px 14px 14px;}
   .bd-cols{display:flex;gap:20px;align-items:flex-start;}
+  .bd-edit-row{display:flex;align-items:center;gap:6px;margin-top:12px;padding-top:10px;border-top:1px solid var(--line);}
+  .bd-edit-lbl{font-size:var(--text-caption);color:var(--dim);}
   .bd-col-left{flex:0 0 118px;display:flex;flex-direction:column;gap:16px;justify-content:center;}
   .bd-col-right{flex:1;min-width:0;}
   .bl{font-size:var(--text-caption);color:var(--dim);}
@@ -2210,6 +2214,33 @@ function bandCompareChartSvg(nowBands, suggBands, detailed, colors){
   return `<svg ${svgAttrs} viewBox="0 0 ${w} ${h}">${marks}</svg>`;
 }
 
+// Shared edit-panel markup — used by track rows (Import/Organise) AND the
+// Play suggestion rows. Deliberately has no per-track ids on its inner
+// fields (only data-save/data-cancel/data-pic carry the track id, for the
+// save handler's lookup) — the SAME track can be rendered in more than one
+// tab's DOM at once (e.g. in a crate in Organise and in the Import list),
+// and duplicate element ids would make getElementById grab the wrong one.
+// Wiring below always scopes back up via closest('.edit-panel') instead.
+function editToggleBtnHtml(t){
+  return `<button class="edit-toggle" data-edit="${t.id}" aria-label="Edit ${escapeHtml(t.name)}">✎</button>`;
+}
+function editPanelHtml(t){
+  return `<div class="edit-panel">
+      <div class="edit-pic-row">
+        <img class="edit-pic-preview" src="${t.icon}">
+        <button class="edit-pic-btn" data-pic="${t.id}">Change picture</button>
+        <input type="file" accept="image/*" class="edit-pic-input" style="display:none;">
+      </div>
+      <input class="edit-input edit-name" placeholder="Track name" value="${escapeHtml(t.name)}">
+      <input class="edit-input edit-artist" placeholder="Artist" value="${escapeHtml(t.artist||'')}">
+      <input class="edit-input edit-bpm" type="number" inputmode="decimal" placeholder="BPM" value="${t.bpm}">
+      <select class="edit-input edit-key">${camelotOptionsHtml(t.key.camelot)}</select>
+      <div class="edit-actions">
+        <button class="edit-save" data-save="${t.id}">Save</button>
+        <button class="edit-cancel" data-cancel="${t.id}">Cancel</button>
+      </div>
+    </div>`;
+}
 function trackRowHtml(t, opts){
   opts = opts || {};
   const showEdit = opts.showEdit !== false;
@@ -2235,40 +2266,26 @@ function trackRowHtml(t, opts){
           <svg viewBox="0 0 34 34" width="30" height="30">
             <circle class="play-fill" cx="17" cy="17" r="16" style="fill:var(--accent)" opacity="0"></circle>
             <circle cx="17" cy="17" r="15" fill="none" style="stroke:var(--accent)" stroke-width="2"></circle>
-            <path class="play-tri" d="M11.5 13.5h3l4.2-3.6v14.2l-4.2-3.6h-3z" fill="var(--accent)" stroke="var(--accent)" stroke-width="1" stroke-linejoin="round"></path>
-            <path class="play-tri" d="M21.3 13.7a5 5 0 010 6.6" fill="none" stroke="var(--accent)" stroke-width="1.7" stroke-linecap="round"></path>
-            <path class="play-tri" d="M23.7 11.2a8.4 8.4 0 010 11.6" fill="none" stroke="var(--accent)" stroke-width="1.7" stroke-linecap="round" opacity="0.7"></path>
+            <path class="play-tri" d="M13.8 13.5h3l4.2-3.6v14.2l-4.2-3.6h-3z" fill="var(--accent)" stroke="var(--accent)" stroke-width="1" stroke-linejoin="round"></path>
+            <path class="play-tri" d="M23.6 13.7a5 5 0 010 6.6" fill="none" stroke="var(--accent)" stroke-width="1.7" stroke-linecap="round"></path>
+            <path class="play-tri" d="M26 11.2a8.4 8.4 0 010 11.6" fill="none" stroke="var(--accent)" stroke-width="1.7" stroke-linecap="round" opacity="0.7"></path>
           </svg>
         </button>` : `
         <button class="add-preview-btn" data-add-preview="${t.id}" title="Add a 15s preview clip" aria-label="Add a preview clip for ${escapeHtml(t.name)}">
           <svg viewBox="0 0 24 24" width="16" height="16"><path fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" d="M12 5v14M5 12h14"/></svg>
         </button>
-        <input type="file" accept="audio/*" class="add-preview-input" id="add-preview-input-${t.id}" style="display:none;">`}
+        <input type="file" accept="audio/*" class="add-preview-input" style="display:none;">`}
         <button class="fav-star${favourites.includes(t.id)?' is-fav':''}" data-fav="${t.id}" title="Add to Favourites" aria-label="${favourites.includes(t.id)?'Remove':'Add'} ${escapeHtml(t.name)} ${favourites.includes(t.id)?'from':'to'} Favourites">
           <svg viewBox="0 0 24 24" width="17" height="17">
             <path d="M12 2 L14.9 8.6 L22 9.3 L16.7 14.1 L18.2 21 L12 17.4 L5.8 21 L7.3 14.1 L2 9.3 L9.1 8.6 Z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
             <path class="star-fill" d="M12 2 L14.9 8.6 L22 9.3 L16.7 14.1 L18.2 21 L12 17.4 L5.8 21 L7.3 14.1 L2 9.3 L9.1 8.6 Z" fill="#eab308" opacity="${favourites.includes(t.id)?'1':'0'}"/>
           </svg>
         </button>
-        ${showEdit ? `<button class="edit-toggle" data-edit="${t.id}" aria-label="Edit ${escapeHtml(t.name)}">✎</button>` : ''}
+        ${showEdit ? editToggleBtnHtml(t) : ''}
         ${delBtn}
       </div>
     </div>
-    ${showEdit ? `<div class="edit-panel" id="edit-${t.id}">
-      <div class="edit-pic-row">
-        <img class="edit-pic-preview" id="edit-pic-preview-${t.id}" src="${t.icon}">
-        <button class="edit-pic-btn" data-pic="${t.id}">Change picture</button>
-        <input type="file" accept="image/*" class="edit-pic-input" id="edit-pic-input-${t.id}" style="display:none;">
-      </div>
-      <input class="edit-input" id="edit-name-${t.id}" placeholder="Track name" value="${escapeHtml(t.name)}">
-      <input class="edit-input" id="edit-artist-${t.id}" placeholder="Artist" value="${escapeHtml(t.artist||'')}">
-      <input class="edit-input" id="edit-bpm-${t.id}" type="number" inputmode="decimal" placeholder="BPM" value="${t.bpm}">
-      <select class="edit-input" id="edit-key-${t.id}">${camelotOptionsHtml(t.key.camelot)}</select>
-      <div class="edit-actions">
-        <button class="edit-save" data-save="${t.id}">Save</button>
-        <button class="edit-cancel" data-cancel="${t.id}">Cancel</button>
-      </div>
-    </div>` : ''}
+    ${showEdit ? editPanelHtml(t) : ''}
   </div>`;
 }
 
@@ -2660,7 +2677,7 @@ function wireLibraryRows(scopeEl){
   });
   scopeEl.querySelectorAll('[data-add-preview]').forEach(btn=>{
     btn.addEventListener('click', ()=>{
-      document.getElementById('add-preview-input-'+btn.dataset.addPreview).click();
+      btn.closest('.row-actions').querySelector('.add-preview-input').click();
     });
   });
   scopeEl.querySelectorAll('.add-preview-input').forEach(input=>{
@@ -2668,7 +2685,7 @@ function wireLibraryRows(scopeEl){
       const file = e.target.files[0];
       e.target.value='';
       if(!file) return;
-      const id = input.id.replace('add-preview-input-','');
+      const id = input.closest('.row-actions').querySelector('[data-add-preview]').dataset.addPreview;
       const track = library.find(t=>t.id===id);
       if(!track) return;
       showHeaderProgress('Re-analysing…');
@@ -2708,46 +2725,66 @@ function wireLibraryRows(scopeEl){
       hapticTap(20);
     });
   });
+  wireTrackEditActions(scopeEl);
+}
+// Shared by Import (wireLibraryRows), Organise (wireTrackRowActions), and
+// Play's suggestion rows — anywhere editPanelHtml()/editToggleBtnHtml() is
+// rendered. Always scopes back up from the clicked element via
+// closest('.edit-panel') rather than a global id lookup, since the same
+// track's edit panel can legitimately exist more than once in the DOM at
+// once (e.g. in a crate in Organise and in the Import list).
+function wireTrackEditActions(scopeEl){
   scopeEl.querySelectorAll('[data-edit]').forEach(btn=>{
-    btn.addEventListener('click', ()=>{
-      const panel = document.getElementById('edit-'+btn.dataset.edit);
-      panel.classList.toggle('show');
+    btn.addEventListener('click', e=>{
+      e.stopPropagation();
+      btn.closest('.track-row, .match-row').querySelector('.edit-panel').classList.toggle('show');
     });
   });
   scopeEl.querySelectorAll('[data-pic]').forEach(btn=>{
-    btn.addEventListener('click', ()=>document.getElementById('edit-pic-input-'+btn.dataset.pic).click());
+    btn.addEventListener('click', e=>{
+      e.stopPropagation();
+      btn.closest('.edit-panel').querySelector('.edit-pic-input').click();
+    });
   });
   scopeEl.querySelectorAll('.edit-pic-input').forEach(input=>{
     input.addEventListener('change', async e=>{
-      const id = input.id.replace('edit-pic-input-','');
+      const panel = input.closest('.edit-panel');
       const file = e.target.files[0];
       if(!file) return;
       const dataUrl = await blobToThumbDataUrl(file);
-      if(dataUrl) document.getElementById('edit-pic-preview-'+id).src = dataUrl;
+      if(dataUrl) panel.querySelector('.edit-pic-preview').src = dataUrl;
       input.dataset.pending = dataUrl || '';
     });
   });
   scopeEl.querySelectorAll('[data-cancel]').forEach(btn=>{
-    btn.addEventListener('click', ()=>{ document.getElementById('edit-'+btn.dataset.cancel).classList.remove('show'); });
+    btn.addEventListener('click', e=>{
+      e.stopPropagation();
+      btn.closest('.edit-panel').classList.remove('show');
+    });
   });
   scopeEl.querySelectorAll('[data-save]').forEach(btn=>{
-    btn.addEventListener('click', async ()=>{
+    btn.addEventListener('click', async e=>{
+      e.stopPropagation();
       const id = btn.dataset.save;
       const track = library.find(t=>t.id===id);
       if(!track) return;
-      track.name = document.getElementById('edit-name-'+id).value.trim() || track.name;
-      track.artist = document.getElementById('edit-artist-'+id).value.trim();
-      const bpmVal = +document.getElementById('edit-bpm-'+id).value;
+      const panel = btn.closest('.edit-panel');
+      track.name = panel.querySelector('.edit-name').value.trim() || track.name;
+      track.artist = panel.querySelector('.edit-artist').value.trim();
+      const bpmVal = +panel.querySelector('.edit-bpm').value;
       if(bpmVal>0) track.bpm = Math.round(bpmVal);
-      const keyVal = document.getElementById('edit-key-'+id).value;
+      const keyVal = panel.querySelector('.edit-key').value;
       if(keyVal){
         const [code, root, mode, keyName] = keyVal.split('|');
         track.key = {camelot:code, name:keyName, root:+root, mode};
       }
-      const picInput = document.getElementById('edit-pic-input-'+id);
+      const picInput = panel.querySelector('.edit-pic-input');
       if(picInput.dataset.pending) track.icon = picInput.dataset.pending;
       await persistTrackAdd(track); // same id — overwrites the stored record
+      panel.classList.remove('show');
       renderLibrary(); renderNowPlayingSelect(); renderMatches();
+      if(currentTab==='organise') renderOrganise(true);
+      showInfoToast('Track updated', false);
     });
   });
 }
@@ -3018,6 +3055,9 @@ function isAdjacentToPending(globalIndex){
   return globalIndex===anchorIndex-1 || globalIndex===anchorIndex+1;
 }
 
+function findFlowBetween(idA, idB){
+  return flows.find(f=>(f.from===idA && f.to===idB) || (f.from===idB && f.to===idA));
+}
 async function saveFlow(fromId, toId){
   if(flows.some(f=>f.from===fromId && f.to===toId)){
     showInfoToast('Already saved that flow', false);
@@ -3028,6 +3068,14 @@ async function saveFlow(fromId, toId){
   const fromT = library.find(t=>t.id===fromId), toT = library.find(t=>t.id===toId);
   showInfoToast(`Saved flow: ${fromT?fromT.name:'?'} → ${toT?toT.name:'?'}`, false);
   renderMatches();
+  renderPlayHistory();
+}
+async function removeFlow(flow){
+  flows = flows.filter(f=>f!==flow);
+  await saveFlows();
+  showInfoToast('Flow removed', false);
+  renderMatches();
+  renderPlayHistory();
 }
 
 function handleWavyClick(id){
@@ -3069,7 +3117,10 @@ function renderPlayHistory(){
     const opacity = (0.4 + 0.6*((i+1)/items.length)).toFixed(2);
     const isAnchor = pendingFlowAnchorId===id;
     const isNeighbor = !!pendingFlowAnchorId && !isAnchor && isAdjacentToPending(globalIndex);
-    const cls = isAnchor ? 'wavy-anchor' : (isNeighbor ? 'wavy-neighbor' : '');
+    const prevId = globalIndex>0 ? playHistory[globalIndex-1] : null;
+    const nextId = globalIndex<playHistory.length-1 ? playHistory[globalIndex+1] : null;
+    const hasSavedFlow = (prevId && findFlowBetween(prevId, id)) || (nextId && findFlowBetween(nextId, id));
+    const cls = isAnchor ? 'wavy-anchor' : (isNeighbor ? 'wavy-neighbor' : (hasSavedFlow ? 'wavy-saved' : ''));
     const freshCls = (i===items.length-1 && historyJustGrew) ? ' history-card-new' : '';
     return `<div class="history-card${freshCls}" style="opacity:${opacity}" title="${escapeHtml(t.name)}">
       <img src="${t.icon}">
@@ -3308,7 +3359,7 @@ function renderDecks(){
   holder.innerHTML = `<div class="deck-row">
     ${deckCard(deckAT, 'DECK A', DECK_A_COLOR, !deckAT, 'A')}
     <div class="deck-mid-col">
-      <button class="flow-between-btn${(deckA&&deckB)?' ready':''}" id="flow-between-btn" title="Save a Flow between the decks" aria-label="Save a Flow between the decks">
+      <button class="flow-between-btn${((deckA&&deckB)&&findFlowBetween(deckA.trackId,deckB.trackId))?' ready':''}" id="flow-between-btn" title="Save a Flow between the decks" aria-label="Save a Flow between the decks">
         <svg viewBox="0 0 24 24" width="18" height="18"><path d="M2 14c2.5-5 5.5-5 8 0s5.5 5 8 0s5.5-5 8 0" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg>
       </button>
       <button class="tonal-between-btn${tonalDropdownOpen?' open':''}" id="tonal-between-btn" title="Compare tonal balance" aria-label="Compare tonal balance of both decks" aria-expanded="${tonalDropdownOpen?'true':'false'}">
@@ -3340,9 +3391,15 @@ function renderDecks(){
   </div>`;
   if(deckA && deckB){
     document.getElementById('flow-between-btn').addEventListener('click', ()=>{
-      const [from, to] = deckA.insertedAt <= deckB.insertedAt ? [deckA, deckB] : [deckB, deckA];
-      saveFlow(from.trackId, to.trackId);
-      hapticTap(20);
+      const existing = findFlowBetween(deckA.trackId, deckB.trackId);
+      if(existing){
+        hapticTap(15);
+        removeFlow(existing);
+      } else {
+        const [from, to] = deckA.insertedAt <= deckB.insertedAt ? [deckA, deckB] : [deckB, deckA];
+        saveFlow(from.trackId, to.trackId);
+        hapticTap(20);
+      }
     });
   }
   document.getElementById('tonal-between-btn').addEventListener('click', ()=>{
@@ -3595,6 +3652,8 @@ function renderMatches(animateNew){
             ${detailChart}
           </div>
         </div>
+        <div class="bd-edit-row">${editToggleBtnHtml(r.t)}<span class="bd-edit-lbl">Edit name, BPM or key</span></div>
+        ${editPanelHtml(r.t)}
       </div></div>
     </div>`;
   }).join('');
@@ -3607,6 +3666,7 @@ function renderMatches(animateNew){
       document.querySelector('.app').scrollIntoView({behavior:'smooth', block:'start'});
     });
   });
+  wireTrackEditActions(list);
 
   list.querySelectorAll('.match-row').forEach(row=>{
     const main = row.querySelector('.match-main');
@@ -4354,6 +4414,7 @@ function wireTrackRowActions(el, opts){
       });
     });
   }
+  wireTrackEditActions(el);
 }
 
 function renderFavDetail(){
@@ -4361,7 +4422,7 @@ function renderFavDetail(){
   const tracks = sortTracksByBpm(favourites.map(id=>library.find(t=>t.id===id)).filter(Boolean));
   el.innerHTML = `<div class="section-lbl">Favourites</div>` +
     (tracks.length===0 ? `<div class="lib-empty">No favourites yet — tap the ☆ on any track in Import.</div>` :
-     bpmSortControlHtml() + `<div id="fav-tracks-list">${tracks.map(t=>trackRowHtml(t, {showEdit:false, removeAttr:'data-remove-fav'})).join('')}</div>`);
+     bpmSortControlHtml() + `<div id="fav-tracks-list">${tracks.map(t=>trackRowHtml(t, {removeAttr:'data-remove-fav'})).join('')}</div>`);
   wireBpmSortControl(el, renderFavDetail);
   wireTrackRowActions(el, {
     onRemoveFav: async (id)=>{
@@ -4527,7 +4588,7 @@ function renderCrateDetail(){
     ${tracks.length===0 ? '' : bpmSortControlHtml()}
     <div id="crate-tracks-list">
       ${tracks.length===0 ? `<div class="lib-empty">No tracks yet.</div>` :
-        tracks.map(t=>trackRowHtml(t, {showEdit:false, removeAttr:'data-remove-crate'})).join('')}
+        tracks.map(t=>trackRowHtml(t, {removeAttr:'data-remove-crate'})).join('')}
     </div>`;
   wireTrackPicker('crate-add', crate.trackIds, async (id)=>{
     crate.trackIds.push(id);
@@ -4590,13 +4651,14 @@ function renderFlowDetail(){
 /* =========================================================
    INIT
 ========================================================= */
-const APP_VERSION = '1.29';
+const APP_VERSION = '1.30';
 const APP_BUILD = '2026-09-08';
 document.getElementById('version-display').textContent = `${APP_VERSION} · ${APP_BUILD}`;
 // Reconstructed from this build session's history — not tracked in real time
 // from the very start, but accurate to the best of what was actually shipped.
 // Add one line here with each future update.
 const CHANGELOG = [
+  {v:'1.30', notes:'Every track row in Import, Play (inside a suggestion’s details), and Organise (crates and Favourites) now has an edit button (✎) to fix a track’s name, BPM or key on the fly. Preview icon recentred — it was sitting visibly left of the circle’s centre. The Flow button between the decks is now grey by default and only turns blue once a flow is actually saved between the two loaded tracks — tap it again to remove that flow. Flows saved this way (or via the history strip) now show as a highlighted wavy icon on the matching pair of tracks in the history strip above the decks.'},
   {v:'1.29', notes:'Corrected a misread from last round \u2014 the main deck cards are back to their original, taller vertical layout (that request was actually about the small A/B buttons on suggestion rows, which are now horizontal and bigger for easier thumb taps). Preview button icon changed from a play-triangle to a speaker/soundwave icon so it reads clearly as \u201cpreview\u201d rather than \u201cplay\u201d. Added an Undo button next to the crate filter in Play, for reversing an accidental deck load or eject mid-set. Suggestion Priorities sliders moved out of Settings into a new Filters dropdown right there in Play. Organise: crates and Favourites can now be sorted by BPM (ascending or descending) so you can scan a crate\u2019s tempo range at a glance.'},
   {v:'1.28', notes:'Export/import now compressed with native gzip (previously uncompressed JSON with base64 audio bloat) \u2014 old uncompressed backups still import fine. 15 suggestions shown instead of 10. Match score redesigned \u2014 big number, small %, colored underline, MATCH label. \u201cSuggest from\u201d crate picker restyled as a filter pill with an icon. Import, Organise, and Play now show bpm and track length in list rows instead of key (key is still fully used for harmonic matching, just not shown in the compact row anymore).'},
   {v:'1.27', notes:'Energy Level removed entirely \u2014 the composite formula wasn\u2019t reading accurately against real tracks (a track that should have scored 8+ was landing at 5), and rather than patch a heuristic that clearly needed real diagnosis, it\u2019s been pulled out completely. Suggestion Priorities back to 4 sliders (BPM/Key/Loudness/Tonal Balance) at the original 20/30/10/40 split. The re-analyse button on tracks now only backfills preview audio, its original purpose.'},
