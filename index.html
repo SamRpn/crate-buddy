@@ -78,15 +78,24 @@
     -webkit-font-smoothing:antialiased;-webkit-text-size-adjust:100%;text-size-adjust:100%;
     touch-action:manipulation;overscroll-behavior-y:none;}
   /* ---- Studio Grade (v1.33, Q2), fixed after Sam flagged a visible seam under the
-     header on a real desktop-width browser: the glow is scoped to .app's own 640px
-     column (not the full viewport) and scrolls normally with the page, instead of a
-     viewport-fixed background — so it sits naturally behind the frosted sticky header
-     instead of showing as a separately-composited rectangle, and never bleeds into the
-     empty margins on a wide window. Y-position is a px offset (not %) so it stays
-     pinned near the very top regardless of how tall the page's content is. ---- */
-  .app{max-width:640px;margin:0 auto;padding:0 0 70px;
-    background-image:radial-gradient(ellipse 620px 380px at 6% -60px, var(--glow-1), transparent 60%),
-                      radial-gradient(ellipse 620px 380px at 100% -20px, var(--glow-2), transparent 55%);
+     header on a real desktop-width browser: the glow scrolls normally with the page
+     (as part of .app), instead of a viewport-fixed background — so it sits naturally
+     behind the frosted sticky header instead of showing as a separately-composited
+     rectangle. Y-position is a px offset (not %) so it stays pinned near the very top
+     regardless of how tall the page's content is.
+     v1.35 follow-up: the glow was painted on .app's own background-image, so it was
+     hard-clipped at .app's 640px column edges. On a narrow phone screen that column
+     IS the viewport, so the clip line landed off-screen and nothing looked wrong —
+     but on a wide/landscape browser the black margins on either side made that clip
+     line read as an ugly straight-edged "panel" sitting behind the header instead of
+     an ambient glow. Moved the same two gradients onto a ::before that's 100vw wide
+     (independent of .app's max-width) so they keep fading via their own transparent
+     stop with room to spare, same as before on mobile, no more hard edge on desktop. ---- */
+  .app{max-width:640px;margin:0 auto;padding:0 0 70px;position:relative;isolation:isolate;}
+  .app::before{content:"";position:absolute;top:0;left:50%;width:100vw;height:460px;
+    transform:translateX(-50%);pointer-events:none;z-index:-1;
+    background-image:radial-gradient(ellipse 620px 380px at calc(50% - 282px) -60px, var(--glow-1), transparent 60%),
+                      radial-gradient(ellipse 620px 380px at calc(50% + 320px) -20px, var(--glow-2), transparent 55%);
     background-repeat:no-repeat;}
   button{transition:transform 0.1s ease;}
   button:active{transform:scale(0.97);}
@@ -824,7 +833,12 @@
   .readiness-tile b{display:block;font-size:19px;font-family:var(--font-display);}
   .readiness-tile span{font-size:9.5px;color:var(--dim);font-weight:600;text-transform:uppercase;letter-spacing:0.3px;}
 
-  /* ---- Set Builder (v1.32) ---- */
+  /* ---- Set Builder (v1.32; overhauled v1.36 — locked spec: candidate ranking
+     merges algorithmic matches with saved Flows into one boosted list instead
+     of gating on Flows alone (the cold-start fix), tap-to-place tension-arc
+     checkpoints with a persistent live strip, two-tap preview/commit rows
+     with a grey Proven ring, "mark as played" promotes a set's picks into
+     real Flows). ---- */
   .setb-anchor-row{display:flex;flex-direction:column;gap:8px;margin-bottom:14px;}
   .setb-chain-strip{display:flex;flex-wrap:wrap;gap:8px;min-height:44px;background:var(--card);border:1px dashed var(--line);
     border-radius:var(--radius-panel);padding:10px;margin-bottom:12px;}
@@ -832,13 +846,61 @@
   .setb-chip img{width:26px;height:26px;border-radius:5px;object-fit:cover;}
   .setb-chip span{font-size:var(--text-caption);font-weight:600;max-width:100px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
   .setb-candidates{display:flex;flex-direction:column;gap:8px;margin-bottom:14px;}
-  .setb-candidate-row{display:flex;align-items:center;gap:10px;background:var(--card);border:1px solid var(--line);
-    border-radius:var(--radius-card);padding:10px 12px;cursor:pointer;text-align:left;width:100%;font-family:inherit;}
-  .setb-candidate-row img{width:34px;height:34px;border-radius:6px;object-fit:cover;flex-shrink:0;}
+  .setb-candidate-row{display:flex;align-items:center;gap:10px;background:var(--card);border:2px solid transparent;
+    border-radius:var(--radius-card);padding:10px 12px;cursor:pointer;text-align:left;width:100%;font-family:inherit;
+    transition:border-color 0.15s ease;}
+  .setb-candidate-row.playing{border-color:var(--accent);}
+  .setb-candidate-thumb{position:relative;flex-shrink:0;width:44px;height:44px;}
+  .setb-candidate-thumb img{width:44px;height:44px;border-radius:8px;object-fit:cover;display:block;box-sizing:border-box;}
+  /* Proven ring: a saved Flow led here before — same grey as Play's
+     .match-row.flow-match, moved onto the artwork so it doesn't collide
+     visually with the row's own pink "currently previewing" border. */
+  .setb-candidate-row.proven .setb-candidate-thumb img{border:3px solid #6b7280;}
+  .setb-candidate-info{flex:1;min-width:0;}
+  .setb-candidate-info .t{font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .setb-candidate-info .a{font-size:var(--text-caption);color:var(--dim);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .setb-proven-tag{font-size:var(--text-micro);font-weight:700;color:#6b7280;display:inline-block;margin-top:2px;}
+  .setb-candidate-score{font-family:var(--font-display);font-weight:700;font-size:var(--text-body-lg);flex-shrink:0;}
   .setb-actions{display:flex;gap:8px;margin-bottom:18px;}
   .setb-actions button{flex:1;}
-  .setb-saved-row{display:flex;align-items:center;gap:10px;background:var(--card);border:1px solid var(--line);
+  .setb-saved-row{display:flex;flex-direction:column;gap:8px;background:var(--card);border:1px solid var(--line);
     border-radius:var(--radius-card);padding:10px 12px;margin-bottom:8px;}
+  .setb-saved-row-main{display:flex;align-items:center;gap:10px;}
+  .setb-played-badge{font-size:var(--text-micro);font-weight:700;color:var(--dim);background:var(--bg);
+    border-radius:var(--radius-tight);padding:3px 8px;flex-shrink:0;}
+  .setb-played-match{display:flex;align-items:center;gap:10px;background:var(--bg);border-radius:var(--radius-control);
+    padding:8px 10px;}
+  .setb-played-match span{flex:1;font-size:var(--text-caption);color:var(--text);}
+  .setb-played-match button{background:var(--accent);color:#fff;border:none;border-radius:var(--radius-tight);
+    padding:6px 12px;font-size:var(--text-caption);font-weight:700;cursor:pointer;flex-shrink:0;}
+  .setb-played-toggle{display:flex;align-items:center;justify-content:space-between;gap:10px;
+    font-size:var(--text-caption);color:var(--dim);}
+
+  /* ---- Set Builder: the Tension Arc (Decision 2B — a few pinned checkpoints,
+     the system interpolates the rest; Design 2A — a persistent strip stays
+     visible while candidates are ranked against it, Design 1B — checkpoints
+     are placed by tapping a canvas). ---- */
+  .setb-arc-strip{background:var(--card);border:1px solid var(--line);border-radius:var(--radius-panel);
+    padding:12px 14px;margin-bottom:12px;}
+  .setb-arc-strip-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;gap:10px;}
+  .setb-arc-strip-hd b{font-size:var(--text-body-sm);}
+  .setb-arc-hint{font-size:var(--text-caption);color:var(--dim);}
+  .setb-arc-edit-btn{background:none;border:1px solid var(--line);border-radius:var(--radius-control);
+    padding:5px 10px;font-size:var(--text-caption);font-weight:700;color:var(--dim);cursor:pointer;flex-shrink:0;}
+  .setb-arc-editor{background:var(--card);border:1px solid var(--line);border-radius:var(--radius-panel);
+    padding:12px 14px;margin-bottom:12px;display:flex;flex-direction:column;gap:10px;}
+  .setb-arc-grid-wrap{overflow-x:auto;padding-bottom:2px;}
+  .setb-arc-row{display:flex;align-items:center;gap:2px;}
+  .setb-arc-row-label{width:16px;flex-shrink:0;font-size:var(--text-micro);color:var(--dim);text-align:right;padding-right:3px;}
+  .setb-arc-axis-row{display:flex;align-items:center;gap:2px;margin-top:2px;}
+  .setb-arc-axis-num{width:22px;flex-shrink:0;font-size:var(--text-micro);color:var(--dim);text-align:center;}
+  .setb-arc-cell{width:22px;height:17px;border-radius:3px;background:var(--bg);border:1px solid var(--line);
+    cursor:pointer;padding:0;flex-shrink:0;}
+  .setb-arc-cell.set{background:var(--accent);border-color:var(--accent);}
+  .setb-arc-chips{display:flex;flex-wrap:wrap;gap:6px;}
+  .setb-arc-chip{display:flex;align-items:center;gap:5px;background:var(--bg);border-radius:8px;padding:4px 8px;
+    font-size:var(--text-caption);font-weight:600;}
+  .setb-arc-chip button{background:none;border:none;color:var(--dim);cursor:pointer;padding:0;font-size:12px;line-height:1;}
 
   html.gig-mode{--radius-control:12px;}
   html.gig-mode .track-row .head{padding-top:14px;padding-bottom:14px;}
@@ -3887,6 +3949,25 @@ function bandCloseness(nowDb, suggDb){
   return Math.round(Math.max(0, 100*(1 - Math.abs(nowDb-suggDb)/BAND_DB_TOLERANCE)));
 }
 
+// Standalone version of the weighted-overall math inside Play's renderMatches
+// scoreTrack() — same BPM/Key/Bands/Loudness blend, same activeWeights, just
+// usable outside that closure. Set Builder v2 calls this so its ranked list
+// is scored the exact same way the Play tab already scores matches (the
+// pitch deck's Decision 1: "reuse what already ranks well").
+function computeCompatScore(now, t){
+  const wBpm=activeWeights['w-bpm'], wKey=activeWeights['w-key'], wBands=activeWeights['w-bands'], wLoud=activeWeights['w-loud'];
+  const bm=bpmMatchInfo(now.bpm,t.bpm);
+  const bs=Math.round(bm.score);
+  const kd=camelotDistance(now.key.camelot,t.key.camelot);
+  const bandS=bandsScore(now.bands,t.bands);
+  const loudS=loudnessScore(now.loudness,t.loudness);
+  const parts=[{score:bs,weight:wBpm},{score:kd.score,weight:wKey}];
+  if(bandS!=null) parts.push({score:bandS,weight:wBands});
+  if(loudS!=null) parts.push({score:loudS,weight:wLoud});
+  const activeTotal=parts.reduce((s,p)=>s+p.weight,0)||1;
+  return Math.round(parts.reduce((s,p)=>s+p.score*p.weight,0)/activeTotal);
+}
+
 const CHART_DB_MIN=-22, CHART_DB_MAX=8;
 
 let suggestionsCrateFilterId = '';
@@ -4978,6 +5059,171 @@ async function saveSets(){
   }catch(e){ console.error('sets save failed', e); }
 }
 let setbChain = []; // array of track ids being built right now
+// ---- Set Builder v2 state (this session's locked spec) ----
+let setbCheckpoints = []; // [{track:<1-based position in the chain>, energy:<1-10>}], sorted by track asc
+let setbEditingArc = false; // whether the tap-to-place arc grid is open
+const SETB_ARC_SPAN = 10; // default horizon (in tracks) the arc strip/editor covers with no checkpoints yet
+const SETB_FLOW_BOOST = 18; // max points a Proven (saved-Flow) candidate gets added on top of its compat score
+const SETB_FLOW_BOOST_HALFLIFE_DAYS = 120; // a Flow this old still keeps ~50% of its boost — old, untouched Flows fade rather than permanently outranking a fresher match
+
+function setbArcHorizon(){
+  const lastCp = setbCheckpoints.length ? setbCheckpoints[setbCheckpoints.length-1].track : 0;
+  return Math.max(SETB_ARC_SPAN, lastCp, setbChain.length+2);
+}
+// Linear interpolation between pinned checkpoints; flat before the first and after the last —
+// "the system interpolates the rest" (Decision 2B).
+function setbTargetEnergyAt(trackNum){
+  const cps = setbCheckpoints;
+  if(cps.length===0) return null;
+  if(trackNum<=cps[0].track) return cps[0].energy;
+  if(trackNum>=cps[cps.length-1].track) return cps[cps.length-1].energy;
+  for(let i=0;i<cps.length-1;i++){
+    const a=cps[i], b=cps[i+1];
+    if(trackNum>=a.track && trackNum<=b.track){
+      const t=(trackNum-a.track)/((b.track-a.track)||1);
+      return a.energy + (b.energy-a.energy)*t;
+    }
+  }
+  return cps[cps.length-1].energy;
+}
+function setbAddCheckpoint(track, energy){
+  track=Math.round(track); energy=Math.max(1,Math.min(10,Math.round(energy)));
+  setbCheckpoints = setbCheckpoints.filter(c=>c.track!==track);
+  setbCheckpoints.push({track, energy});
+  setbCheckpoints.sort((a,b)=>a.track-b.track);
+}
+function setbRemoveCheckpoint(track){
+  setbCheckpoints = setbCheckpoints.filter(c=>c.track!==track);
+}
+// Decision 1B: one merged, ranked list — the Play tab's own compatibility
+// engine always fills it (the cold-start fix), a saved Flow just boosts its
+// candidate and stays visibly marked ("Proven") rather than gating what
+// shows at all. The boost decays with the Flow's age (see "Watch for" on
+// that slide) so a transition proven once, long ago, can't permanently
+// outrank a fresher, better-scoring match. Decision 2B: once an arc is
+// pinned, blend in how close the candidate's own energy sits to what the
+// target arc calls for at the position it would take in the chain.
+function computeSetbCandidates(){
+  if(setbChain.length===0) return [];
+  const lastId = setbChain[setbChain.length-1];
+  const now = library.find(t=>t.id===lastId);
+  if(!now) return [];
+  const nextPos = setbChain.length+1; // 1-based position this candidate would take
+  const targetEnergy = setbTargetEnergyAt(nextPos);
+  const flowMap = new Map(); // toId -> most recent matching saved Flow
+  flows.filter(f=>f.from===lastId).forEach(f=>{
+    const existing = flowMap.get(f.to);
+    if(!existing || f.savedAt>existing.savedAt) flowMap.set(f.to, f);
+  });
+  const eligible = library.filter(t=>t.id!==lastId && !setbChain.includes(t.id));
+  const scored = eligible.map(t=>{
+    const compat = computeCompatScore(now, t);
+    let fit = compat;
+    if(targetEnergy!=null && t.energy){
+      const arcFit = Math.max(0, 100 - Math.abs(t.energy-targetEnergy)*12);
+      fit = Math.round(compat*0.65 + arcFit*0.35);
+    }
+    const flow = flowMap.get(t.id);
+    let proven = false, overall = fit;
+    if(flow){
+      proven = true;
+      const ageDays = Math.max(0, (Date.now()-flow.savedAt)/86400000);
+      const decay = Math.pow(0.5, ageDays/SETB_FLOW_BOOST_HALFLIFE_DAYS);
+      overall = Math.min(100, fit + SETB_FLOW_BOOST*decay);
+    }
+    return {t, overall:Math.round(overall), proven};
+  });
+  scored.sort((a,b)=>b.overall-a.overall);
+  return scored.slice(0,15);
+}
+// Decision 4C / the data-flywheel slide: does a saved Set's track order show
+// up, in order (not necessarily back-to-back — other tracks may sit between
+// them), inside a saved History session or this session's live play
+// history? Used to offer "Matched to last night's set — promote?" instead of
+// making Sam remember to flip a toggle after every gig.
+function setbIsOrderedSubsequence(needle, haystack){
+  if(needle.length===0) return false;
+  let i=0;
+  for(const id of haystack){
+    if(id===needle[i]) i++;
+    if(i>=needle.length) return true;
+  }
+  return false;
+}
+function setbFindPlayedMatch(set){
+  for(const h of historySessions){
+    if(setbIsOrderedSubsequence(set.trackIds, h.trackIds)) return h.name;
+  }
+  if(setbIsOrderedSubsequence(set.trackIds, playHistory)) return 'this session’s play history';
+  return null;
+}
+// Only once a Set is marked played does it stop being provisional — its
+// consecutive pairs are quietly written into the real Flow graph (Decision
+// 4C), so Chains and future Set Builder sessions get stronger over time
+// without ever polluting Flows with picks that were merely plausible.
+async function setbMarkPlayed(set){
+  set.played = true; set.playedAt = Date.now();
+  let added = 0;
+  for(let i=0;i<set.trackIds.length-1;i++){
+    const from=set.trackIds[i], to=set.trackIds[i+1];
+    if(!flows.some(f=>f.from===from && f.to===to)){
+      flows.push({from, to, savedAt:Date.now(), comment:''});
+      added++;
+    }
+  }
+  if(added>0) await saveFlows();
+  await saveSets();
+  showInfoToast(added>0 ? `Marked as played — ${added} transition${added===1?'':'s'} saved as Flows` : 'Marked as played', false);
+  renderSetBuilder();
+}
+function setbArcStripSvg(){
+  const w=560, h=84, padL=6, padR=6, padT=10, padB=8;
+  const horizon = setbArcHorizon();
+  const plotW = w-padL-padR, plotH = h-padT-padB;
+  const xFor = pos => padL + ((pos-1)/Math.max(1,horizon-1))*plotW;
+  const yFor = e => padT + (1-(e-1)/9)*plotH;
+  let targetLine = '';
+  if(setbCheckpoints.length){
+    const pts=[];
+    for(let p=1;p<=horizon;p++){ pts.push(`${xFor(p).toFixed(1)},${yFor(setbTargetEnergyAt(p)).toFixed(1)}`); }
+    targetLine = `<polyline points="${pts.join(' ')}" fill="none" stroke="#8a8a94" stroke-width="2.5" stroke-dasharray="5 6" stroke-linecap="round"/>`;
+  }
+  const chainTracks = setbChain.map(id=>library.find(t=>t.id===id)).filter(Boolean);
+  const builtPts = [];
+  chainTracks.forEach((t,i)=>{ if(t.energy) builtPts.push({x:xFor(i+1), y:yFor(t.energy)}); });
+  const builtLine = builtPts.length>1 ? `<polyline points="${builtPts.map(p=>`${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' ')}" fill="none" stroke="var(--accent)" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>` : '';
+  const builtDots = builtPts.map(p=>`<circle cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="4" fill="var(--accent)"/>`).join('');
+  return `<svg width="100%" height="70" viewBox="0 0 ${w} ${h}" preserveAspectRatio="none" style="display:block;" aria-label="Tension arc: target energy shape versus what's been built so far">${targetLine}${builtLine}${builtDots}</svg>`;
+}
+function setbArcEditorHtml(){
+  const horizon = Math.min(setbArcHorizon(), 16);
+  const rows = [10,9,8,7,6,5,4,3,2,1];
+  return `
+    <div class="setb-arc-grid-wrap">
+      <div>
+        ${rows.map(e=>`<div class="setb-arc-row">
+          <span class="setb-arc-row-label">${e}</span>
+          ${Array.from({length:horizon},(_,i)=>i+1).map(trackNum=>{
+            const cp = setbCheckpoints.find(c=>c.track===trackNum);
+            const isSet = cp && cp.energy===e;
+            return `<button type="button" class="setb-arc-cell${isSet?' set':''}" data-arc-track="${trackNum}" data-arc-energy="${e}" aria-label="Track ${trackNum}, energy ${e}${isSet?' (set — tap to clear)':''}"></button>`;
+          }).join('')}
+        </div>`).join('')}
+        <div class="setb-arc-axis-row">
+          <span class="setb-arc-row-label"></span>
+          ${Array.from({length:horizon},(_,i)=>i+1).map(n=>`<span class="setb-arc-axis-num">${n}</span>`).join('')}
+        </div>
+      </div>
+    </div>
+    <div class="setb-arc-chips">
+      ${setbCheckpoints.length===0 ? `<span class="setb-arc-hint">Tap a cell — track # across, energy 1–10 up — to pin a checkpoint, e.g. "peak by track 10."</span>` :
+        setbCheckpoints.map(c=>`<span class="setb-arc-chip">Track ${c.track}: energy ${c.energy}<button type="button" data-arc-remove="${c.track}" aria-label="Remove checkpoint at track ${c.track}">✕</button></span>`).join('')}
+    </div>
+    <div class="setb-actions">
+      <button class="edit-cancel" id="setb-arc-clear-btn" ${setbCheckpoints.length===0?'disabled':''}>Clear arc</button>
+      <button class="edit-save" id="setb-arc-done-btn">Done</button>
+    </div>`;
+}
 
 function renderOrganise(skipAnim){
   const listView = document.getElementById('organise-list-view');
@@ -5070,7 +5316,7 @@ document.getElementById('open-chain-crate').addEventListener('click', ()=>{ open
 document.getElementById('open-flow-crate').addEventListener('click', ()=>{ openCrateId='__flow__'; renderOrganise(); });
 document.getElementById('open-fav-folder').addEventListener('click', ()=>{ openCrateId='__fav__'; renderOrganise(); });
 document.getElementById('open-history-folder').addEventListener('click', ()=>{ openCrateId='__history__'; openHistorySessionId=null; renderOrganise(); });
-document.getElementById('open-setbuilder-folder').addEventListener('click', ()=>{ openCrateId='__setbuilder__'; setbChain=[]; renderOrganise(); });
+document.getElementById('open-setbuilder-folder').addEventListener('click', ()=>{ openCrateId='__setbuilder__'; setbChain=[]; setbCheckpoints=[]; setbEditingArc=false; renderOrganise(); });
 document.getElementById('organise-back-btn').addEventListener('click', ()=>{
   if(openCrateId==='__history__' && openHistorySessionId){
     openHistorySessionId = null; // step back to the session list, not all the way out
@@ -5082,7 +5328,7 @@ document.getElementById('organise-back-btn').addEventListener('click', ()=>{
     openCrateId = '__flow__'; // step back to the Flow list, not all the way out
   } else {
     openCrateId=null; manualFlowFrom=null; manualFlowTo=null; openHistorySessionId=null;
-    generatedChainCandidates=[]; organiseSortDir=null; setbChain=[];
+    generatedChainCandidates=[]; organiseSortDir=null; setbChain=[]; setbCheckpoints=[]; setbEditingArc=false;
   }
   renderOrganise();
 });
@@ -5712,25 +5958,36 @@ function renderGameRecap(){
 function renderSetBuilder(){
   const el = document.getElementById('organise-detail-content');
   const chainTracks = setbChain.map(id=>library.find(t=>t.id===id)).filter(Boolean);
-  const lastId = setbChain.length ? setbChain[setbChain.length-1] : null;
-  let candidates = [];
-  if(lastId){
-    candidates = flows.filter(f=>f.from===lastId && library.some(t=>t.id===f.to) && !setbChain.includes(f.to))
-      .map(f=>library.find(t=>t.id===f.to)).filter(Boolean);
-  }
+  const candidates = setbChain.length ? computeSetbCandidates() : [];
   el.innerHTML = `
     <div class="section-lbl">${ICON_HEADPHONES} Set Builder</div>
     ${setbChain.length===0 ? `
-      <div class="lib-empty" style="margin-bottom:12px;">Pick a track to start your set — from there, it only ever suggests tracks you've already saved a Flow into.</div>
+      <div class="lib-empty" style="margin-bottom:12px;">Pick a track to start your set — every step after that ranks your whole library, boosting anything you've already proven with a saved Flow.</div>
       ${trackPickerHtml('setb-anchor','Start with…')}
     ` : `
       <div class="setb-chain-strip">
         ${chainTracks.map((t,i)=>`<div class="setb-chip"><img src="${t.icon}"><span>${i+1}. ${escapeHtml(t.name)}</span></div>`).join('')}
       </div>
-      <label class="edit-subhead">${candidates.length ? 'Flows into…' : 'No saved Flow leads anywhere new from here'}</label>
+      <div class="setb-arc-strip">
+        <div class="setb-arc-strip-hd">
+          <b>Tension arc</b>
+          <button type="button" class="setb-arc-edit-btn" id="setb-arc-toggle-btn">${setbEditingArc ? 'Close' : (setbCheckpoints.length ? 'Edit arc' : 'Set the arc')}</button>
+        </div>
+        ${setbCheckpoints.length ? '' : `<div class="setb-arc-hint">No checkpoints pinned yet — candidates rank on compatibility alone.</div>`}
+        ${setbArcStripSvg()}
+      </div>
+      ${setbEditingArc ? `<div class="setb-arc-editor">${setbArcEditorHtml()}</div>` : ''}
+      <label class="edit-subhead">${candidates.length ? 'Top matches — tap to preview, tap again to add' : "Add more tracks to your library to get suggestions here"}</label>
       <div class="setb-candidates">
-        ${candidates.map(t=>`<button class="setb-candidate-row" data-setb-add="${t.id}">
-          <img src="${t.icon}"><div class="now-sugg-info"><div class="t">${escapeHtml(t.name)}</div><div class="a">${escapeHtml(t.artist||'Unknown artist')}</div></div>
+        ${candidates.map(({t,overall,proven})=>`<button class="setb-candidate-row${proven?' proven':''}" data-setb-add="${t.id}">
+          <div class="setb-candidate-thumb"><img src="${t.icon}"></div>
+          <div class="setb-candidate-info">
+            <div class="t">${escapeHtml(t.name)}</div>
+            <div class="a">${escapeHtml(t.artist||'Unknown artist')} · ${t.bpm} bpm</div>
+            ${rowBadgesHtml(t)}
+            ${proven ? `<span class="setb-proven-tag">Proven — saved Flow</span>` : ''}
+          </div>
+          <span class="setb-candidate-score" style="color:${pctColor(overall)};">${overall}%</span>
         </button>`).join('')}
       </div>
       <div class="setb-actions">
@@ -5740,29 +5997,82 @@ function renderSetBuilder(){
     `}
     <div class="section-lbl" style="margin-top:6px;">Saved Sets</div>
     ${sets.length===0 ? `<div class="lib-empty">No sets saved yet.</div>` :
-      sets.map(s=>`<div class="setb-saved-row">
-        <div class="now-sugg-info" style="flex:1;"><div class="t">${escapeHtml(s.name)}</div><div class="a">${s.trackIds.length} track${s.trackIds.length===1?'':'s'}</div></div>
-        <button class="remove-btn" data-remove-set="${s.id}">✕</button>
-      </div>`).join('')}
+      sets.map(s=>{
+        const match = !s.played ? setbFindPlayedMatch(s) : null;
+        return `<div class="setb-saved-row">
+        <div class="setb-saved-row-main">
+          <div class="now-sugg-info" style="flex:1;"><div class="t">${escapeHtml(s.name)}</div><div class="a">${s.trackIds.length} track${s.trackIds.length===1?'':'s'}</div></div>
+          ${s.played ? `<span class="setb-played-badge">Played</span>` : ''}
+          <button class="remove-btn" data-remove-set="${s.id}">✕</button>
+        </div>
+        ${s.played ? '' : match ? `
+        <div class="setb-played-match">
+          <span>Matched to ${escapeHtml(match)} — promote?</span>
+          <button type="button" data-setb-promote="${s.id}">Promote</button>
+        </div>` : `
+        <label class="setb-played-toggle">
+          <span>Played at a gig</span>
+          <label class="switch"><input type="checkbox" data-setb-played-toggle="${s.id}"><span class="switch-slider"></span></label>
+        </label>`}
+      </div>`;
+      }).join('')}
   `;
   if(setbChain.length===0){
     wireTrackPicker('setb-anchor', null, (id)=>{ setbChain=[id]; renderSetBuilder(); }, true);
   } else {
     el.querySelectorAll('[data-setb-add]').forEach(btn=>{
-      btn.addEventListener('click', ()=>{ setbChain.push(btn.dataset.setbAdd); renderSetBuilder(); });
+      btn.addEventListener('click', ()=>{
+        const id = btn.dataset.setbAdd;
+        const t = library.find(x=>x.id===id);
+        // Same two-tap pattern as the Memory Game (Decision 3A): first tap on
+        // a candidate previews it; only a second tap on the one still
+        // playing commits it into the chain. No preview audio at all commits
+        // on a single tap, same as everywhere else this pattern is used.
+        if(!btn.classList.contains('playing') && t && t.previewAudio){
+          playPreviewOn(btn, t);
+          return;
+        }
+        stopCurrentPreview();
+        setbChain.push(id);
+        renderSetBuilder();
+      });
     });
     document.getElementById('setb-undo-btn').addEventListener('click', ()=>{
+      stopCurrentPreview();
       setbChain.pop();
       renderSetBuilder();
     });
+    const arcToggleBtn = document.getElementById('setb-arc-toggle-btn');
+    if(arcToggleBtn) arcToggleBtn.addEventListener('click', ()=>{ setbEditingArc = !setbEditingArc; renderSetBuilder(); });
+    if(setbEditingArc){
+      el.querySelectorAll('[data-arc-track]').forEach(cell=>{
+        cell.addEventListener('click', ()=>{
+          const track = +cell.dataset.arcTrack, energy = +cell.dataset.arcEnergy;
+          const existing = setbCheckpoints.find(c=>c.track===track);
+          if(existing && existing.energy===energy) setbRemoveCheckpoint(track);
+          else setbAddCheckpoint(track, energy);
+          renderSetBuilder();
+        });
+      });
+      el.querySelectorAll('[data-arc-remove]').forEach(btn=>{
+        btn.addEventListener('click', e=>{ e.stopPropagation(); setbRemoveCheckpoint(+btn.dataset.arcRemove); renderSetBuilder(); });
+      });
+      const clearBtn = document.getElementById('setb-arc-clear-btn');
+      if(clearBtn && !clearBtn.disabled) clearBtn.addEventListener('click', ()=>{ setbCheckpoints=[]; renderSetBuilder(); });
+      const doneBtn = document.getElementById('setb-arc-done-btn');
+      if(doneBtn) doneBtn.addEventListener('click', ()=>{ setbEditingArc=false; renderSetBuilder(); });
+    }
     const saveBtn = document.getElementById('setb-save-btn');
     if(saveBtn && !saveBtn.disabled) saveBtn.addEventListener('click', async ()=>{
       const name = prompt('Name this set:', `Set – ${new Date().toLocaleDateString()}`);
       if(!name || !name.trim()) return;
-      sets.push({id:'set_'+Date.now()+'_'+Math.random().toString(36).slice(2,7), name:name.trim(), trackIds:[...setbChain], savedAt:Date.now()});
+      sets.push({id:'set_'+Date.now()+'_'+Math.random().toString(36).slice(2,7), name:name.trim(), trackIds:[...setbChain], savedAt:Date.now(), played:false});
       await saveSets();
-      setbChain = [];
-      showInfoToast('Set saved', false);
+      stopCurrentPreview();
+      setbChain = []; setbCheckpoints = []; setbEditingArc = false;
+      // Provisional by design (Decision 4C) — this set's transitions only
+      // become real Flows once it's marked played, further down this screen.
+      showInfoToast('Set saved — mark it played once you’ve run it at a gig, to save its transitions as Flows', false);
       renderSetBuilder();
     });
   }
@@ -5777,18 +6087,32 @@ function renderSetBuilder(){
       });
     });
   });
+  el.querySelectorAll('[data-setb-promote]').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const set = sets.find(s=>s.id===btn.dataset.setbPromote);
+      if(set) setbMarkPlayed(set);
+    });
+  });
+  el.querySelectorAll('[data-setb-played-toggle]').forEach(input=>{
+    input.addEventListener('change', ()=>{
+      const set = sets.find(s=>s.id===input.dataset.setbPlayedToggle);
+      if(set && input.checked) setbMarkPlayed(set);
+    });
+  });
 }
 
 /* =========================================================
    INIT
 ========================================================= */
-const APP_VERSION = '1.34';
+const APP_VERSION = '1.36';
 const APP_BUILD = '2026-09-28';
 document.getElementById('version-display').textContent = `${APP_VERSION} · ${APP_BUILD}`;
 // Reconstructed from this build session's history — not tracked in real time
 // from the very start, but accurate to the best of what was actually shipped.
 // Add one line here with each future update.
 const CHANGELOG = [
+  {v:'1.36', notes:'Set Builder, rebuilt on the "Cold Start & The Tension Arc" pitch deck (all 4 picks were the recommendation): it no longer dead-ends when a track has no saved Flow leading anywhere — every step now ranks your whole library with the same compatibility engine Play already uses, with a saved Flow boosting (not gating) its candidate and staying marked "Proven" with a grey ring on its artwork, the boost fading the older that Flow gets so a transition proven once, long ago, can’t permanently outrank a fresher match. New: a Tension Arc — tap a track#/energy grid to pin a couple of checkpoints ("peak by track 10") and the system interpolates the rest, blending each candidate’s fit to that target energy into its score; a persistent strip above the candidate list always shows the target arc against what’s actually been built so far. Candidate rows use the same tap-to-preview, tap-again-to-add pattern as the Memory Game. Saved Sets stay provisional — their transitions only get written into real Flows once marked played, either by hand or via a "Matched to your History — promote?" prompt that finds the set’s own track order inside a saved History session automatically.'},
+  {v:'1.35', notes:'Fixed the ambient glow behind the header reading as a hard-edged, unnatural rectangle on a wide desktop/landscape browser. The glow was painted on the app column’s own 640px-wide box, so it got clipped dead straight at that box’s edges — invisible on a phone (where the column fills the screen anyway) but very visible on a wide window, sitting like a boxed panel against the black margins on either side. It now paints on a full-viewport-wide layer instead, so it fades out on its own same as it always visually intended to, with no hard line, at any window width.'},
   {v:'1.34', notes:'Fixed the edit panel (Import/Organise/Play, tap ✎ on any track) being cramped and unreadable, and a real clipping bug: a stale max-height cap from before Tags and Energy existed was silently cutting off the bottom of the panel. Picture, Title, Artist, and BPM/Key now live together in their own "Track Details" dropdown nested inside the edit panel (collapsed by default, with a quick bpm/key caption visible even while closed) — Tags and Energy stay where they were, right below it.'},
   {v:'1.33', notes:'The full "Studio Grade" pitch deck, built (all picks were B): a real three-tier elevation system replaces flat 1px-bordered cards with soft layered shadows (tuned separately for dark and light mode); a fixed, low-opacity ambient glow now sits behind the whole app instead of a flat background fill, and a loaded Deck A/B now casts its own soft pink/teal glow instead of just a thin border; Space Grotesk now carries section headers and screen titles while dense lists stay on the system font; the recap high-score badge (previously hardcoded dark regardless of theme — a genuine bug, not a style choice) now gets a proper warm-cream/amber light-mode look, and the four energy-band colors are deepened per theme so they hold contrast on a white card too. New: a custom line-icon set (matching the app’s own star/EQ-bar style) replaces every classic emoji — Memory Game, Set Builder, History, Generate, and the three recap-screen states (complete/out of hearts/ended early) — so the app renders identically on every device instead of depending on the OS emoji font. New: a three-tier button system (solid primary, soft-tint secondary, plain-text tertiary/destructive) applied across New Crate, Generate Chains, Practice your Flows, round-end actions, and Play’s reset. Revisited 1.32’s Q1 pick: Memory Game tiles show every track name again, dimmed and small at rest, snapping to full size and brightness once that tile is actually in play — readable at a glance without turning the round into pure read-and-tap. New: a brief splash screen (the glow behind the wordmark) on launch.'},
   {v:'1.32', notes:'The full "Level Up" pitch deck, built (all picks were B): The Memory Game is now a proper arcade round — pick a crate (or "All flows") on a new picker screen first, then play up to 25 of that scope’s Flows with 5 hearts; a wrong tap costs a heart, a correct one scores less as hearts run out (with a small bonus for a streak), and running out of hearts or finishing the round leads to a recap with your score, a per-crate + all-time high score, and the flows you missed. Tiles are bigger crate-wall art with a glow ring on whatever’s playing; names only surface on the tile you’re actually holding. New: tags and a 1-10 energy scale (grouped into Chill/Warmup/Buildup-Peak/High Energy-Impact) can be set per track from the edit panel — tag input autocompletes from tags already used elsewhere, energy is a tap-to-set bar. Both show as small badges on every track row (Import, Organise, Play) and can be filtered in Library. New: Set Builder (Organise) — chain saved Flows anchor-to-anchor into a named, ordered set. New: a three-number gig-readiness snapshot (track count, % with a saved Flow, BPM/key range) at the top of every crate — kept deliberately literal rather than inventing a composite score, the same reasoning that removed Energy Level back in 1.27. New: Gig Mode (Settings) — bigger touch targets and edit/delete hidden everywhere, for using the app at the booth without a stray tap costing you something mid-set.'},
