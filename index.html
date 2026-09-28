@@ -73,17 +73,21 @@
   /* ---- Studio Grade (v1.33, Q2): fixed ambient glow, no motion, near-invisible in
      light mode and a soft color-shifted bloom in dark mode — the same technique from
      the pitch decks, tuned way down and pinned to the viewport so it never scrolls. ---- */
-  html,body{margin:0;padding:0;
-    background-color:var(--bg);
-    background-image:radial-gradient(ellipse 900px 480px at 12% -8%, var(--glow-1), transparent 60%),
-                      radial-gradient(ellipse 900px 480px at 105% 8%, var(--glow-2), transparent 55%);
-    background-repeat:no-repeat;background-attachment:fixed;
-    color:var(--text);
+  html,body{margin:0;padding:0;background:var(--bg);color:var(--text);
     font-family:-apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, sans-serif;
     -webkit-font-smoothing:antialiased;-webkit-text-size-adjust:100%;text-size-adjust:100%;
     touch-action:manipulation;overscroll-behavior-y:none;}
-  html.dark body{background-color:var(--bg);}
-  .app{max-width:640px;margin:0 auto;padding:0 0 70px;}
+  /* ---- Studio Grade (v1.33, Q2), fixed after Sam flagged a visible seam under the
+     header on a real desktop-width browser: the glow is scoped to .app's own 640px
+     column (not the full viewport) and scrolls normally with the page, instead of a
+     viewport-fixed background — so it sits naturally behind the frosted sticky header
+     instead of showing as a separately-composited rectangle, and never bleeds into the
+     empty margins on a wide window. Y-position is a px offset (not %) so it stays
+     pinned near the very top regardless of how tall the page's content is. ---- */
+  .app{max-width:640px;margin:0 auto;padding:0 0 70px;
+    background-image:radial-gradient(ellipse 620px 380px at 6% -60px, var(--glow-1), transparent 60%),
+                      radial-gradient(ellipse 620px 380px at 100% -20px, var(--glow-2), transparent 55%);
+    background-repeat:no-repeat;}
   button{transition:transform 0.1s ease;}
   button:active{transform:scale(0.97);}
   .removing{transition:max-height 0.24s ease, opacity 0.22s ease, margin 0.24s ease, padding 0.24s ease, transform 0.22s ease;
@@ -109,6 +113,7 @@
   .splash-screen.hide{opacity:0;pointer-events:none;}
   .splash-logo{position:relative;width:220px;height:auto;z-index:1;
     animation:splash-pulse 1.6s ease-in-out infinite;}
+  .splash-logo text{font-family:'Rubik Wet Paint', cursive;}
   @keyframes splash-pulse{0%,100%{transform:scale(1);}50%{transform:scale(1.035);}}
   @media (prefers-reduced-motion: reduce){.splash-logo{animation:none;}}
 
@@ -399,7 +404,7 @@
   html.clock-hidden .play-clock{display:none !important;}
   html:not(.dark) .play-clock{border:1.5px solid #fff;
     box-shadow:0 0 0 1px rgba(0,0,0,0.85), 0 4px 12px rgba(0,0,0,0.14);}
-  .header-clock{margin-left:8px;}
+  .header-clock{margin-left:8px;flex:1;justify-content:center;}
   .pc-secs{display:inline-flex;align-items:center;opacity:0.5;}
 
   .screensaver{position:fixed;inset:0;background:#000;z-index:900;
@@ -740,6 +745,7 @@
     font-size:15px;font-weight:800;color:#fff;text-shadow:0 1px 4px rgba(0,0,0,0.6);pointer-events:none;
     animation:game-pts-float 0.85s ease forwards;z-index:2;}
   .game-progress{font-size:var(--text-body-sm);font-weight:600;color:var(--dim);text-align:center;margin-bottom:10px;}
+  .game-tap-hint{font-size:var(--text-caption);color:var(--dim);text-align:center;margin:-6px 0 14px;}
   .game-progress.complete{color:var(--accent);}
   .game-newround-btn{display:block;width:100%;background:color-mix(in srgb, var(--accent) 12%, var(--card));
     border:none;border-radius:var(--radius-control);padding:11px;font-size:var(--text-body-sm);font-weight:700;color:var(--accent);cursor:pointer;font-family:inherit;}
@@ -3408,7 +3414,10 @@ function ejectDeck(letter){
 function renderNowChip(){
   const clockEl = document.getElementById('play-clock');
   if(!clockEl) return;
-  clockEl.style.display = currentTab==='match' ? 'flex' : 'none';
+  // Studio Grade (v1.33): the header clock now shows on every tab, not just
+  // Play — centered in the banner. "Show clock" in Settings still hides it
+  // everywhere via the html.clock-hidden CSS override below.
+  clockEl.style.display = 'flex';
 }
 
 /* =========================================================
@@ -5511,6 +5520,7 @@ function renderGamePlaying(){
       </button>
       <div class="game-grid">${tilesHtml}</div>
     </div>
+    <div class="game-tap-hint">Tap a tile to preview it · tap again to lock it in</div>
     <button class="game-newround-btn" id="game-giveup-btn">End round early — see recap</button>
   `;
   wireGameTiles();
@@ -5555,6 +5565,18 @@ function wireGameTiles(){
         if(t && t.previewAudio) playPreviewOn(btn, t);
         return;
       }
+      // Studio Grade (v1.33): first tap on an unanswered tile just previews it
+      // like every other preview control in the app (and re-tapping a
+      // different tile switches the preview to that one, same as elsewhere).
+      // Only a second tap on the tile that's actually still playing commits
+      // it as your answer — so you can audition candidates before guessing.
+      if(!btn.classList.contains('playing') && t && t.previewAudio){
+        playPreviewOn(btn, t);
+        return;
+      }
+      // No preview audio for this track (nothing to audition) — a single tap
+      // commits immediately, same as before Studio Grade.
+      stopCurrentPreview();
       if(gameCorrectIds.has(id)){
         gameFoundIds.add(id);
         gameRemainingByAnchor[gameAnchorId].delete(id);
