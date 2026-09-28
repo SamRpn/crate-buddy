@@ -304,15 +304,38 @@
 
   .edit-panel{max-height:0;opacity:0;overflow:hidden;display:flex;flex-direction:column;gap:8px;
     transition:max-height 0.28s ease, opacity 0.22s ease;}
-  .edit-panel.show{max-height:400px;opacity:1;margin-top:10px;padding-top:10px;border-top:1px solid var(--line);}
+  /* Was a hardcoded 400px, which silently clipped the bottom of the panel
+     (the Energy section) once Tags/Energy were added on top of the original
+     name/artist/bpm/key fields. Generous fixed cap instead of a real
+     content-based height, since this is a CSS max-height transition. */
+  .edit-panel.show{max-height:1400px;opacity:1;margin-top:10px;padding-top:10px;border-top:1px solid var(--line);}
   .edit-pic-row{display:flex;align-items:center;gap:10px;}
   .edit-pic-preview{width:44px;height:44px;border-radius:var(--radius-thumb);object-fit:cover;flex-shrink:0;}
   .edit-pic-btn{background:var(--bg);border:1px solid var(--line);border-radius:var(--radius-control);padding:8px 10px;
     font-size:var(--text-body-sm);font-weight:600;color:var(--dim);cursor:pointer;}
-  .edit-input{background:var(--bg);border:1px solid var(--line);border-radius:var(--radius-control);padding:9px 10px;font-size:var(--text-body-lg);color:var(--text);}
+  .edit-input{background:var(--bg);border:1px solid var(--line);border-radius:var(--radius-control);padding:9px 10px;font-size:var(--text-body-lg);color:var(--text);width:100%;}
   .edit-actions{display:flex;gap:8px;}
   .edit-save{flex:1;background:var(--accent);color:#fff;border:none;border-radius:var(--radius-control);padding:9px;font-weight:700;font-size:var(--text-body-sm);cursor:pointer;}
   .edit-cancel{background:var(--bg);border:1px solid var(--line);border-radius:var(--radius-control);padding:9px 14px;font-size:var(--text-body-sm);color:var(--dim);cursor:pointer;}
+
+  /* ---- Track Details: name/artist/bpm/key/picture, nested as their own
+     collapsible "dropdown" inside the edit panel — same disclosure pattern
+     as .weights, so it reads as one section instead of a wall of stacked
+     inputs with no grouping. Collapsed by default; the summary row keeps a
+     quick bpm/key caption visible even while closed. ---- */
+  .edit-details{background:var(--bg);border-radius:var(--radius-panel);border:1px solid var(--line);}
+  .edit-details-summary{padding:10px 12px;font-size:var(--text-body-sm);color:var(--text);cursor:pointer;font-weight:700;
+    display:flex;align-items:center;gap:8px;}
+  .edit-details-summary-cap{margin-left:auto;font-size:var(--text-caption);color:var(--dim);font-weight:600;}
+  .edit-details-tri{transition:transform 0.18s ease;flex-shrink:0;color:var(--dim);}
+  .edit-details.open .edit-details-summary .edit-details-tri{transform:rotate(180deg);}
+  .edit-details .edit-details-content{max-height:0;overflow:hidden;opacity:0;
+    transition:max-height 0.28s ease, opacity 0.2s ease;}
+  .edit-details.open .edit-details-content{max-height:500px;opacity:1;}
+  .edit-details-content-inner{padding:2px 12px 12px;display:flex;flex-direction:column;gap:10px;}
+  .edit-field-label{display:block;font-size:var(--text-caption);font-weight:700;color:var(--dim);margin-bottom:4px;}
+  .edit-field-row{display:flex;gap:10px;}
+  .edit-field-col{flex:1;min-width:0;}
 
 
   /* ---- now playing ---- */
@@ -2552,15 +2575,40 @@ function rowBadgesHtml(t){
 }
 function editPanelHtml(t){
   return `<div class="edit-panel">
-      <div class="edit-pic-row">
-        <img class="edit-pic-preview" src="${t.icon}">
-        <button class="edit-pic-btn" data-pic="${t.id}">Change picture</button>
-        <input type="file" accept="image/*" class="edit-pic-input" style="display:none;">
+      <div class="edit-details" data-editdetails="${t.id}">
+        <div class="edit-details-summary">
+          <span>Track Details</span>
+          <span class="edit-details-summary-cap">${t.bpm} bpm · ${t.key.camelot}</span>
+          <svg class="edit-details-tri" viewBox="0 0 24 24" width="13" height="13"><path fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" d="M6 9l6 6 6-6"/></svg>
+        </div>
+        <div class="edit-details-content">
+          <div class="edit-details-content-inner">
+            <div class="edit-pic-row">
+              <img class="edit-pic-preview" src="${t.icon}">
+              <button class="edit-pic-btn" data-pic="${t.id}">Change picture</button>
+              <input type="file" accept="image/*" class="edit-pic-input" style="display:none;">
+            </div>
+            <div>
+              <label class="edit-field-label">Title</label>
+              <input class="edit-input edit-name" placeholder="Track name" value="${escapeHtml(t.name)}">
+            </div>
+            <div>
+              <label class="edit-field-label">Artist</label>
+              <input class="edit-input edit-artist" placeholder="Artist" value="${escapeHtml(t.artist||'')}">
+            </div>
+            <div class="edit-field-row">
+              <div class="edit-field-col">
+                <label class="edit-field-label">BPM</label>
+                <input class="edit-input edit-bpm" type="number" inputmode="decimal" placeholder="BPM" value="${t.bpm}">
+              </div>
+              <div class="edit-field-col">
+                <label class="edit-field-label">Key</label>
+                <select class="edit-input edit-key">${camelotOptionsHtml(t.key.camelot)}</select>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
-      <input class="edit-input edit-name" placeholder="Track name" value="${escapeHtml(t.name)}">
-      <input class="edit-input edit-artist" placeholder="Artist" value="${escapeHtml(t.artist||'')}">
-      <input class="edit-input edit-bpm" type="number" inputmode="decimal" placeholder="BPM" value="${t.bpm}">
-      <select class="edit-input edit-key">${camelotOptionsHtml(t.key.camelot)}</select>
       <label class="edit-subhead">Tags</label>
       <div class="edit-tag-chips" data-tagchips="${t.id}">${tagChipsHtml(t.tags)}</div>
       <div class="edit-tag-input-row">
@@ -3157,6 +3205,14 @@ function wireTrackEditActions(scopeEl){
     btn.addEventListener('click', e=>{
       e.stopPropagation();
       btn.closest('.edit-panel').classList.remove('show');
+    });
+  });
+  // ---- Track Details: picture/title/artist/bpm/key grouped into their own
+  // nested dropdown inside the edit panel, collapsed by default (v1.34) ----
+  scopeEl.querySelectorAll('.edit-details-summary').forEach(summary=>{
+    summary.addEventListener('click', e=>{
+      e.stopPropagation();
+      summary.closest('.edit-details').classList.toggle('open');
     });
   });
   // ---- Tags: chip input with autocomplete drawn from tags already used
@@ -5726,13 +5782,14 @@ function renderSetBuilder(){
 /* =========================================================
    INIT
 ========================================================= */
-const APP_VERSION = '1.33';
+const APP_VERSION = '1.34';
 const APP_BUILD = '2026-09-28';
 document.getElementById('version-display').textContent = `${APP_VERSION} · ${APP_BUILD}`;
 // Reconstructed from this build session's history — not tracked in real time
 // from the very start, but accurate to the best of what was actually shipped.
 // Add one line here with each future update.
 const CHANGELOG = [
+  {v:'1.34', notes:'Fixed the edit panel (Import/Organise/Play, tap ✎ on any track) being cramped and unreadable, and a real clipping bug: a stale max-height cap from before Tags and Energy existed was silently cutting off the bottom of the panel. Picture, Title, Artist, and BPM/Key now live together in their own "Track Details" dropdown nested inside the edit panel (collapsed by default, with a quick bpm/key caption visible even while closed) — Tags and Energy stay where they were, right below it.'},
   {v:'1.33', notes:'The full "Studio Grade" pitch deck, built (all picks were B): a real three-tier elevation system replaces flat 1px-bordered cards with soft layered shadows (tuned separately for dark and light mode); a fixed, low-opacity ambient glow now sits behind the whole app instead of a flat background fill, and a loaded Deck A/B now casts its own soft pink/teal glow instead of just a thin border; Space Grotesk now carries section headers and screen titles while dense lists stay on the system font; the recap high-score badge (previously hardcoded dark regardless of theme — a genuine bug, not a style choice) now gets a proper warm-cream/amber light-mode look, and the four energy-band colors are deepened per theme so they hold contrast on a white card too. New: a custom line-icon set (matching the app’s own star/EQ-bar style) replaces every classic emoji — Memory Game, Set Builder, History, Generate, and the three recap-screen states (complete/out of hearts/ended early) — so the app renders identically on every device instead of depending on the OS emoji font. New: a three-tier button system (solid primary, soft-tint secondary, plain-text tertiary/destructive) applied across New Crate, Generate Chains, Practice your Flows, round-end actions, and Play’s reset. Revisited 1.32’s Q1 pick: Memory Game tiles show every track name again, dimmed and small at rest, snapping to full size and brightness once that tile is actually in play — readable at a glance without turning the round into pure read-and-tap. New: a brief splash screen (the glow behind the wordmark) on launch.'},
   {v:'1.32', notes:'The full "Level Up" pitch deck, built (all picks were B): The Memory Game is now a proper arcade round — pick a crate (or "All flows") on a new picker screen first, then play up to 25 of that scope’s Flows with 5 hearts; a wrong tap costs a heart, a correct one scores less as hearts run out (with a small bonus for a streak), and running out of hearts or finishing the round leads to a recap with your score, a per-crate + all-time high score, and the flows you missed. Tiles are bigger crate-wall art with a glow ring on whatever’s playing; names only surface on the tile you’re actually holding. New: tags and a 1-10 energy scale (grouped into Chill/Warmup/Buildup-Peak/High Energy-Impact) can be set per track from the edit panel — tag input autocompletes from tags already used elsewhere, energy is a tap-to-set bar. Both show as small badges on every track row (Import, Organise, Play) and can be filtered in Library. New: Set Builder (Organise) — chain saved Flows anchor-to-anchor into a named, ordered set. New: a three-number gig-readiness snapshot (track count, % with a saved Flow, BPM/key range) at the top of every crate — kept deliberately literal rather than inventing a composite score, the same reasoning that removed Energy Level back in 1.27. New: Gig Mode (Settings) — bigger touch targets and edit/delete hidden everywhere, for using the app at the booth without a stray tap costing you something mid-set.'},
   {v:'1.31', notes:'Three from the pitch deck, all built: (1) Flows can now carry a short note (max 75 characters) — a "+ Add a note" link appears on the save toast, editable any time after from Organise → Flow (✎), and it now surfaces as a peek icon + full text in a suggestion’s expanded details in Play. (2) The preview icon—wrong twice running on hand-nudged coordinates—now reuses the app’s own equaliser-bar "now playing" glyph (the same one from drag-to-preview), which is trivially symmetric and needs no eyeballing. (3) New: a Memory Game at Organise → Flow → "Practice your Flows" — an anchor track plays on the left, nine candidates sit on the right, tap the ones you think flow with it. Direction matters (only the saved direction counts), and a round can hide more than one correct flow among the nine — the round tells you up front how many there are to find.'},
