@@ -617,6 +617,23 @@
   .game-launch-btn{display:block;width:100%;margin:2px 0 14px;background:var(--card);
     border:1.5px solid var(--accent);border-radius:var(--radius-panel);padding:12px;
     font-size:var(--text-body-sm);font-weight:700;color:var(--accent);cursor:pointer;text-align:center;font-family:inherit;}
+
+  /* ---- Memory Game v2 (v1.32): crate-wall tiles, hearts + score HUD, crate picker, recap ---- */
+  .game-back-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;}
+  .game-back-mini{background:none;border:none;color:var(--dim);font-size:var(--text-caption);font-weight:600;cursor:pointer;padding:4px 0;}
+  .game-picker-list{display:flex;flex-direction:column;gap:10px;margin-top:6px;}
+  .game-picker-card{display:flex;align-items:center;justify-content:space-between;gap:12px;background:var(--card);
+    border:1.5px solid var(--line);border-radius:var(--radius-card);padding:14px 16px;cursor:pointer;text-align:left;font-family:inherit;width:100%;}
+  .game-picker-card:active{border-color:var(--accent);}
+  .game-picker-info .t{font-size:var(--text-body);font-weight:700;}
+  .game-picker-info .a{font-size:var(--text-caption);color:var(--dim);margin-top:2px;}
+  .game-picker-best{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:var(--text-caption);color:#c98a1f;flex-shrink:0;}
+  .game-hud{display:flex;align-items:center;justify-content:space-between;background:var(--card);border:1px solid var(--line);
+    border-radius:var(--radius-panel);padding:12px 14px;margin-bottom:12px;}
+  .game-hearts{display:flex;gap:4px;}
+  .game-hearts svg{flex-shrink:0;}
+  .game-score{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:var(--text-title);font-weight:700;color:#c98a1f;}
+  .game-scope-lbl{font-size:var(--text-micro);color:var(--dim);text-align:center;margin:-4px 0 12px;}
   .game-wrap{display:flex;gap:12px;align-items:flex-start;margin-bottom:14px;}
   .game-anchor-card{flex:0 0 118px;background:var(--card);border:2px solid var(--accent);border-radius:var(--radius-card);
     padding:12px 10px;text-align:center;cursor:pointer;box-shadow:0 1px 2px rgba(0,0,0,0.04);font-family:inherit;}
@@ -630,12 +647,17 @@
   .game-anchor-hint{font-size:var(--text-micro);color:var(--dim);margin-top:4px;line-height:1.3;}
   .game-grid{flex:1;display:grid;grid-template-columns:repeat(3,1fr);gap:8px;min-width:0;}
   .game-tile{position:relative;background:var(--card);border:2px solid var(--line);border-radius:var(--radius-card);
-    padding:0;cursor:pointer;aspect-ratio:1;overflow:hidden;display:flex;align-items:center;justify-content:center;font-family:inherit;}
+    padding:0;cursor:pointer;aspect-ratio:1;overflow:hidden;display:flex;align-items:center;justify-content:center;font-family:inherit;
+    transition:box-shadow 0.2s ease, border-color 0.2s ease;}
   .game-tile img{width:100%;height:100%;object-fit:cover;display:block;}
-  .game-tile-name{position:absolute;left:0;right:0;bottom:0;padding:3px 4px;font-size:8.5px;font-weight:700;color:#fff;
-    background:linear-gradient(to top, rgba(0,0,0,0.72), rgba(0,0,0,0));text-align:center;
-    overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .game-tile-name{position:absolute;left:0;right:0;bottom:0;padding:4px 5px;font-size:9px;font-weight:700;color:#fff;
+    background:linear-gradient(to top, rgba(0,0,0,0.78), rgba(0,0,0,0));text-align:center;
+    overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+    opacity:0;transform:translateY(4px);transition:opacity 0.15s ease, transform 0.15s ease;}
+  .game-tile:active .game-tile-name, .game-tile.found .game-tile-name, .game-tile.wrong .game-tile-name, .game-tile.playing .game-tile-name{
+    opacity:1;transform:translateY(0);}
   .game-tile .game-tile-eq{position:absolute;inset:0;background:rgba(0,0,0,0.5);align-items:center;justify-content:center;height:auto;opacity:0;}
+  .game-tile.playing{box-shadow:0 0 0 3px rgba(10,132,255,0.35), 0 0 16px rgba(10,132,255,0.45);border-color:var(--accent);}
   .game-tile.playing .game-tile-eq{opacity:1;}
   .game-tile.found{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent) inset;}
   .game-tile.wrong{border-color:#dc2626;opacity:0.55;cursor:default;}
@@ -644,10 +666,92 @@
   @keyframes game-tile-shake{0%,100%{transform:translateX(0);}20%{transform:translateX(-4px);}
     40%{transform:translateX(4px);}60%{transform:translateX(-3px);}80%{transform:translateX(3px);}}
   .game-tile.shake{animation:game-tile-shake 0.4s ease;}
+  @keyframes game-pts-float{0%{opacity:0;transform:translate(-50%,4px) scale(0.8);}25%{opacity:1;transform:translate(-50%,-2px) scale(1);}
+    100%{opacity:0;transform:translate(-50%,-26px) scale(1);}}
+  .game-pts-pop{position:absolute;left:50%;top:6px;transform:translate(-50%,0);font-family:ui-monospace,SFMono-Regular,Menlo,monospace;
+    font-size:15px;font-weight:800;color:#fff;text-shadow:0 1px 4px rgba(0,0,0,0.6);pointer-events:none;
+    animation:game-pts-float 0.85s ease forwards;z-index:2;}
   .game-progress{font-size:var(--text-body-sm);font-weight:600;color:var(--dim);text-align:center;margin-bottom:10px;}
   .game-progress.complete{color:var(--accent);}
   .game-newround-btn{display:block;width:100%;background:var(--card);border:1px solid var(--line);
     border-radius:var(--radius-control);padding:11px;font-size:var(--text-body-sm);font-weight:600;color:var(--dim);cursor:pointer;font-family:inherit;}
+  .game-recap{text-align:center;padding:8px 4px 4px;}
+  .game-recap-title{font-size:22px;font-weight:800;margin-bottom:4px;}
+  .game-recap-hs{display:inline-block;background:#3a2f12;color:#F5B942;border-radius:10px;padding:5px 12px;
+    font-size:var(--text-caption);font-weight:700;margin-bottom:14px;}
+  .game-recap-score{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:44px;font-weight:800;color:#c98a1f;line-height:1;}
+  .game-recap-best{font-size:var(--text-caption);color:var(--dim);margin:8px 0 20px;}
+  .game-recap-stats{display:flex;justify-content:center;gap:22px;margin-bottom:20px;}
+  .game-recap-stat b{display:block;font-size:20px;}
+  .game-recap-stat span{font-size:var(--text-micro);color:var(--dim);}
+  .game-recap-missed{text-align:left;margin-bottom:18px;}
+  .game-recap-missed-row{display:flex;align-items:center;gap:8px;font-size:var(--text-body-sm);color:var(--dim);padding:5px 0;}
+  .game-recap-actions{display:flex;flex-direction:column;gap:10px;}
+
+  /* ---- Tags & Energy: per-track metadata (v1.32) ---- */
+  .edit-subhead{display:block;font-size:var(--text-caption);font-weight:700;color:var(--dim);margin:12px 0 6px;text-transform:uppercase;letter-spacing:0.4px;}
+  .edit-tag-chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px;}
+  .tag-chip{display:inline-flex;align-items:center;gap:5px;background:var(--bg);border:1px solid var(--line);
+    border-radius:8px;padding:5px 6px 5px 10px;font-size:var(--text-caption);font-weight:600;color:var(--text);}
+  .tag-chip-x{background:none;border:none;color:var(--dim);font-size:11px;cursor:pointer;padding:2px;line-height:1;}
+  .edit-tag-input-row{position:relative;}
+  .tag-suggest{position:absolute;left:0;right:0;top:100%;margin-top:2px;background:var(--card);border:1px solid var(--line);
+    border-radius:var(--radius-control);box-shadow:0 4px 14px rgba(0,0,0,0.15);z-index:5;max-height:160px;overflow-y:auto;display:none;}
+  .tag-suggest.show{display:block;}
+  .tag-suggest-item{padding:8px 12px;font-size:var(--text-body-sm);cursor:pointer;}
+  .tag-suggest-item:hover, .tag-suggest-item.hl{background:var(--bg);}
+  .energy-bar{display:flex;gap:3px;}
+  .energy-seg{flex:1;height:16px;border-radius:4px;background:var(--line);border:none;padding:0;cursor:pointer;min-width:0;}
+  .energy-seg.filled{background:var(--seg-color, var(--accent));}
+  .energy-band-label{font-size:var(--text-caption);font-weight:700;color:var(--dim);margin-top:6px;}
+  .row-badges{display:flex;align-items:center;gap:5px;margin-top:3px;}
+  .row-energy-dot{display:inline-block;width:8px;height:8px;border-radius:4px;flex-shrink:0;}
+  .row-tag-pill{display:inline-block;background:var(--line);color:var(--dim);border-radius:6px;padding:1px 7px;font-size:9.5px;font-weight:700;}
+
+  /* ---- Library filter bar: tags & energy (v1.32) ---- */
+  .lib-filter-toggle{background:none;border:1px solid var(--line);border-radius:var(--radius-control);
+    color:var(--dim);font-size:var(--text-caption);font-weight:600;padding:7px 12px;cursor:pointer;}
+  .lib-filter-toggle.active{border-color:var(--accent);color:var(--accent);}
+  .lib-filter-panel{display:none;flex-wrap:wrap;gap:8px;background:var(--card);border:1px solid var(--line);
+    border-radius:var(--radius-panel);padding:12px 14px;margin:8px 0;}
+  .lib-filter-panel.show{display:flex;}
+  .lib-filter-chip{background:var(--bg);border:1.5px solid var(--line);border-radius:20px;padding:6px 13px;
+    font-size:var(--text-caption);font-weight:600;color:var(--text);cursor:pointer;}
+  .lib-filter-chip.active{border-color:var(--accent);color:var(--accent);background:rgba(10,132,255,0.08);}
+  .lib-filter-clear{background:none;border:none;color:var(--dim);font-size:var(--text-caption);text-decoration:underline;cursor:pointer;}
+
+  /* ---- Crate readiness snapshot (v1.32) ---- */
+  .readiness-row{display:flex;gap:10px;margin-bottom:16px;}
+  .readiness-tile{flex:1;background:var(--card);border:1px solid var(--line);border-radius:var(--radius-card);
+    padding:12px 8px;text-align:center;}
+  .readiness-tile b{display:block;font-size:19px;}
+  .readiness-tile span{font-size:9.5px;color:var(--dim);font-weight:600;text-transform:uppercase;letter-spacing:0.3px;}
+
+  /* ---- Set Builder (v1.32) ---- */
+  .setb-anchor-row{display:flex;flex-direction:column;gap:8px;margin-bottom:14px;}
+  .setb-chain-strip{display:flex;flex-wrap:wrap;gap:8px;min-height:44px;background:var(--card);border:1px dashed var(--line);
+    border-radius:var(--radius-panel);padding:10px;margin-bottom:12px;}
+  .setb-chip{display:flex;align-items:center;gap:6px;background:var(--bg);border-radius:8px;padding:4px 8px 4px 4px;}
+  .setb-chip img{width:26px;height:26px;border-radius:5px;object-fit:cover;}
+  .setb-chip span{font-size:var(--text-caption);font-weight:600;max-width:100px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .setb-candidates{display:flex;flex-direction:column;gap:8px;margin-bottom:14px;}
+  .setb-candidate-row{display:flex;align-items:center;gap:10px;background:var(--card);border:1px solid var(--line);
+    border-radius:var(--radius-card);padding:10px 12px;cursor:pointer;text-align:left;width:100%;font-family:inherit;}
+  .setb-candidate-row img{width:34px;height:34px;border-radius:6px;object-fit:cover;flex-shrink:0;}
+  .setb-actions{display:flex;gap:8px;margin-bottom:18px;}
+  .setb-actions button{flex:1;}
+  .setb-saved-row{display:flex;align-items:center;gap:10px;background:var(--card);border:1px solid var(--line);
+    border-radius:var(--radius-card);padding:10px 12px;margin-bottom:8px;}
+
+  html.gig-mode{--radius-control:12px;}
+  html.gig-mode .track-row .head{padding-top:14px;padding-bottom:14px;}
+  html.gig-mode .track-row .edit-toggle, html.gig-mode .track-row .del,
+  html.gig-mode .match-row .edit-toggle, html.gig-mode .del-crate,
+  html.gig-mode .flow-pair-main .remove-btn, html.gig-mode .flow-pair-main .edit-toggle,
+  html.gig-mode .organise-row .remove-btn, html.gig-mode .edit-panel{display:none!important;}
+  html.gig-mode .match-play-btn, html.gig-mode .fav-star{transform:scale(1.18);}
+  html.gig-mode .tabs button{padding-top:14px;padding-bottom:14px;}
+  html.gig-mode .game-tile, html.gig-mode .game-picker-card{transform:scale(1.02);}
 
   @media (prefers-reduced-motion: reduce){
     *, *::before, *::after{
@@ -730,6 +834,10 @@
         <span>Search only within selected crate</span>
         <label class="switch"><input type="checkbox" id="search-crate-scope-toggle"><span class="switch-slider"></span></label>
       </div>
+      <div class="modal-row" style="border-top:1px solid var(--line);padding-top:14px;margin-top:4px;">
+        <span>Gig Mode <span style="color:var(--dim);font-size:var(--text-caption);">— bigger targets, edit/delete off</span></span>
+        <label class="switch"><input type="checkbox" id="gig-mode-toggle"><span class="switch-slider"></span></label>
+      </div>
       <div class="modal-row" style="margin-top:14px;">
         <span>Suggestion Priorities</span>
         <span style="color:var(--dim);font-size:var(--text-caption);text-align:right;">Now under Filters in Play</span>
@@ -799,6 +907,7 @@
       <input type="file" id="import-file-input" accept="application/json" style="display:none;">
     </div>
     <div class="lib-toolbar" id="lib-toolbar"></div>
+    <div class="lib-filter-panel" id="lib-filter-panel"></div>
     <div class="collection-heading">
       <span>Total Music Collection:</span>
       <span id="import-track-count"></span>
@@ -847,6 +956,13 @@
         <div class="crate-card-info">
           <div class="t">History</div>
           <div class="a" id="history-folder-count"></div>
+        </div>
+        <div class="chev">›</div>
+      </div>
+      <div class="crate-card" id="open-setbuilder-folder">
+        <div class="crate-card-info">
+          <div class="t">🎧 Set Builder</div>
+          <div class="a" id="setbuilder-folder-count"></div>
         </div>
         <div class="chev">›</div>
       </div>
@@ -2297,6 +2413,54 @@ function bandCompareChartSvg(nowBands, suggBands, detailed, colors){
 function editToggleBtnHtml(t){
   return `<button class="edit-toggle" data-edit="${t.id}" aria-label="Edit ${escapeHtml(t.name)}">✎</button>`;
 }
+/* ---- Tags & Energy (v1.32) ----
+   tags: array of free-text strings on the track. energy: integer 1-10 or
+   null/undefined ("not set"), grouped into four named bands Sam chose:
+   Chill 1-3, Warmup 4-6, Buildup/Peak 7-8, High Energy/Impact 9-10. */
+function allUsedTags(){
+  const s = new Set();
+  library.forEach(t=>(t.tags||[]).forEach(tag=>s.add(tag)));
+  return [...s].sort((a,b)=>a.localeCompare(b));
+}
+function energyBandLabel(v){
+  if(!v) return null;
+  if(v<=3) return 'Chill';
+  if(v<=6) return 'Warmup';
+  if(v<=8) return 'Buildup/Peak';
+  return 'High Energy/Impact';
+}
+function energyBandColor(v){
+  if(!v) return null;
+  if(v<=3) return '#2bb3a3';
+  if(v<=6) return '#0A84FF';
+  if(v<=8) return '#F5B942';
+  return '#e94f9e';
+}
+function tagChipsHtml(tags){
+  return (tags||[]).map(tag=>`<span class="tag-chip" data-tag="${escapeHtml(tag)}">${escapeHtml(tag)}<button type="button" class="tag-chip-x" data-tagremove="${escapeHtml(tag)}" aria-label="Remove tag ${escapeHtml(tag)}">✕</button></span>`).join('');
+}
+function energyBarHtml(t){
+  const v = t.energy||0;
+  const color = energyBandColor(v) || 'var(--accent)';
+  return `<div class="energy-bar" data-energybar="${t.id}" data-value="${v}" style="--seg-color:${color};">
+    ${Array.from({length:10}).map((_,i)=>`<button type="button" class="energy-seg${i<v?' filled':''}" data-energyval="${i+1}" aria-label="Set energy to ${i+1}"></button>`).join('')}
+  </div>
+  <div class="energy-band-label" data-energylabel style="color:${v?color:'var(--dim)'};">${v ? `${energyBandLabel(v)} (${v}/10)` : 'Not set — tap a bar'}</div>`;
+}
+/* Small inline badges (energy dot + up to one tag pill) shown after the
+   artist name on track rows across Import/Organise/Play (v1.32, question 9). */
+function rowBadgesHtml(t){
+  const tags = t.tags||[];
+  const bits = [];
+  if(t.energy){
+    bits.push(`<span class="row-energy-dot" style="background:${energyBandColor(t.energy)}" title="${energyBandLabel(t.energy)} (${t.energy}/10)"></span>`);
+  }
+  if(tags.length){
+    const extra = tags.length>1 ? ` +${tags.length-1}` : '';
+    bits.push(`<span class="row-tag-pill">${escapeHtml(tags[0])}${extra}</span>`);
+  }
+  return bits.length ? `<span class="row-badges">${bits.join('')}</span>` : '';
+}
 function editPanelHtml(t){
   return `<div class="edit-panel">
       <div class="edit-pic-row">
@@ -2308,6 +2472,14 @@ function editPanelHtml(t){
       <input class="edit-input edit-artist" placeholder="Artist" value="${escapeHtml(t.artist||'')}">
       <input class="edit-input edit-bpm" type="number" inputmode="decimal" placeholder="BPM" value="${t.bpm}">
       <select class="edit-input edit-key">${camelotOptionsHtml(t.key.camelot)}</select>
+      <label class="edit-subhead">Tags</label>
+      <div class="edit-tag-chips" data-tagchips="${t.id}">${tagChipsHtml(t.tags)}</div>
+      <div class="edit-tag-input-row">
+        <input class="edit-input edit-tag-input" data-tagid="${t.id}" placeholder="Add a tag, press Enter" autocomplete="off">
+        <div class="tag-suggest" data-tagsuggest="${t.id}"></div>
+      </div>
+      <label class="edit-subhead">Energy</label>
+      ${energyBarHtml(t)}
       <div class="edit-actions">
         <button class="edit-save" data-save="${t.id}">Save</button>
         <button class="edit-cancel" data-cancel="${t.id}">Cancel</button>
@@ -2331,6 +2503,7 @@ function trackRowHtml(t, opts){
       <div class="track-title drag-info">
         <div class="t">${escapeHtml(t.name)}</div>
         <div class="a">${escapeHtml(t.artist||'Unknown artist')}</div>
+        ${rowBadgesHtml(t)}
       </div>
       <div class="meta"><span class="meta-bpm"><b>${t.bpm}</b> bpm</span><br><span class="meta-dur">${fmtDuration(t.duration)}</span></div>
       <div class="row-actions">
@@ -2590,12 +2763,19 @@ function renderLibToolbar(){
   if(!el) return;
   if(library.length===0){ el.innerHTML=''; return; }
   if(!selectionMode){
-    el.innerHTML = `<button id="select-toggle-btn">Select</button>`;
+    const filterCount = libTagFilter.size + libEnergyFilter.size;
+    el.innerHTML = `<button id="select-toggle-btn">Select</button>
+      ${allUsedTags().length ? `<button class="lib-filter-toggle${filterCount?' active':''}" id="lib-filter-toggle">Filter${filterCount?` (${filterCount})`:''}</button>` : ''}`;
     document.getElementById('select-toggle-btn').addEventListener('click', ()=>{
       selectionMode=true; selectedTrackIds.clear();
       document.getElementById('library-list').classList.add('selecting');
       hapticTap(10);
       renderLibToolbar();
+    });
+    const filterBtn = document.getElementById('lib-filter-toggle');
+    if(filterBtn) filterBtn.addEventListener('click', ()=>{
+      libFilterPanelOpen = !libFilterPanelOpen;
+      renderLibFilterPanel();
     });
     return;
   }
@@ -2687,6 +2867,50 @@ if(document.fonts && document.fonts.ready){
   document.fonts.ready.then(alignLogoToTrackIcons); // the logo font loads async — re-measure once it's actually swapped in
 }
 
+// ---- Library filter by tag / energy band (v1.32, Q9-B) ----
+let libTagFilter = new Set();
+let libEnergyFilter = new Set(); // band labels: Chill / Warmup / Buildup/Peak / High Energy/Impact
+let libFilterPanelOpen = false;
+function getFilteredLibrary(){
+  if(libTagFilter.size===0 && libEnergyFilter.size===0) return library;
+  return library.filter(t=>{
+    if(libTagFilter.size && !(t.tags||[]).some(tag=>libTagFilter.has(tag))) return false;
+    if(libEnergyFilter.size && !libEnergyFilter.has(energyBandLabel(t.energy)||'')) return false;
+    return true;
+  });
+}
+function renderLibFilterPanel(){
+  const panel = document.getElementById('lib-filter-panel');
+  if(!panel) return;
+  const tags = allUsedTags();
+  const bands = ['Chill','Warmup','Buildup/Peak','High Energy/Impact'];
+  if(tags.length===0){ panel.innerHTML=''; panel.classList.remove('show'); return; }
+  panel.innerHTML = `
+    ${bands.map(b=>`<button class="lib-filter-chip${libEnergyFilter.has(b)?' active':''}" data-filter-energy="${b}">${b}</button>`).join('')}
+    ${tags.map(tag=>`<button class="lib-filter-chip${libTagFilter.has(tag)?' active':''}" data-filter-tag="${escapeHtml(tag)}">${escapeHtml(tag)}</button>`).join('')}
+    ${(libTagFilter.size||libEnergyFilter.size) ? `<button class="lib-filter-clear" id="lib-filter-clear">Clear filters</button>` : ''}
+  `;
+  panel.classList.toggle('show', libFilterPanelOpen);
+  panel.querySelectorAll('[data-filter-tag]').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const tag = btn.dataset.filterTag;
+      libTagFilter.has(tag) ? libTagFilter.delete(tag) : libTagFilter.add(tag);
+      renderLibFilterPanel(); renderLibrary();
+    });
+  });
+  panel.querySelectorAll('[data-filter-energy]').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const b = btn.dataset.filterEnergy;
+      libEnergyFilter.has(b) ? libEnergyFilter.delete(b) : libEnergyFilter.add(b);
+      renderLibFilterPanel(); renderLibrary();
+    });
+  });
+  const clearBtn = document.getElementById('lib-filter-clear');
+  if(clearBtn) clearBtn.addEventListener('click', ()=>{
+    libTagFilter.clear(); libEnergyFilter.clear();
+    renderLibFilterPanel(); renderLibrary();
+  });
+}
 const LIBRARY_BATCH_SIZE = 40;
 let importRenderedCount = LIBRARY_BATCH_SIZE;
 function renderLibrary(){
@@ -2694,9 +2918,12 @@ function renderLibrary(){
   updateBulkPreviewBtn();
   const el = document.getElementById('library-list');
   renderLibToolbar();
+  renderLibFilterPanel();
   if(library.length===0){ el.innerHTML = `<div class="lib-empty">Your imported tracks will show up here.</div>`; return; }
-  const visibleCount = Math.min(Math.max(importRenderedCount, LIBRARY_BATCH_SIZE), library.length);
-  el.innerHTML = library.slice(0, visibleCount).map(trackRowHtml).join('');
+  const filtered = getFilteredLibrary();
+  if(filtered.length===0){ el.innerHTML = `<div class="lib-empty">No tracks match this filter.</div>`; return; }
+  const visibleCount = Math.min(Math.max(importRenderedCount, LIBRARY_BATCH_SIZE), filtered.length);
+  el.innerHTML = filtered.slice(0, visibleCount).map(trackRowHtml).join('');
   freshlyAddedIds.clear();
   wireLibraryRows(el);
   alignLogoToTrackIcons();
@@ -2843,6 +3070,68 @@ function wireTrackEditActions(scopeEl){
       btn.closest('.edit-panel').classList.remove('show');
     });
   });
+  // ---- Tags: chip input with autocomplete drawn from tags already used
+  // elsewhere in the library, so tagging stays consistent (v1.32, Q7-B) ----
+  scopeEl.querySelectorAll('.edit-tag-chips').forEach(chipsEl=>{
+    chipsEl.querySelectorAll('[data-tagremove]').forEach(x=>{
+      x.addEventListener('click', e=>{
+        e.stopPropagation();
+        x.closest('.tag-chip').remove();
+      });
+    });
+  });
+  scopeEl.querySelectorAll('.edit-tag-input').forEach(input=>{
+    const panel = input.closest('.edit-panel');
+    const chipsEl = panel.querySelector('.edit-tag-chips');
+    const suggestEl = panel.querySelector('.tag-suggest');
+    function currentTags(){ return [...chipsEl.querySelectorAll('.tag-chip')].map(c=>c.dataset.tag); }
+    function addTag(tag){
+      tag = tag.trim();
+      if(!tag) return;
+      if(currentTags().some(x=>x.toLowerCase()===tag.toLowerCase())) { input.value=''; suggestEl.classList.remove('show'); return; }
+      const chip = document.createElement('span');
+      chip.className = 'tag-chip'; chip.dataset.tag = tag;
+      chip.innerHTML = `${escapeHtml(tag)}<button type="button" class="tag-chip-x" aria-label="Remove tag ${escapeHtml(tag)}">✕</button>`;
+      chip.querySelector('.tag-chip-x').addEventListener('click', e=>{ e.stopPropagation(); chip.remove(); });
+      chipsEl.appendChild(chip);
+      input.value = ''; suggestEl.classList.remove('show');
+    }
+    input.addEventListener('click', e=>e.stopPropagation());
+    input.addEventListener('keydown', e=>{
+      if(e.key==='Enter'){ e.preventDefault(); addTag(input.value); }
+    });
+    input.addEventListener('input', ()=>{
+      const q = input.value.trim().toLowerCase();
+      if(!q){ suggestEl.classList.remove('show'); suggestEl.innerHTML=''; return; }
+      const have = currentTags().map(x=>x.toLowerCase());
+      const matches = allUsedTags().filter(tag=>tag.toLowerCase().includes(q) && !have.includes(tag.toLowerCase())).slice(0,6);
+      if(matches.length===0){ suggestEl.classList.remove('show'); suggestEl.innerHTML=''; return; }
+      suggestEl.innerHTML = matches.map(tag=>`<div class="tag-suggest-item" data-suggval="${escapeHtml(tag)}">${escapeHtml(tag)}</div>`).join('');
+      suggestEl.classList.add('show');
+      suggestEl.querySelectorAll('[data-suggval]').forEach(item=>{
+        item.addEventListener('mousedown', e=>{ e.preventDefault(); addTag(item.dataset.suggval); });
+      });
+    });
+    input.addEventListener('blur', ()=>setTimeout(()=>suggestEl.classList.remove('show'), 150));
+  });
+  // ---- Energy: tap a bar segment to set 1-10; label shows the named band
+  // Sam chose (v1.32, Q8-custom) ----
+  scopeEl.querySelectorAll('.energy-bar').forEach(bar=>{
+    bar.querySelectorAll('[data-energyval]').forEach(seg=>{
+      seg.addEventListener('click', e=>{
+        e.stopPropagation();
+        let val = +seg.dataset.energyval;
+        if(+bar.dataset.value === val) val = 0; // tap the already-set top segment to clear it
+        bar.dataset.value = val;
+        const color = energyBandColor(val);
+        bar.style.setProperty('--seg-color', color || 'var(--accent)');
+        bar.querySelectorAll('.energy-seg').forEach((s,i)=>s.classList.toggle('filled', i<val));
+        const lbl = bar.closest('.edit-panel').querySelector('[data-energylabel]');
+        lbl.textContent = val ? `${energyBandLabel(val)} (${val}/10)` : 'Not set — tap a bar';
+        lbl.style.color = val ? color : 'var(--dim)';
+      });
+    });
+  });
   scopeEl.querySelectorAll('[data-save]').forEach(btn=>{
     btn.addEventListener('click', async e=>{
       e.stopPropagation();
@@ -2861,6 +3150,9 @@ function wireTrackEditActions(scopeEl){
       }
       const picInput = panel.querySelector('.edit-pic-input');
       if(picInput.dataset.pending) track.icon = picInput.dataset.pending;
+      track.tags = [...panel.querySelectorAll('.edit-tag-chips .tag-chip')].map(c=>c.dataset.tag);
+      const energyBar = panel.querySelector('.energy-bar');
+      track.energy = energyBar ? (+energyBar.dataset.value || null) : (track.energy||null);
       await persistTrackAdd(track); // same id — overwrites the stored record
       panel.classList.remove('show');
       renderLibrary(); renderNowPlayingSelect(); renderMatches();
@@ -2871,14 +3163,15 @@ function wireTrackEditActions(scopeEl){
 }
 function maybeLoadMoreLibraryRows(){
   if(currentTab!=='import') return;
-  if(importRenderedCount>=library.length) return;
+  const filtered = getFilteredLibrary();
+  if(importRenderedCount>=filtered.length) return;
   const el = document.getElementById('library-list');
   if(!el) return;
   const nearBottom = window.scrollY + window.innerHeight > document.documentElement.scrollHeight - 900;
   if(!nearBottom) return;
   const prevCount = importRenderedCount;
-  importRenderedCount = Math.min(importRenderedCount + LIBRARY_BATCH_SIZE, library.length);
-  const nextBatch = library.slice(prevCount, importRenderedCount);
+  importRenderedCount = Math.min(importRenderedCount + LIBRARY_BATCH_SIZE, filtered.length);
+  const nextBatch = filtered.slice(prevCount, importRenderedCount);
   if(nextBatch.length===0) return;
   const wrapper = document.createElement('div');
   wrapper.innerHTML = nextBatch.map(trackRowHtml).join('');
@@ -4190,6 +4483,37 @@ document.getElementById('vinyl-brake-toggle').addEventListener('change', async e
   }catch(err){ console.error('vinyl brake setting save failed', err); }
 });
 
+/* ---- Gig Mode (v1.32, Q12-B) — bigger touch targets, higher-contrast dark
+   theme, and edit/delete disabled everywhere so a stray tap at the booth
+   can't undo something mid-set. ---- */
+let gigModeEnabled = false;
+const GIG_MODE_KEY = 'cratebuddy:gig-mode';
+function applyGigMode(){
+  document.documentElement.classList.toggle('gig-mode', gigModeEnabled);
+}
+async function loadGigModeSetting(){
+  try{
+    if(hasArtifactStorage){
+      const r = await window.storage.get(GIG_MODE_KEY,false).catch(()=>null);
+      if(r && r.value!=null) gigModeEnabled = r.value==='1';
+    } else {
+      const s = localStorage.getItem(GIG_MODE_KEY);
+      if(s!=null) gigModeEnabled = s==='1';
+    }
+  }catch(e){}
+  document.getElementById('gig-mode-toggle').checked = gigModeEnabled;
+  applyGigMode();
+}
+document.getElementById('gig-mode-toggle').addEventListener('change', async e=>{
+  gigModeEnabled = e.target.checked;
+  applyGigMode();
+  try{
+    if(hasArtifactStorage) await window.storage.set(GIG_MODE_KEY, gigModeEnabled?'1':'0', false);
+    else localStorage.setItem(GIG_MODE_KEY, gigModeEnabled?'1':'0');
+  }catch(err){ console.error('gig mode setting save failed', err); }
+  showInfoToast(gigModeEnabled ? 'Gig Mode on — edit & delete disabled' : 'Gig Mode off', false);
+});
+
 let searchScopedToCrate = false;
 const SEARCH_CRATE_SCOPE_KEY = 'cratebuddy:search-crate-scope';
 async function loadSearchCrateScopeSetting(){
@@ -4367,6 +4691,9 @@ async function cleanupReferencesToTrack(id){
   const beforeFlows = flows.length;
   flows = flows.filter(f=>f.from!==id && f.to!==id);
   if(flows.length!==beforeFlows) await saveFlows();
+  const beforeSets = sets.length;
+  sets = sets.filter(s=>!s.trackIds.includes(id)); // a set built as a flow chain breaks if any link is deleted
+  if(sets.length!==beforeSets) await saveSets();
 }
 
 // Small reusable search-and-pick input, used for adding tracks to a crate
@@ -4409,12 +4736,89 @@ function wireTrackPicker(idPrefix, excludeIds, onPick, singleSelect){
   input.addEventListener('blur', ()=>setTimeout(()=>box.classList.remove('show'),150));
 }
 
-let openCrateId = null; // null = list view, '__flow__' = Flow crate, '__chain__' = Chains folder, '__history__' = History folder, '__game__' = Memory Game, or a crate id
+let openCrateId = null; // null = list view, '__flow__' = Flow crate, '__chain__' = Chains folder, '__history__' = History folder, '__game__' = Memory Game, '__setbuilder__' = Set Builder, or a crate id
 let manualFlowFrom = null, manualFlowTo = null;
 let openHistorySessionId = null; // only relevant when openCrateId === '__history__'
 let generatedChainCandidates = [];
-// Memory Game state — ephemeral (not persisted), reset each new round
+// ---- Memory Game state (v1.32) — ephemeral session state, reset each round.
+// gamePhase: 'picker' (choose a crate/scope) -> 'playing' (anchor+tile
+// rounds, hearts, score) -> 'recap' (final score, missed flows, high score).
+let gamePhase = 'picker';
+let gameScope = null; // '__all__' or a crate id, chosen on the picker screen
+let gameHearts = 5, gameScore = 0, gameStreak = 0;
+let gameSessionTargetTotal = 0;   // min(25, unique flows in scope) — the round's target
+let gameSessionFoundTotal = 0;    // cumulative correct taps this session
+let gameRemainingByAnchor = {};   // {anchorId: Set(toIds)} — session-target flows not yet found
+let gameMissedFlows = [];         // [{from,to}] shown on the recap if the round ends early
+let gameSessionNewHighScore = false;
 let gameAnchorId = null, gameTileIds = [], gameCorrectIds = new Set(), gameFoundIds = new Set(), gameWrongIds = new Set();
+const GAME_HEART_MULT = [1.0, 0.8, 0.6, 0.4, 0.2]; // indexed by hearts remaining - 1
+const GAME_SCORES_KEY = 'cratebuddy:gamescores';
+let gameHighScores = {}; // {scopeId: {best, bestAt}}
+async function loadGameScores(){
+  try{
+    if(hasArtifactStorage){
+      const r = await window.storage.get(GAME_SCORES_KEY, false).catch(()=>null);
+      gameHighScores = r && r.value ? JSON.parse(r.value) : {};
+    } else {
+      const raw = localStorage.getItem(GAME_SCORES_KEY);
+      gameHighScores = raw ? JSON.parse(raw) : {};
+    }
+  }catch(e){ gameHighScores = {}; }
+}
+async function saveGameScores(){
+  try{
+    if(hasArtifactStorage) await window.storage.set(GAME_SCORES_KEY, JSON.stringify(gameHighScores), false);
+    else localStorage.setItem(GAME_SCORES_KEY, JSON.stringify(gameHighScores));
+  }catch(e){ console.error('game scores save failed', e); }
+}
+function gameGlobalBest(){
+  const vals = Object.values(gameHighScores).map(v=>v.best||0);
+  return vals.length ? Math.max(...vals) : 0;
+}
+function gameScopeLabel(scopeId){
+  if(scopeId==='__all__') return 'All flows';
+  const c = crates.find(x=>x.id===scopeId);
+  return c ? c.name : 'Unknown crate';
+}
+// Flows usable for a given scope — both tracks must still exist in the
+// library, and (for a crate scope) both tracks must be in that crate.
+function flowsForScope(scopeId){
+  const crate = scopeId==='__all__' ? null : crates.find(c=>c.id===scopeId);
+  return flows.filter(f=>{
+    if(f.from===f.to) return false;
+    if(!library.some(t=>t.id===f.from) || !library.some(t=>t.id===f.to)) return false;
+    if(crate && !(crate.trackIds.includes(f.from) && crate.trackIds.includes(f.to))) return false;
+    return true;
+  });
+}
+
+/* =========================================================
+   SET BUILDER — Organise → Set Builder. Chains saved Flows into an ordered
+   set path: pick an anchor, then keep choosing the next track from among
+   whatever it actually flows into, reusing mixing decisions already saved
+   instead of starting from a blank page (v1.32, Q10-B).
+========================================================= */
+const SETS_KEY = 'cratebuddy:sets';
+let sets = [];
+async function loadSets(){
+  try{
+    if(hasArtifactStorage){
+      const r = await window.storage.get(SETS_KEY, false).catch(()=>null);
+      sets = r && r.value ? JSON.parse(r.value) : [];
+    } else {
+      const raw = localStorage.getItem(SETS_KEY);
+      sets = raw ? JSON.parse(raw) : [];
+    }
+  }catch(e){ sets = []; }
+}
+async function saveSets(){
+  try{
+    if(hasArtifactStorage) await window.storage.set(SETS_KEY, JSON.stringify(sets), false);
+    else localStorage.setItem(SETS_KEY, JSON.stringify(sets));
+  }catch(e){ console.error('sets save failed', e); }
+}
+let setbChain = []; // array of track ids being built right now
 
 function renderOrganise(skipAnim){
   const listView = document.getElementById('organise-list-view');
@@ -4428,6 +4832,7 @@ function renderOrganise(skipAnim){
     else if(openCrateId==='__chain__') renderChainDetail();
     else if(openCrateId==='__fav__') renderFavDetail();
     else if(openCrateId==='__game__') renderMemoryGame();
+    else if(openCrateId==='__setbuilder__') renderSetBuilder();
     else if(openCrateId==='__history__'){
       if(openHistorySessionId) renderHistorySessionDetail();
       else renderHistoryFolder();
@@ -4465,6 +4870,8 @@ function renderOrganiseList(){
     favourites.length + (favourites.length===1 ? ' favourite' : ' favourites');
   document.getElementById('history-folder-count').textContent =
     historySessions.length + (historySessions.length===1 ? ' saved session' : ' saved sessions');
+  document.getElementById('setbuilder-folder-count').textContent =
+    sets.length + (sets.length===1 ? ' saved set' : ' saved sets');
   const el = document.getElementById('crates-list');
   if(crates.length===0){
     el.innerHTML = `<div class="lib-empty">No crates yet — create one below.</div>`;
@@ -4504,15 +4911,19 @@ document.getElementById('open-chain-crate').addEventListener('click', ()=>{ open
 document.getElementById('open-flow-crate').addEventListener('click', ()=>{ openCrateId='__flow__'; renderOrganise(); });
 document.getElementById('open-fav-folder').addEventListener('click', ()=>{ openCrateId='__fav__'; renderOrganise(); });
 document.getElementById('open-history-folder').addEventListener('click', ()=>{ openCrateId='__history__'; openHistorySessionId=null; renderOrganise(); });
+document.getElementById('open-setbuilder-folder').addEventListener('click', ()=>{ openCrateId='__setbuilder__'; setbChain=[]; renderOrganise(); });
 document.getElementById('organise-back-btn').addEventListener('click', ()=>{
   if(openCrateId==='__history__' && openHistorySessionId){
     openHistorySessionId = null; // step back to the session list, not all the way out
+  } else if(openCrateId==='__game__' && gamePhase!=='picker'){
+    stopCurrentPreview();
+    gamePhase = 'picker'; // step back to the crate picker, not all the way out
   } else if(openCrateId==='__game__'){
     stopCurrentPreview();
     openCrateId = '__flow__'; // step back to the Flow list, not all the way out
   } else {
     openCrateId=null; manualFlowFrom=null; manualFlowTo=null; openHistorySessionId=null;
-    generatedChainCandidates=[]; organiseSortDir=null;
+    generatedChainCandidates=[]; organiseSortDir=null; setbChain=[];
   }
   renderOrganise();
 });
@@ -4731,6 +5142,24 @@ function wireBpmSortControl(el, onSortChange){
   });
 }
 
+// ---- Crate gig-readiness snapshot (v1.32, Q11-B) — three honest raw
+// numbers rather than one invented composite score. v1.27 pulled the old
+// auto-computed "Energy Level" for being more confusing than useful; a new
+// made-up readiness score risks the same fate, so this stays literal. ----
+function crateReadinessHtml(crate){
+  const tracks = crate.trackIds.map(id=>library.find(t=>t.id===id)).filter(Boolean);
+  if(tracks.length===0) return '';
+  const withFlow = tracks.filter(t=>flows.some(f=>f.from===t.id || f.to===t.id)).length;
+  const pct = Math.round((withFlow/tracks.length)*100);
+  const bpms = tracks.map(t=>t.bpm).filter(b=>b>0);
+  const bpmRange = bpms.length ? `${Math.min(...bpms)}–${Math.max(...bpms)}` : '–';
+  const keys = new Set(tracks.map(t=>t.key && t.key.camelot).filter(Boolean));
+  return `<div class="readiness-row">
+    <div class="readiness-tile"><b>${tracks.length}</b><span>Tracks</span></div>
+    <div class="readiness-tile"><b>${pct}%</b><span>Have a Flow</span></div>
+    <div class="readiness-tile"><b>${bpmRange}</b><span>BPM · ${keys.size} key${keys.size===1?'':'s'}</span></div>
+  </div>`;
+}
 function renderCrateDetail(){
   const crate = crates.find(c=>c.id===openCrateId);
   const el = document.getElementById('organise-detail-content');
@@ -4738,6 +5167,7 @@ function renderCrateDetail(){
   const tracks = sortTracksByBpm(crate.trackIds.map(id=>library.find(t=>t.id===id)).filter(Boolean));
   el.innerHTML = `
     <div class="section-lbl">${escapeHtml(crate.name)}</div>
+    ${crateReadinessHtml(crate)}
     ${trackPickerHtml('crate-add','Add a track to this crate…')}
     ${tracks.length===0 ? '' : bpmSortControlHtml()}
     <div id="crate-tracks-list">
@@ -4843,34 +5273,81 @@ function renderFlowDetail(){
   const gameBtn = document.getElementById('open-memory-game');
   if(gameBtn) gameBtn.addEventListener('click', ()=>{
     openCrateId = '__game__';
-    startNewGameRound();
+    gamePhase = 'picker';
+    renderOrganise();
   });
 }
 
 /* =========================================================
-   MEMORY GAME — Organise → Flow → "Practice your Flows".
-   Pick a random anchor with at least one saved outgoing Flow, show its
-   correct destination(s) mixed in among distractor tracks, and let the DJ
-   tap to guess which ones actually flow with it. Reuses the same preview
-   playback plumbing (playPreviewOn/stopCurrentPreview) and the .drag-eq
-   "now playing" bars as the rest of the app — one component, two jobs.
+   MEMORY GAME v2 (v1.32) — Organise → Flow → "Practice your Flows".
+   Picker screen (choose a crate/scope) -> a session of up to 25 unique
+   Flows, hunted one anchor+grid at a time -> a recap screen with score,
+   high score, and the flows you missed. Five hearts; each wrong tap costs
+   one; each correct tap scores less as hearts run out, with a small bonus
+   for a consecutive streak. Reuses the same preview playback plumbing
+   (playPreviewOn/stopCurrentPreview) and the .drag-eq "now playing" bars
+   as the rest of the app — one component, many jobs.
 ========================================================= */
-function startNewGameRound(){
-  stopCurrentPreview();
-  const byAnchor = {};
-  flows.forEach(f=>{
-    if(f.from===f.to) return;
-    if(!library.some(t=>t.id===f.from) || !library.some(t=>t.id===f.to)) return;
-    (byAnchor[f.from] = byAnchor[f.from] || new Set()).add(f.to);
-  });
-  const anchors = Object.keys(byAnchor);
-  if(anchors.length===0){
-    gameAnchorId = null; gameTileIds = []; gameCorrectIds = new Set(); gameFoundIds = new Set(); gameWrongIds = new Set();
-    renderMemoryGame();
+function heartsHtml(hearts){
+  let out = '';
+  for(let i=0;i<5;i++){
+    const filled = i<hearts;
+    out += `<svg width="21" height="19" viewBox="0 0 24 22" aria-hidden="true">
+      <path d="M12 21s-8-5.5-8-12a5 5 0 0 1 9-3 5 5 0 0 1 9 3c0 6.5-8 12-8 12"
+        fill="${filled?'#e94f9e':'none'}" stroke="${filled?'#e94f9e':'var(--line)'}" stroke-width="${filled?0:1.6}"/>
+    </svg>`;
+  }
+  return out;
+}
+function renderGamePicker(){
+  const el = document.getElementById('organise-detail-content');
+  const scopes = [{id:'__all__', flowCount: flowsForScope('__all__').length}]
+    .concat(crates.map(c=>({id:c.id, flowCount: flowsForScope(c.id).length})).filter(s=>s.flowCount>0));
+  if(scopes[0].flowCount===0){
+    el.innerHTML = `<div class="section-lbl">🎮 Practice your Flows</div>
+      <div class="lib-empty">Save at least one Flow from the Play tab first — then come back here to test yourself on it.</div>`;
     return;
   }
+  el.innerHTML = `
+    <div class="section-lbl">🎮 Choose a crate to practice</div>
+    <div class="game-picker-list">
+      ${scopes.map(s=>{
+        const best = (gameHighScores[s.id] && gameHighScores[s.id].best) || 0;
+        return `<button class="game-picker-card" data-game-scope="${s.id}">
+          <div class="game-picker-info">
+            <div class="t">${escapeHtml(gameScopeLabel(s.id))}</div>
+            <div class="a">${s.flowCount} flow${s.flowCount===1?'':'s'} saved</div>
+          </div>
+          <div class="game-picker-best">${best ? 'Best '+best : '—'}</div>
+        </button>`;
+      }).join('')}
+    </div>
+  `;
+  el.querySelectorAll('[data-game-scope]').forEach(btn=>{
+    btn.addEventListener('click', ()=>{ startGameSession(btn.dataset.gameScope); });
+  });
+}
+function startGameSession(scopeId){
+  stopCurrentPreview();
+  gameScope = scopeId;
+  const scopeFlows = flowsForScope(scopeId);
+  gameSessionTargetTotal = Math.min(25, scopeFlows.length); // play up to 25 — never pad with repeats (Q5-B)
+  const shuffled = [...scopeFlows];
+  for(let i=shuffled.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [shuffled[i],shuffled[j]]=[shuffled[j],shuffled[i]]; }
+  gameRemainingByAnchor = {};
+  shuffled.slice(0, gameSessionTargetTotal).forEach(f=>{
+    (gameRemainingByAnchor[f.from] = gameRemainingByAnchor[f.from] || new Set()).add(f.to);
+  });
+  gameHearts = 5; gameScore = 0; gameStreak = 0;
+  gameSessionFoundTotal = 0; gameMissedFlows = []; gameSessionNewHighScore = false;
+  gamePhase = 'playing';
+  loadNextAnchor();
+}
+function loadNextAnchor(){
+  const anchors = Object.keys(gameRemainingByAnchor).filter(a=>gameRemainingByAnchor[a].size>0);
+  if(anchors.length===0){ endGameSession(); return; }
   gameAnchorId = anchors[Math.floor(Math.random()*anchors.length)];
-  const correctSet = [...byAnchor[gameAnchorId]].slice(0,9);
+  const correctSet = [...gameRemainingByAnchor[gameAnchorId]].slice(0,9);
   const distractPool = library.map(t=>t.id).filter(id=>id!==gameAnchorId && !correctSet.includes(id));
   for(let i=distractPool.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [distractPool[i],distractPool[j]]=[distractPool[j],distractPool[i]]; }
   const tileCount = Math.min(9, correctSet.length + distractPool.length);
@@ -4885,18 +5362,28 @@ function startNewGameRound(){
   const anchorCard = document.getElementById('game-anchor-card');
   if(anchor && anchor.previewAudio && anchorCard) playPreviewOn(anchorCard, anchor);
 }
-function renderMemoryGame(){
-  const el = document.getElementById('organise-detail-content');
-  if(!gameAnchorId){
-    el.innerHTML = `
-      <div class="section-lbl">🎮 Practice your Flows</div>
-      <div class="lib-empty">Save at least one Flow from the Play tab first — then come back here to test yourself on it.</div>
-    `;
-    return;
+function endGameSession(){
+  gameMissedFlows = [];
+  Object.keys(gameRemainingByAnchor).forEach(anchor=>{
+    gameRemainingByAnchor[anchor].forEach(to=>gameMissedFlows.push({from:anchor, to}));
+  });
+  const prevBest = (gameHighScores[gameScope] && gameHighScores[gameScope].best) || 0;
+  gameSessionNewHighScore = gameScore > prevBest;
+  if(gameSessionNewHighScore){
+    gameHighScores[gameScope] = {best: gameScore, bestAt: Date.now()};
+    saveGameScores();
   }
+  gamePhase = 'recap';
+  renderMemoryGame();
+}
+function renderMemoryGame(){
+  if(gamePhase==='recap') { renderGameRecap(); return; }
+  if(gamePhase==='playing' && gameAnchorId) { renderGamePlaying(); return; }
+  renderGamePicker();
+}
+function renderGamePlaying(){
+  const el = document.getElementById('organise-detail-content');
   const anchor = library.find(t=>t.id===gameAnchorId);
-  const total = gameCorrectIds.size, found = gameFoundIds.size;
-  const complete = found>0 && found===total;
   const tilesHtml = gameTileIds.map(id=>{
     const t = library.find(x=>x.id===id);
     if(!t) return '';
@@ -4912,7 +5399,12 @@ function renderMemoryGame(){
     </button>`;
   }).join('');
   el.innerHTML = `
-    <div class="section-lbl">🎮 Practice your Flows</div>
+    <div class="section-lbl">🎮 ${escapeHtml(gameScopeLabel(gameScope))}</div>
+    <div class="game-hud">
+      <div class="game-hearts">${heartsHtml(gameHearts)}</div>
+      <div class="game-score">${gameScore}</div>
+    </div>
+    <div class="game-progress">Flow ${gameSessionFoundTotal} of ${gameSessionTargetTotal} found</div>
     <div class="game-wrap">
       <button class="game-anchor-card" id="game-anchor-card" title="Replay ${escapeHtml(anchor?anchor.name:'')}">
         <div class="game-anchor-label">ANCHOR</div>
@@ -4925,24 +5417,34 @@ function renderMemoryGame(){
       </button>
       <div class="game-grid">${tilesHtml}</div>
     </div>
-    <div class="game-progress${complete?' complete':''}">${complete
-      ? `🎉 Found all ${total} flow${total===1?'':'s'} hidden here`
-      : `${total} flow${total===1?'':'s'} hidden in this round — found ${found}`}</div>
-    <button class="game-newround-btn" id="game-newround-btn">Shuffle — new round</button>
+    <button class="game-newround-btn" id="game-giveup-btn">End round early — see recap</button>
   `;
-  wireMemoryGame();
+  wireGameTiles();
+}
+function updateGameHud(){
+  const heartsEl = document.querySelector('.game-hearts');
+  if(heartsEl) heartsEl.innerHTML = heartsHtml(gameHearts);
+  const scoreEl = document.querySelector('.game-score');
+  if(scoreEl) scoreEl.textContent = gameScore;
 }
 function updateGameProgress(){
-  const total = gameCorrectIds.size, found = gameFoundIds.size;
-  const complete = found>0 && found===total;
   const el = document.querySelector('.game-progress');
   if(!el) return;
-  el.classList.toggle('complete', complete);
-  el.textContent = complete
-    ? `🎉 Found all ${total} flow${total===1?'':'s'} hidden here`
-    : `${total} flow${total===1?'':'s'} hidden in this round — found ${found}`;
+  el.textContent = `Flow ${gameSessionFoundTotal} of ${gameSessionTargetTotal} found`;
 }
-function wireMemoryGame(){
+function showPointsPop(btn, pts){
+  const pop = document.createElement('span');
+  pop.className = 'game-pts-pop';
+  pop.textContent = '+'+pts;
+  btn.appendChild(pop);
+  setTimeout(()=>{ pop.remove(); }, 900);
+}
+function checkAnchorOrSessionComplete(){
+  if(gameFoundIds.size < gameCorrectIds.size) return;
+  const anchorsLeft = Object.keys(gameRemainingByAnchor).some(a=>gameRemainingByAnchor[a].size>0);
+  setTimeout(()=>{ anchorsLeft ? loadNextAnchor() : endGameSession(); }, 700);
+}
+function wireGameTiles(){
   const anchorCard = document.getElementById('game-anchor-card');
   if(anchorCard){
     anchorCard.addEventListener('click', ()=>{
@@ -4961,34 +5463,161 @@ function wireMemoryGame(){
       }
       if(gameCorrectIds.has(id)){
         gameFoundIds.add(id);
+        gameRemainingByAnchor[gameAnchorId].delete(id);
+        gameSessionFoundTotal++;
+        gameStreak++;
+        // Base 100 x a heart multiplier that drops as hearts are lost, plus
+        // a small streak bonus for consecutive correct answers (Q2-B).
+        const mult = GAME_HEART_MULT[Math.max(0, gameHearts-1)];
+        const streakBonus = Math.min(gameStreak, 10) * 5;
+        const pts = Math.round(100*mult) + streakBonus;
+        gameScore += pts;
         btn.classList.add('found');
+        showPointsPop(btn, pts);
         hapticTap(20);
         if(t && t.previewAudio) playPreviewOn(btn, t);
+        updateGameHud();
         updateGameProgress();
+        checkAnchorOrSessionComplete();
       } else {
+        gameHearts--;
+        gameStreak = 0;
         gameWrongIds.add(id);
         btn.classList.add('wrong');
         const eq = btn.querySelector('.game-tile-eq');
         if(eq) eq.outerHTML = '<span class="game-tile-x">✕</span>';
         hapticTap(10);
         btn.classList.remove('shake'); void btn.offsetWidth; btn.classList.add('shake');
+        updateGameHud();
+        if(gameHearts<=0){
+          stopCurrentPreview();
+          setTimeout(endGameSession, 550);
+        }
       }
     });
   });
-  const newRoundBtn = document.getElementById('game-newround-btn');
-  if(newRoundBtn) newRoundBtn.addEventListener('click', startNewGameRound);
+  const giveUpBtn = document.getElementById('game-giveup-btn');
+  if(giveUpBtn) giveUpBtn.addEventListener('click', ()=>{ stopCurrentPreview(); endGameSession(); });
+}
+function renderGameRecap(){
+  const el = document.getElementById('organise-detail-content');
+  const allFound = gameSessionFoundTotal >= gameSessionTargetTotal;
+  const recapTitle = allFound ? '🎉 Round complete' : (gameHearts<=0 ? '💔 Out of hearts' : '🏳️ Round ended early');
+  const scopeBest = (gameHighScores[gameScope] && gameHighScores[gameScope].best) || gameScore;
+  const globalBest = Math.max(gameGlobalBest(), gameScore);
+  const missedRows = gameMissedFlows.slice(0,8).map(f=>{
+    const fromT = library.find(t=>t.id===f.from), toT = library.find(t=>t.id===f.to);
+    if(!fromT || !toT) return '';
+    return `<div class="game-recap-missed-row">
+      <img src="${fromT.icon}" style="width:22px;height:22px;border-radius:5px;object-fit:cover;flex-shrink:0;">
+      <span>${escapeHtml(fromT.name)} → ${escapeHtml(toT.name)}</span>
+    </div>`;
+  }).join('');
+  el.innerHTML = `
+    <div class="game-recap">
+      <div class="game-recap-title">${recapTitle}</div>
+      ${gameSessionNewHighScore ? `<div class="game-recap-hs">New high score for ${escapeHtml(gameScopeLabel(gameScope))}!</div>` : ''}
+      <div class="game-recap-score">${gameScore}</div>
+      <div class="game-recap-best">Best here: ${scopeBest} · All-time best: ${globalBest}</div>
+      <div class="game-recap-stats">
+        <div class="game-recap-stat"><b>${gameSessionFoundTotal}/${gameSessionTargetTotal}</b><span>FOUND</span></div>
+        <div class="game-recap-stat"><b>${5-gameHearts}</b><span>HEARTS LOST</span></div>
+      </div>
+      ${gameMissedFlows.length ? `<div class="game-recap-missed"><label class="edit-subhead">Flows you missed</label>${missedRows}</div>` : ''}
+      <div class="game-recap-actions">
+        <button class="edit-save" id="game-play-again-btn">Play again — same crate</button>
+        <button class="game-newround-btn" id="game-choose-crate-btn">Choose another crate</button>
+      </div>
+    </div>
+  `;
+  document.getElementById('game-play-again-btn').addEventListener('click', ()=>{ startGameSession(gameScope); });
+  document.getElementById('game-choose-crate-btn').addEventListener('click', ()=>{ gamePhase='picker'; renderMemoryGame(); });
+}
+
+/* =========================================================
+   SET BUILDER — Organise → Set Builder (v1.32, Q10-B).
+========================================================= */
+function renderSetBuilder(){
+  const el = document.getElementById('organise-detail-content');
+  const chainTracks = setbChain.map(id=>library.find(t=>t.id===id)).filter(Boolean);
+  const lastId = setbChain.length ? setbChain[setbChain.length-1] : null;
+  let candidates = [];
+  if(lastId){
+    candidates = flows.filter(f=>f.from===lastId && library.some(t=>t.id===f.to) && !setbChain.includes(f.to))
+      .map(f=>library.find(t=>t.id===f.to)).filter(Boolean);
+  }
+  el.innerHTML = `
+    <div class="section-lbl">🎧 Set Builder</div>
+    ${setbChain.length===0 ? `
+      <div class="lib-empty" style="margin-bottom:12px;">Pick a track to start your set — from there, it only ever suggests tracks you've already saved a Flow into.</div>
+      ${trackPickerHtml('setb-anchor','Start with…')}
+    ` : `
+      <div class="setb-chain-strip">
+        ${chainTracks.map((t,i)=>`<div class="setb-chip"><img src="${t.icon}"><span>${i+1}. ${escapeHtml(t.name)}</span></div>`).join('')}
+      </div>
+      <label class="edit-subhead">${candidates.length ? 'Flows into…' : 'No saved Flow leads anywhere new from here'}</label>
+      <div class="setb-candidates">
+        ${candidates.map(t=>`<button class="setb-candidate-row" data-setb-add="${t.id}">
+          <img src="${t.icon}"><div class="now-sugg-info"><div class="t">${escapeHtml(t.name)}</div><div class="a">${escapeHtml(t.artist||'Unknown artist')}</div></div>
+        </button>`).join('')}
+      </div>
+      <div class="setb-actions">
+        <button class="edit-cancel" id="setb-undo-btn">Undo last</button>
+        <button class="edit-save" id="setb-save-btn" ${chainTracks.length<2?'disabled':''}>Save this set</button>
+      </div>
+    `}
+    <div class="section-lbl" style="margin-top:6px;">Saved Sets</div>
+    ${sets.length===0 ? `<div class="lib-empty">No sets saved yet.</div>` :
+      sets.map(s=>`<div class="setb-saved-row">
+        <div class="now-sugg-info" style="flex:1;"><div class="t">${escapeHtml(s.name)}</div><div class="a">${s.trackIds.length} track${s.trackIds.length===1?'':'s'}</div></div>
+        <button class="remove-btn" data-remove-set="${s.id}">✕</button>
+      </div>`).join('')}
+  `;
+  if(setbChain.length===0){
+    wireTrackPicker('setb-anchor', null, (id)=>{ setbChain=[id]; renderSetBuilder(); }, true);
+  } else {
+    el.querySelectorAll('[data-setb-add]').forEach(btn=>{
+      btn.addEventListener('click', ()=>{ setbChain.push(btn.dataset.setbAdd); renderSetBuilder(); });
+    });
+    document.getElementById('setb-undo-btn').addEventListener('click', ()=>{
+      setbChain.pop();
+      renderSetBuilder();
+    });
+    const saveBtn = document.getElementById('setb-save-btn');
+    if(saveBtn && !saveBtn.disabled) saveBtn.addEventListener('click', async ()=>{
+      const name = prompt('Name this set:', `Set – ${new Date().toLocaleDateString()}`);
+      if(!name || !name.trim()) return;
+      sets.push({id:'set_'+Date.now()+'_'+Math.random().toString(36).slice(2,7), name:name.trim(), trackIds:[...setbChain], savedAt:Date.now()});
+      await saveSets();
+      setbChain = [];
+      showInfoToast('Set saved', false);
+      renderSetBuilder();
+    });
+  }
+  el.querySelectorAll('[data-remove-set]').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      if(!confirm('Delete this saved set?')) return;
+      const row = btn.closest('.setb-saved-row');
+      animateRemoveEl(row, async ()=>{
+        sets = sets.filter(s=>s.id!==btn.dataset.removeSet);
+        await saveSets();
+        renderSetBuilder();
+      });
+    });
+  });
 }
 
 /* =========================================================
    INIT
 ========================================================= */
-const APP_VERSION = '1.31';
+const APP_VERSION = '1.32';
 const APP_BUILD = '2026-09-28';
 document.getElementById('version-display').textContent = `${APP_VERSION} · ${APP_BUILD}`;
 // Reconstructed from this build session's history — not tracked in real time
 // from the very start, but accurate to the best of what was actually shipped.
 // Add one line here with each future update.
 const CHANGELOG = [
+  {v:'1.32', notes:'The full "Level Up" pitch deck, built (all picks were B): The Memory Game is now a proper arcade round — pick a crate (or "All flows") on a new picker screen first, then play up to 25 of that scope’s Flows with 5 hearts; a wrong tap costs a heart, a correct one scores less as hearts run out (with a small bonus for a streak), and running out of hearts or finishing the round leads to a recap with your score, a per-crate + all-time high score, and the flows you missed. Tiles are bigger crate-wall art with a glow ring on whatever’s playing; names only surface on the tile you’re actually holding. New: tags and a 1-10 energy scale (grouped into Chill/Warmup/Buildup-Peak/High Energy-Impact) can be set per track from the edit panel — tag input autocompletes from tags already used elsewhere, energy is a tap-to-set bar. Both show as small badges on every track row (Import, Organise, Play) and can be filtered in Library. New: Set Builder (Organise) — chain saved Flows anchor-to-anchor into a named, ordered set. New: a three-number gig-readiness snapshot (track count, % with a saved Flow, BPM/key range) at the top of every crate — kept deliberately literal rather than inventing a composite score, the same reasoning that removed Energy Level back in 1.27. New: Gig Mode (Settings) — bigger touch targets and edit/delete hidden everywhere, for using the app at the booth without a stray tap costing you something mid-set.'},
   {v:'1.31', notes:'Three from the pitch deck, all built: (1) Flows can now carry a short note (max 75 characters) — a "+ Add a note" link appears on the save toast, editable any time after from Organise → Flow (✎), and it now surfaces as a peek icon + full text in a suggestion’s expanded details in Play. (2) The preview icon—wrong twice running on hand-nudged coordinates—now reuses the app’s own equaliser-bar "now playing" glyph (the same one from drag-to-preview), which is trivially symmetric and needs no eyeballing. (3) New: a Memory Game at Organise → Flow → "Practice your Flows" — an anchor track plays on the left, nine candidates sit on the right, tap the ones you think flow with it. Direction matters (only the saved direction counts), and a round can hide more than one correct flow among the nine — the round tells you up front how many there are to find.'},
   {v:'1.30', notes:'Every track row in Import, Play (inside a suggestion’s details), and Organise (crates and Favourites) now has an edit button (✎) to fix a track’s name, BPM or key on the fly. Preview icon recentred — it was sitting visibly left of the circle’s centre. The Flow button between the decks is now grey by default and only turns blue once a flow is actually saved between the two loaded tracks — tap it again to remove that flow. Flows saved this way (or via the history strip) now show as a highlighted wavy icon on the matching pair of tracks in the history strip above the decks.'},
   {v:'1.29', notes:'Corrected a misread from last round \u2014 the main deck cards are back to their original, taller vertical layout (that request was actually about the small A/B buttons on suggestion rows, which are now horizontal and bigger for easier thumb taps). Preview button icon changed from a play-triangle to a speaker/soundwave icon so it reads clearly as \u201cpreview\u201d rather than \u201cplay\u201d. Added an Undo button next to the crate filter in Play, for reversing an accidental deck load or eject mid-set. Suggestion Priorities sliders moved out of Settings into a new Filters dropdown right there in Play. Organise: crates and Favourites can now be sorted by BPM (ascending or descending) so you can scan a crate\u2019s tempo range at a glance.'},
@@ -5041,6 +5670,9 @@ bootPromises.push(loadSearchCrateScopeSetting());
 bootPromises.push(loadPreviewMethod());
 bootPromises.push(loadClockSettings());
 bootPromises.push(loadHistorySessions());
+bootPromises.push(loadGigModeSetting());
+bootPromises.push(loadGameScores());
+bootPromises.push(loadSets());
 
 /* Landscape-only clock next to the play-history strip — CSS handles when
    it's actually visible. Rendered as real 7-segment shapes (not a font)
