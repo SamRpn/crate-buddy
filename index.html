@@ -525,7 +525,7 @@
   .organise-row .a{font-size:var(--text-caption);color:var(--dim);}
   .organise-row .remove-btn{margin-left:auto;background:none;border:none;color:#c9c9ce;font-size:var(--text-body-lg);cursor:pointer;padding:4px;}
 
-  .flow-pair-row{display:flex;align-items:center;gap:8px;background:var(--card);border-radius:var(--radius-panel);
+  .flow-pair-row{background:var(--card);border-radius:var(--radius-panel);
     padding:10px 12px;margin-bottom:8px;box-shadow:0 1px 2px rgba(0,0,0,0.04);}
   .flow-pair-row img{width:36px;height:36px;border-radius:var(--radius-thumb);object-fit:cover;flex-shrink:0;}
   .flow-pair-arrow{color:#2563eb;font-weight:700;flex-shrink:0;}
@@ -548,14 +548,10 @@
   .match-score-label{font-size:8px;font-weight:700;letter-spacing:0.6px;color:var(--dim);}
   .match-play-btn{flex-shrink:0;width:34px;height:34px;border-radius:50%;background:none;border:none;
     display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0;}
-  .play-fill{transition:opacity 0.3s ease;}
-  .play-fill.filling{opacity:1;}
-  .play-tri{transition:fill 0.3s ease, stroke 0.3s ease;}
   .deck-allocate-btns{display:flex;flex-direction:row;gap:6px;flex-shrink:0;}
   .deck-allocate-btn{width:40px;height:36px;border-radius:9px;background:none;border:2px solid var(--deck-color);
     color:var(--deck-color);font-size:14px;font-weight:800;cursor:pointer;padding:0;}
   .deck-allocate-btn:active{background:var(--deck-color);color:#fff;}
-  .play-tri.filling{fill:#fff;stroke:#fff;}
   .chev{width:14px;text-align:center;color:#c2c2c8;font-size:var(--text-caption);transition:transform .15s;flex-shrink:0;}
   .match-row.open .chev{transform:rotate(180deg);}
   .breakdown{max-height:0;overflow:hidden;transition:max-height .2s ease;}
@@ -576,6 +572,83 @@
 
   .note{color:var(--dim);font-size:var(--text-caption);line-height:1.6;margin:18px 20px 0;padding:13px 15px;
     background:var(--card);border-radius:var(--radius-panel);}
+
+  /* ---- Flow save toast: optional note capture (v1.31) ---- */
+  .flow-toast{align-items:flex-start;max-width:360px;}
+  .flow-toast .toast-check{margin-top:2px;}
+  .flow-toast-row{display:flex;align-items:center;gap:10px;margin-top:4px;}
+  .flow-toast-addnote{background:none;border:none;color:#5eb2ff;font-size:var(--text-caption);font-weight:700;cursor:pointer;padding:0;}
+  .flow-toast-hint{font-size:var(--text-micro);color:#9a9a9f;}
+  .flow-toast-note-panel{max-height:0;opacity:0;overflow:hidden;display:flex;flex-direction:column;gap:6px;
+    transition:max-height 0.28s ease, opacity 0.22s ease;}
+  .flow-toast-note-panel.show{max-height:140px;opacity:1;margin-top:8px;}
+  .flow-toast-note-input{background:#2c2c2e;border:1px solid #3a3a3c;border-radius:var(--radius-control);
+    padding:9px 10px;font-size:var(--text-body-sm);color:#fff;resize:none;min-height:52px;font-family:inherit;}
+  .flow-toast-note-counter{font-size:var(--text-micro);color:#9a9a9f;text-align:right;}
+
+  /* ---- Flow comments: editable from Organise (v1.31) ---- */
+  .flow-pair-main{display:flex;align-items:center;gap:8px;}
+  .flow-pair-comment{color:var(--dim);font-size:var(--text-caption);font-style:italic;margin-top:2px;
+    overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .flow-note-edit-panel{max-height:0;opacity:0;overflow:hidden;display:flex;flex-direction:column;gap:6px;
+    transition:max-height 0.28s ease, opacity 0.22s ease;}
+  .flow-note-edit-panel.show{max-height:170px;opacity:1;margin-top:10px;padding-top:10px;border-top:1px solid var(--line);}
+  .flow-note-textarea{background:var(--bg);border:1px solid var(--line);border-radius:var(--radius-control);
+    padding:9px 10px;font-size:var(--text-body-sm);color:var(--text);resize:none;min-height:54px;font-family:inherit;}
+  .flow-note-counter{font-size:var(--text-caption);color:var(--dim);text-align:right;}
+
+  /* ---- Preview icon: reuses the drag-eq "now playing" bars (v1.31) ---- */
+  .preview-eq-ring{width:30px;height:30px;border-radius:50%;border:2px solid var(--accent);
+    display:flex;align-items:center;justify-content:center;flex-shrink:0;box-sizing:border-box;
+    transition:background-color 0.3s ease;}
+  .match-play-btn .drag-eq.preview-eq{opacity:1;height:13px;}
+  .preview-eq i{background:var(--accent);opacity:0.45;transition:background-color 0.3s ease, opacity 0.3s ease;}
+  .match-play-btn.playing .preview-eq-ring{background:var(--accent);}
+  .match-play-btn.playing .preview-eq i{background:#fff;opacity:1;}
+
+  /* ---- Flow note peek + full text in the Play breakdown (v1.31) ---- */
+  .flow-note-peek{display:inline-flex;align-items:center;justify-content:center;width:15px;height:15px;
+    color:var(--dim);vertical-align:middle;margin-left:3px;flex-shrink:0;}
+  .bd-flow-note{display:flex;align-items:flex-start;gap:8px;background:var(--bg);border-radius:var(--radius-control);
+    padding:9px 11px;margin-bottom:12px;font-size:var(--text-body-sm);color:var(--text);font-style:italic;line-height:1.4;}
+  .bd-flow-note-icon{flex-shrink:0;color:var(--accent);margin-top:1px;}
+
+  /* ---- Memory Game: Organise → Flow → Practice your Flows (v1.31) ---- */
+  .game-launch-btn{display:block;width:100%;margin:2px 0 14px;background:var(--card);
+    border:1.5px solid var(--accent);border-radius:var(--radius-panel);padding:12px;
+    font-size:var(--text-body-sm);font-weight:700;color:var(--accent);cursor:pointer;text-align:center;font-family:inherit;}
+  .game-wrap{display:flex;gap:12px;align-items:flex-start;margin-bottom:14px;}
+  .game-anchor-card{flex:0 0 118px;background:var(--card);border:2px solid var(--accent);border-radius:var(--radius-card);
+    padding:12px 10px;text-align:center;cursor:pointer;box-shadow:0 1px 2px rgba(0,0,0,0.04);font-family:inherit;}
+  .game-anchor-label{font-size:var(--text-micro);font-weight:700;letter-spacing:0.5px;color:var(--accent);margin-bottom:6px;}
+  .game-anchor-art{position:relative;width:76px;height:76px;margin:0 auto 8px;border-radius:var(--radius-thumb);overflow:hidden;background:var(--bg);}
+  .game-anchor-art img{width:100%;height:100%;object-fit:cover;display:block;}
+  .game-anchor-card .game-anchor-eq{position:absolute;inset:0;align-items:center;justify-content:center;
+    background:rgba(0,0,0,0.45);opacity:0;height:auto;transition:opacity 0.2s ease;}
+  .game-anchor-card.playing .game-anchor-eq{opacity:1;}
+  .game-anchor-name{font-size:var(--text-caption);font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .game-anchor-hint{font-size:var(--text-micro);color:var(--dim);margin-top:4px;line-height:1.3;}
+  .game-grid{flex:1;display:grid;grid-template-columns:repeat(3,1fr);gap:8px;min-width:0;}
+  .game-tile{position:relative;background:var(--card);border:2px solid var(--line);border-radius:var(--radius-card);
+    padding:0;cursor:pointer;aspect-ratio:1;overflow:hidden;display:flex;align-items:center;justify-content:center;font-family:inherit;}
+  .game-tile img{width:100%;height:100%;object-fit:cover;display:block;}
+  .game-tile-name{position:absolute;left:0;right:0;bottom:0;padding:3px 4px;font-size:8.5px;font-weight:700;color:#fff;
+    background:linear-gradient(to top, rgba(0,0,0,0.72), rgba(0,0,0,0));text-align:center;
+    overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .game-tile .game-tile-eq{position:absolute;inset:0;background:rgba(0,0,0,0.5);align-items:center;justify-content:center;height:auto;opacity:0;}
+  .game-tile.playing .game-tile-eq{opacity:1;}
+  .game-tile.found{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent) inset;}
+  .game-tile.wrong{border-color:#dc2626;opacity:0.55;cursor:default;}
+  .game-tile-x{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+    font-size:22px;font-weight:800;color:#dc2626;background:rgba(0,0,0,0.35);}
+  @keyframes game-tile-shake{0%,100%{transform:translateX(0);}20%{transform:translateX(-4px);}
+    40%{transform:translateX(4px);}60%{transform:translateX(-3px);}80%{transform:translateX(3px);}}
+  .game-tile.shake{animation:game-tile-shake 0.4s ease;}
+  .game-progress{font-size:var(--text-body-sm);font-weight:600;color:var(--dim);text-align:center;margin-bottom:10px;}
+  .game-progress.complete{color:var(--accent);}
+  .game-newround-btn{display:block;width:100%;background:var(--card);border:1px solid var(--line);
+    border-radius:var(--radius-control);padding:11px;font-size:var(--text-body-sm);font-weight:600;color:var(--dim);cursor:pointer;font-family:inherit;}
+
   @media (prefers-reduced-motion: reduce){
     *, *::before, *::after{
       animation-duration: 0.001ms !important;
@@ -2263,13 +2336,7 @@ function trackRowHtml(t, opts){
       <div class="row-actions">
         ${t.previewAudio ? `
         <button class="match-play-btn" data-preview="${t.id}" title="Play 15s preview" aria-label="Play 15 second preview of ${escapeHtml(t.name)}">
-          <svg viewBox="0 0 34 34" width="30" height="30">
-            <circle class="play-fill" cx="17" cy="17" r="16" style="fill:var(--accent)" opacity="0"></circle>
-            <circle cx="17" cy="17" r="15" fill="none" style="stroke:var(--accent)" stroke-width="2"></circle>
-            <path class="play-tri" d="M13.8 13.5h3l4.2-3.6v14.2l-4.2-3.6h-3z" fill="var(--accent)" stroke="var(--accent)" stroke-width="1" stroke-linejoin="round"></path>
-            <path class="play-tri" d="M23.6 13.7a5 5 0 010 6.6" fill="none" stroke="var(--accent)" stroke-width="1.7" stroke-linecap="round"></path>
-            <path class="play-tri" d="M26 11.2a8.4 8.4 0 010 11.6" fill="none" stroke="var(--accent)" stroke-width="1.7" stroke-linecap="round" opacity="0.7"></path>
-          </svg>
+          <span class="preview-eq-ring"><span class="drag-eq preview-eq"><i></i><i></i><i></i></span></span>
         </button>` : `
         <button class="add-preview-btn" data-add-preview="${t.id}" title="Add a 15s preview clip" aria-label="Add a preview clip for ${escapeHtml(t.name)}">
           <svg viewBox="0 0 24 24" width="16" height="16"><path fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" d="M12 5v14M5 12h14"/></svg>
@@ -2486,11 +2553,25 @@ document.addEventListener('touchcancel', dragPointerUp);
 function stopCurrentPreview(){
   if(currentPreviewAudio){ currentPreviewAudio.pause(); currentPreviewAudio = null; }
   if(currentPreviewBtn){
-    const fill = currentPreviewBtn.querySelector('.play-fill'), tri = currentPreviewBtn.querySelector('.play-tri');
-    if(fill) fill.classList.remove('filling');
-    if(tri) tri.classList.remove('filling');
+    currentPreviewBtn.classList.remove('playing');
+    const eq = currentPreviewBtn.querySelector('.drag-eq'); if(eq) eq.classList.remove('playing');
     currentPreviewBtn = null;
   }
+}
+// Plays a track's preview on an arbitrary element (a .match-play-btn, or any
+// element containing a .drag-eq) — the same "now playing" bars/toggle logic
+// as the library preview button, reused for the Memory Game's anchor card
+// and candidate tiles so only one preview ever plays at a time app-wide.
+function playPreviewOn(el, track){
+  if(currentPreviewBtn===el){ stopCurrentPreview(); return; }
+  stopCurrentPreview();
+  if(!track || !track.previewAudio) return;
+  const audio = new Audio(track.previewAudio);
+  currentPreviewAudio = audio; currentPreviewBtn = el;
+  el.classList.add('playing');
+  const eq = el.querySelector('.drag-eq'); if(eq) eq.classList.add('playing');
+  audio.addEventListener('ended', stopCurrentPreview);
+  audio.play().catch(()=>{ stopCurrentPreview(); });
 }
 
 function exitSelectionMode(){
@@ -2668,8 +2749,8 @@ function wireLibraryRows(scopeEl){
       if(!t || !t.previewAudio) return;
       const audio = new Audio(t.previewAudio);
       currentPreviewAudio = audio; currentPreviewBtn = btn;
-      btn.querySelector('.play-fill').classList.add('filling');
-      btn.querySelector('.play-tri').classList.add('filling');
+      btn.classList.add('playing');
+      const eq = btn.querySelector('.drag-eq'); if(eq) eq.classList.add('playing');
       hapticTap(10);
       audio.addEventListener('ended', stopCurrentPreview);
       audio.play().catch(()=>{ stopCurrentPreview(); showInfoToast("Couldn't play that preview", true); });
@@ -3063,12 +3144,71 @@ async function saveFlow(fromId, toId){
     showInfoToast('Already saved that flow', false);
     return;
   }
-  flows.push({from:fromId, to:toId, savedAt:Date.now()});
+  const flow = {from:fromId, to:toId, savedAt:Date.now(), comment:''};
+  flows.push(flow);
   await saveFlows();
-  const fromT = library.find(t=>t.id===fromId), toT = library.find(t=>t.id===toId);
-  showInfoToast(`Saved flow: ${fromT?fromT.name:'?'} → ${toT?toT.name:'?'}`, false);
+  showFlowSavedToast(flow);
   renderMatches();
   renderPlayHistory();
+}
+// Richer save confirmation than showInfoToast: names the flow, then offers an
+// optional "+ Add a note" (max 75 chars) that types straight into the flow's
+// comment — auto-dismisses after 4s unless the note field is opened, editable
+// later either way from Organise → Flow.
+function showFlowSavedToast(flow){
+  const fromT = library.find(t=>t.id===flow.from), toT = library.find(t=>t.id===flow.to);
+  const stack = document.getElementById('toast-stack');
+  const t = document.createElement('div');
+  t.className = 'toast success flow-toast';
+  t.innerHTML = `${CHECK_SVG}<div class="tbody">
+      <div class="tname">Saved flow: ${escapeHtml(fromT?fromT.name:'?')} → ${escapeHtml(toT?toT.name:'?')}</div>
+      <div class="flow-toast-row">
+        <button class="flow-toast-addnote">+ Add a note</button>
+        <span class="flow-toast-hint">dismisses in 4s</span>
+      </div>
+      <div class="flow-toast-note-panel">
+        <textarea class="flow-toast-note-input" maxlength="75" placeholder="big energy jump, works once the room's already moving"></textarea>
+        <div class="flow-toast-note-counter">0/75</div>
+      </div>
+    </div>`;
+  stack.appendChild(t);
+  requestAnimationFrame(()=>t.classList.add('show'));
+
+  let noteHandled = false;
+  let dismissTimer = setTimeout(dismiss, 4000);
+  function dismiss(){
+    clearTimeout(dismissTimer);
+    t.classList.remove('show');
+    setTimeout(()=>t.remove(), 250);
+  }
+  async function saveNote(){
+    if(noteHandled) return;
+    noteHandled = true;
+    const val = textarea.value.trim().slice(0,75);
+    if(val){
+      flow.comment = val;
+      await saveFlows();
+      renderMatches();
+      if(openCrateId==='__flow__') renderFlowDetail();
+    }
+    dismiss();
+  }
+  const addBtn = t.querySelector('.flow-toast-addnote');
+  const row = t.querySelector('.flow-toast-row');
+  const panel = t.querySelector('.flow-toast-note-panel');
+  const textarea = t.querySelector('.flow-toast-note-input');
+  const counter = t.querySelector('.flow-toast-note-counter');
+  addBtn.addEventListener('click', ()=>{
+    clearTimeout(dismissTimer);
+    row.style.display = 'none';
+    panel.classList.add('show');
+    textarea.focus();
+  });
+  textarea.addEventListener('input', ()=>{ counter.textContent = `${textarea.value.length}/75`; });
+  textarea.addEventListener('keydown', e=>{
+    if(e.key==='Enter' && !e.shiftKey){ e.preventDefault(); saveNote(); }
+  });
+  textarea.addEventListener('blur', ()=>{ setTimeout(saveNote, 120); });
 }
 async function removeFlow(flow){
   flows = flows.filter(f=>f!==flow);
@@ -3606,6 +3746,11 @@ function renderMatches(animateNew){
     }
     const isChain = r.t.id===chainPickId;
     const isFlow = !isChain && flowToIds.has(r.t.id);
+    const flowObj = isFlow ? flows.find(f=>f.from===now.id && f.to===r.t.id) : null;
+    const hasFlowNote = !!(flowObj && flowObj.comment);
+    const flowNoteBadge = hasFlowNote ? `<span class="flow-note-peek" title="Has a saved note — tap for details">
+      <svg viewBox="0 0 24 24" width="11" height="11"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" d="M4 5h16v10H10l-4 4V5z"/></svg>
+    </span>` : '';
     const startsChain = showFlowChainSuggestions && !isChain && chains.some(c=>c.trackIds[0]===r.t.id);
     const chainBadge = isChain ? `<div class="chain-badge">⛓️ ${chainIsLast?'Final chain track':'Chain suggestion'}</div>` : '';
     const flowBadge = (isFlow && startsChain) ? `<span class="chain-start-icon" title="Starts a saved chain">⛓️</span>` : '';
@@ -3625,7 +3770,7 @@ function renderMatches(animateNew){
         </div>
         <div class="match-info drag-info">
           ${chainBadge}${flowBadge}
-          <div class="t">${favBadge}${escapeHtml(r.t.name)}</div>
+          <div class="t">${favBadge}${escapeHtml(r.t.name)}${flowNoteBadge}</div>
           <div class="a">${escapeHtml(r.t.artist||'Unknown artist')}</div>
         </div>
         <div class="match-score-block">
@@ -3640,6 +3785,9 @@ function renderMatches(animateNew){
         <div class="chev" title="Show details">▾</div>
       </div>
       <div class="breakdown"><div class="breakdown-inner">
+        ${hasFlowNote ? `<div class="bd-flow-note"><span class="bd-flow-note-icon">
+          <svg viewBox="0 0 24 24" width="14" height="14"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" d="M4 5h16v10H10l-4 4V5z"/></svg>
+        </span><span>"${escapeHtml(flowObj.comment)}"</span></div>` : ''}
         <div class="bd-cols">
           <div class="bd-col-left">
             <div class="bd-row"><span class="bl">BPM</span><span class="bd-text" style="color:${bpmDiffColor(r.bm.absDiff)}">${bpmText}</span></div>
@@ -4261,10 +4409,12 @@ function wireTrackPicker(idPrefix, excludeIds, onPick, singleSelect){
   input.addEventListener('blur', ()=>setTimeout(()=>box.classList.remove('show'),150));
 }
 
-let openCrateId = null; // null = list view, '__flow__' = Flow crate, '__chain__' = Chains folder, '__history__' = History folder, or a crate id
+let openCrateId = null; // null = list view, '__flow__' = Flow crate, '__chain__' = Chains folder, '__history__' = History folder, '__game__' = Memory Game, or a crate id
 let manualFlowFrom = null, manualFlowTo = null;
 let openHistorySessionId = null; // only relevant when openCrateId === '__history__'
 let generatedChainCandidates = [];
+// Memory Game state — ephemeral (not persisted), reset each new round
+let gameAnchorId = null, gameTileIds = [], gameCorrectIds = new Set(), gameFoundIds = new Set(), gameWrongIds = new Set();
 
 function renderOrganise(skipAnim){
   const listView = document.getElementById('organise-list-view');
@@ -4277,6 +4427,7 @@ function renderOrganise(skipAnim){
     if(openCrateId==='__flow__') renderFlowDetail();
     else if(openCrateId==='__chain__') renderChainDetail();
     else if(openCrateId==='__fav__') renderFavDetail();
+    else if(openCrateId==='__game__') renderMemoryGame();
     else if(openCrateId==='__history__'){
       if(openHistorySessionId) renderHistorySessionDetail();
       else renderHistoryFolder();
@@ -4356,6 +4507,9 @@ document.getElementById('open-history-folder').addEventListener('click', ()=>{ o
 document.getElementById('organise-back-btn').addEventListener('click', ()=>{
   if(openCrateId==='__history__' && openHistorySessionId){
     openHistorySessionId = null; // step back to the session list, not all the way out
+  } else if(openCrateId==='__game__'){
+    stopCurrentPreview();
+    openCrateId = '__flow__'; // step back to the Flow list, not all the way out
   } else {
     openCrateId=null; manualFlowFrom=null; manualFlowTo=null; openHistorySessionId=null;
     generatedChainCandidates=[]; organiseSortDir=null;
@@ -4374,8 +4528,8 @@ function wireTrackRowActions(el, opts){
       if(!t || !t.previewAudio) return;
       const audio = new Audio(t.previewAudio);
       currentPreviewAudio = audio; currentPreviewBtn = btn;
-      btn.querySelector('.play-fill').classList.add('filling');
-      btn.querySelector('.play-tri').classList.add('filling');
+      btn.classList.add('playing');
+      const eq = btn.querySelector('.drag-eq'); if(eq) eq.classList.add('playing');
       hapticTap(10);
       audio.addEventListener('ended', stopCurrentPreview);
       audio.play().catch(()=>{ stopCurrentPreview(); showInfoToast("Couldn't play that preview", true); });
@@ -4609,19 +4763,34 @@ function renderFlowDetail(){
   const rows = flows.map((f,i)=>{
     const fromT = library.find(t=>t.id===f.from), toT = library.find(t=>t.id===f.to);
     if(!fromT || !toT) return '';
+    const comment = f.comment || '';
     return `<div class="flow-pair-row">
-      <img src="${fromT.icon}">
-      <span class="flow-pair-arrow">→</span>
-      <img src="${toT.icon}">
-      <div class="flow-pair-names">
-        <div class="t">${escapeHtml(fromT.name)} → ${escapeHtml(toT.name)}</div>
+      <div class="flow-pair-main">
+        <img src="${fromT.icon}">
+        <span class="flow-pair-arrow">→</span>
+        <img src="${toT.icon}">
+        <div class="flow-pair-names">
+          <div class="t">${escapeHtml(fromT.name)} → ${escapeHtml(toT.name)}</div>
+          ${comment ? `<div class="flow-pair-comment">"${escapeHtml(comment)}"</div>` : ''}
+        </div>
+        <button class="edit-toggle" data-flow-note-toggle="${i}" title="${comment?'Edit note':'Add a note'}" aria-label="${comment?'Edit note for':'Add a note for'} ${escapeHtml(fromT.name)} to ${escapeHtml(toT.name)}">✎</button>
+        <button class="remove-btn" data-remove-flow="${i}">✕</button>
       </div>
-      <button class="remove-btn" data-remove-flow="${i}">✕</button>
+      <div class="flow-note-edit-panel">
+        <textarea class="flow-note-textarea" maxlength="75" placeholder="big energy jump, works once the room's already moving">${escapeHtml(comment)}</textarea>
+        <div class="flow-note-counter">${comment.length}/75</div>
+        <div class="edit-actions">
+          <button class="edit-save" data-flow-note-save="${i}">Save</button>
+          <button class="edit-cancel" data-flow-note-cancel="${i}">Cancel</button>
+        </div>
+      </div>
     </div>`;
   }).join('');
   el.innerHTML = `
     <div class="section-lbl">Flow — saved transitions</div>
-    ${flows.length===0 ? `<div class="lib-empty">No flows saved yet — build some from the Play tab, or add one manually below.</div>` : `<div id="flow-pairs-list">${rows}</div>`}
+    ${flows.length===0 ? `<div class="lib-empty">No flows saved yet — build some from the Play tab, or add one manually below.</div>` : `
+      <button class="game-launch-btn" id="open-memory-game">🎮 Practice your Flows</button>
+      <div id="flow-pairs-list">${rows}</div>`}
     <div class="section-lbl" style="margin-top:16px;">Add a flow manually</div>
     ${trackPickerHtml('flow-from','From track…')}
     ${trackPickerHtml('flow-to','Into track…')}
@@ -4646,18 +4815,181 @@ function renderFlowDetail(){
       });
     });
   });
+  el.querySelectorAll('[data-flow-note-toggle]').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const panel = btn.closest('.flow-pair-row').querySelector('.flow-note-edit-panel');
+      panel.classList.toggle('show');
+      if(panel.classList.contains('show')) panel.querySelector('.flow-note-textarea').focus();
+    });
+  });
+  el.querySelectorAll('.flow-note-textarea').forEach(ta=>{
+    ta.addEventListener('input', ()=>{
+      ta.closest('.flow-note-edit-panel').querySelector('.flow-note-counter').textContent = `${ta.value.length}/75`;
+    });
+  });
+  el.querySelectorAll('[data-flow-note-cancel]').forEach(btn=>{
+    btn.addEventListener('click', ()=>{ btn.closest('.flow-note-edit-panel').classList.remove('show'); });
+  });
+  el.querySelectorAll('[data-flow-note-save]').forEach(btn=>{
+    btn.addEventListener('click', async ()=>{
+      const flow = flows[+btn.dataset.flowNoteSave];
+      if(!flow) return;
+      const panel = btn.closest('.flow-note-edit-panel');
+      flow.comment = panel.querySelector('.flow-note-textarea').value.trim().slice(0,75);
+      await saveFlows();
+      renderFlowDetail();
+    });
+  });
+  const gameBtn = document.getElementById('open-memory-game');
+  if(gameBtn) gameBtn.addEventListener('click', ()=>{
+    openCrateId = '__game__';
+    startNewGameRound();
+  });
+}
+
+/* =========================================================
+   MEMORY GAME — Organise → Flow → "Practice your Flows".
+   Pick a random anchor with at least one saved outgoing Flow, show its
+   correct destination(s) mixed in among distractor tracks, and let the DJ
+   tap to guess which ones actually flow with it. Reuses the same preview
+   playback plumbing (playPreviewOn/stopCurrentPreview) and the .drag-eq
+   "now playing" bars as the rest of the app — one component, two jobs.
+========================================================= */
+function startNewGameRound(){
+  stopCurrentPreview();
+  const byAnchor = {};
+  flows.forEach(f=>{
+    if(f.from===f.to) return;
+    if(!library.some(t=>t.id===f.from) || !library.some(t=>t.id===f.to)) return;
+    (byAnchor[f.from] = byAnchor[f.from] || new Set()).add(f.to);
+  });
+  const anchors = Object.keys(byAnchor);
+  if(anchors.length===0){
+    gameAnchorId = null; gameTileIds = []; gameCorrectIds = new Set(); gameFoundIds = new Set(); gameWrongIds = new Set();
+    renderMemoryGame();
+    return;
+  }
+  gameAnchorId = anchors[Math.floor(Math.random()*anchors.length)];
+  const correctSet = [...byAnchor[gameAnchorId]].slice(0,9);
+  const distractPool = library.map(t=>t.id).filter(id=>id!==gameAnchorId && !correctSet.includes(id));
+  for(let i=distractPool.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [distractPool[i],distractPool[j]]=[distractPool[j],distractPool[i]]; }
+  const tileCount = Math.min(9, correctSet.length + distractPool.length);
+  const tiles = [...correctSet, ...distractPool.slice(0, Math.max(0, tileCount-correctSet.length))];
+  for(let i=tiles.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [tiles[i],tiles[j]]=[tiles[j],tiles[i]]; }
+  gameTileIds = tiles;
+  gameCorrectIds = new Set(correctSet);
+  gameFoundIds = new Set();
+  gameWrongIds = new Set();
+  renderMemoryGame();
+  const anchor = library.find(t=>t.id===gameAnchorId);
+  const anchorCard = document.getElementById('game-anchor-card');
+  if(anchor && anchor.previewAudio && anchorCard) playPreviewOn(anchorCard, anchor);
+}
+function renderMemoryGame(){
+  const el = document.getElementById('organise-detail-content');
+  if(!gameAnchorId){
+    el.innerHTML = `
+      <div class="section-lbl">🎮 Practice your Flows</div>
+      <div class="lib-empty">Save at least one Flow from the Play tab first — then come back here to test yourself on it.</div>
+    `;
+    return;
+  }
+  const anchor = library.find(t=>t.id===gameAnchorId);
+  const total = gameCorrectIds.size, found = gameFoundIds.size;
+  const complete = found>0 && found===total;
+  const tilesHtml = gameTileIds.map(id=>{
+    const t = library.find(x=>x.id===id);
+    if(!t) return '';
+    const isFound = gameFoundIds.has(id), isWrong = gameWrongIds.has(id);
+    const cls = isFound ? ' found' : (isWrong ? ' wrong' : '');
+    const innerMark = isWrong
+      ? `<span class="game-tile-x">✕</span>`
+      : `<span class="game-tile-eq drag-eq"><i></i><i></i><i></i></span>`;
+    return `<button class="game-tile${cls}" data-game-tile="${id}" title="${escapeHtml(t.name)}" aria-label="${escapeHtml(t.name)}">
+      <img src="${t.icon}">
+      ${innerMark}
+      <span class="game-tile-name">${escapeHtml(t.name)}</span>
+    </button>`;
+  }).join('');
+  el.innerHTML = `
+    <div class="section-lbl">🎮 Practice your Flows</div>
+    <div class="game-wrap">
+      <button class="game-anchor-card" id="game-anchor-card" title="Replay ${escapeHtml(anchor?anchor.name:'')}">
+        <div class="game-anchor-label">ANCHOR</div>
+        <div class="game-anchor-art">
+          <img src="${anchor?anchor.icon:''}">
+          <span class="game-anchor-eq drag-eq"><i></i><i></i><i></i></span>
+        </div>
+        <div class="game-anchor-name">${escapeHtml(anchor?anchor.name:'?')}</div>
+        <div class="game-anchor-hint">Which of these flow with it?</div>
+      </button>
+      <div class="game-grid">${tilesHtml}</div>
+    </div>
+    <div class="game-progress${complete?' complete':''}">${complete
+      ? `🎉 Found all ${total} flow${total===1?'':'s'} hidden here`
+      : `${total} flow${total===1?'':'s'} hidden in this round — found ${found}`}</div>
+    <button class="game-newround-btn" id="game-newround-btn">Shuffle — new round</button>
+  `;
+  wireMemoryGame();
+}
+function updateGameProgress(){
+  const total = gameCorrectIds.size, found = gameFoundIds.size;
+  const complete = found>0 && found===total;
+  const el = document.querySelector('.game-progress');
+  if(!el) return;
+  el.classList.toggle('complete', complete);
+  el.textContent = complete
+    ? `🎉 Found all ${total} flow${total===1?'':'s'} hidden here`
+    : `${total} flow${total===1?'':'s'} hidden in this round — found ${found}`;
+}
+function wireMemoryGame(){
+  const anchorCard = document.getElementById('game-anchor-card');
+  if(anchorCard){
+    anchorCard.addEventListener('click', ()=>{
+      const anchor = library.find(t=>t.id===gameAnchorId);
+      if(anchor && anchor.previewAudio) playPreviewOn(anchorCard, anchor);
+    });
+  }
+  document.querySelectorAll('[data-game-tile]').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const id = btn.dataset.gameTile;
+      if(btn.classList.contains('wrong')) return;
+      const t = library.find(x=>x.id===id);
+      if(btn.classList.contains('found')){
+        if(t && t.previewAudio) playPreviewOn(btn, t);
+        return;
+      }
+      if(gameCorrectIds.has(id)){
+        gameFoundIds.add(id);
+        btn.classList.add('found');
+        hapticTap(20);
+        if(t && t.previewAudio) playPreviewOn(btn, t);
+        updateGameProgress();
+      } else {
+        gameWrongIds.add(id);
+        btn.classList.add('wrong');
+        const eq = btn.querySelector('.game-tile-eq');
+        if(eq) eq.outerHTML = '<span class="game-tile-x">✕</span>';
+        hapticTap(10);
+        btn.classList.remove('shake'); void btn.offsetWidth; btn.classList.add('shake');
+      }
+    });
+  });
+  const newRoundBtn = document.getElementById('game-newround-btn');
+  if(newRoundBtn) newRoundBtn.addEventListener('click', startNewGameRound);
 }
 
 /* =========================================================
    INIT
 ========================================================= */
-const APP_VERSION = '1.30';
-const APP_BUILD = '2026-09-08';
+const APP_VERSION = '1.31';
+const APP_BUILD = '2026-09-28';
 document.getElementById('version-display').textContent = `${APP_VERSION} · ${APP_BUILD}`;
 // Reconstructed from this build session's history — not tracked in real time
 // from the very start, but accurate to the best of what was actually shipped.
 // Add one line here with each future update.
 const CHANGELOG = [
+  {v:'1.31', notes:'Three from the pitch deck, all built: (1) Flows can now carry a short note (max 75 characters) — a "+ Add a note" link appears on the save toast, editable any time after from Organise → Flow (✎), and it now surfaces as a peek icon + full text in a suggestion’s expanded details in Play. (2) The preview icon—wrong twice running on hand-nudged coordinates—now reuses the app’s own equaliser-bar "now playing" glyph (the same one from drag-to-preview), which is trivially symmetric and needs no eyeballing. (3) New: a Memory Game at Organise → Flow → "Practice your Flows" — an anchor track plays on the left, nine candidates sit on the right, tap the ones you think flow with it. Direction matters (only the saved direction counts), and a round can hide more than one correct flow among the nine — the round tells you up front how many there are to find.'},
   {v:'1.30', notes:'Every track row in Import, Play (inside a suggestion’s details), and Organise (crates and Favourites) now has an edit button (✎) to fix a track’s name, BPM or key on the fly. Preview icon recentred — it was sitting visibly left of the circle’s centre. The Flow button between the decks is now grey by default and only turns blue once a flow is actually saved between the two loaded tracks — tap it again to remove that flow. Flows saved this way (or via the history strip) now show as a highlighted wavy icon on the matching pair of tracks in the history strip above the decks.'},
   {v:'1.29', notes:'Corrected a misread from last round \u2014 the main deck cards are back to their original, taller vertical layout (that request was actually about the small A/B buttons on suggestion rows, which are now horizontal and bigger for easier thumb taps). Preview button icon changed from a play-triangle to a speaker/soundwave icon so it reads clearly as \u201cpreview\u201d rather than \u201cplay\u201d. Added an Undo button next to the crate filter in Play, for reversing an accidental deck load or eject mid-set. Suggestion Priorities sliders moved out of Settings into a new Filters dropdown right there in Play. Organise: crates and Favourites can now be sorted by BPM (ascending or descending) so you can scan a crate\u2019s tempo range at a glance.'},
   {v:'1.28', notes:'Export/import now compressed with native gzip (previously uncompressed JSON with base64 audio bloat) \u2014 old uncompressed backups still import fine. 15 suggestions shown instead of 10. Match score redesigned \u2014 big number, small %, colored underline, MATCH label. \u201cSuggest from\u201d crate picker restyled as a filter pill with an icon. Import, Organise, and Play now show bpm and track length in list rows instead of key (key is still fully used for harmonic matching, just not shown in the compact row anymore).'},
