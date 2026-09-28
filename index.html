@@ -90,12 +90,20 @@
      line read as an ugly straight-edged "panel" sitting behind the header instead of
      an ambient glow. Moved the same two gradients onto a ::before that's 100vw wide
      (independent of .app's max-width) so they keep fading via their own transparent
-     stop with room to spare, same as before on mobile, no more hard edge on desktop. ---- */
+     stop with room to spare, same as before on mobile, no more hard edge on desktop.
+     v1.37 follow-up: that still weren't enough — the transparent stop was forced at
+     55-60% of each ellipse's radius, so the whole color-to-transparent ramp was
+     squeezed into just the first half of the shape, and the header/tab-bar chrome
+     happened to sit almost exactly in that steep band, so it still read as a visible
+     line rather than a fade. Dropped the explicit percentage (radial-gradient's
+     default "color, transparent" spreads the ramp across the ENTIRE ellipse instead
+     of front-loading it) and enlarged the ellipses so the same glow now fades in
+     gradually over a much longer distance — no band, no edge, at any window width. ---- */
   .app{max-width:640px;margin:0 auto;padding:0 0 70px;position:relative;isolation:isolate;}
   .app::before{content:"";position:absolute;top:0;left:50%;width:100vw;height:460px;
     transform:translateX(-50%);pointer-events:none;z-index:-1;
-    background-image:radial-gradient(ellipse 620px 380px at calc(50% - 282px) -60px, var(--glow-1), transparent 60%),
-                      radial-gradient(ellipse 620px 380px at calc(50% + 320px) -20px, var(--glow-2), transparent 55%);
+    background-image:radial-gradient(ellipse 900px 620px at calc(50% - 282px) -60px, var(--glow-1), transparent),
+                      radial-gradient(ellipse 900px 620px at calc(50% + 320px) -20px, var(--glow-2), transparent);
     background-repeat:no-repeat;}
   button{transition:transform 0.1s ease;}
   button:active{transform:scale(0.97);}
@@ -385,7 +393,7 @@
   .tick-row{display:flex;justify-content:space-between;margin:2px 0 10px;padding:0 8px;}
   .tick-row span{width:2px;height:8px;border-radius:1px;background:#9ca3af;}
 
-  .crate-filter-row{display:flex;align-items:center;gap:8px;margin-bottom:14px;}
+  .crate-filter-row{display:flex;align-items:center;gap:8px;margin-bottom:14px;flex-wrap:wrap;}
   .filters-pill{display:inline-flex;align-items:center;gap:6px;background:#1c1d21;border:1px solid var(--line);
     border-radius:999px;padding:8px 14px;color:var(--text);cursor:pointer;}
   .filters-pill select{background:none;border:none;color:var(--text);font-size:var(--text-caption);font-weight:700;
@@ -417,6 +425,14 @@
   .now-sugg-crate{font-size:var(--text-caption);font-weight:700;color:var(--dim);flex-shrink:0;width:16px;text-align:center;}
   .now-suggestion-row .t{font-size:var(--text-body-sm);font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
   .now-suggestion-row .a{font-size:var(--text-caption);color:var(--dim);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  /* ---- Deck search while a Set is active (Decision 2B): the set's
+     still-to-come tracks are pinned above the rest of the library, in
+     order, under their own small label — the library itself stays right
+     below for a wildcard pick, it's just no longer what's on top. ---- */
+  .deck-search-set-label{font-size:var(--text-micro);font-weight:700;letter-spacing:0.03em;text-transform:uppercase;
+    color:var(--accent);padding:8px 12px 4px;}
+  .deck-search-set-label.rest{color:var(--dim);margin-top:4px;}
+  .deck-search-set-pos{font-size:var(--text-caption);font-weight:700;color:var(--accent);flex-shrink:0;width:18px;text-align:right;}
 
   .history-strip{display:grid;grid-template-columns:repeat(9,1fr);gap:5px;padding:2px 2px 4px;margin-bottom:6px;}
   .history-card{display:flex;flex-direction:column;align-items:center;gap:2px;position:relative;}
@@ -517,6 +533,15 @@
   .match-row.chain-match .match-main{
     background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='26' height='13'%3E%3Cg transform='rotate(28 13 6.5)' stroke='%236b7280' stroke-width='1.1' fill='none' opacity='0.38'%3E%3Cellipse cx='5.5' cy='6.5' rx='4' ry='2.4'/%3E%3Cellipse cx='13' cy='6.5' rx='4' ry='2.4'/%3E%3Cellipse cx='20.5' cy='6.5' rx='4' ry='2.4'/%3E%3C/g%3E%3C/svg%3E");
     background-repeat:repeat;}
+  /* ---- Active Set "next up" pin (Decision 3B, "Set Builder → Play" pitch):
+     its own accent-colored signal, deliberately not grey, so it can never be
+     mistaken for the unrelated Chain/Flow badges when more than one is on
+     screen at once — and it outranks a Chain pin for the #1 slot. ---- */
+  .set-badge{display:inline-flex;align-items:center;gap:4px;font-size:var(--text-micro);font-weight:700;
+    color:var(--accent);background:color-mix(in srgb, var(--accent) 14%, transparent);
+    border-radius:var(--radius-tight);padding:2px 7px;margin-bottom:5px;}
+  .match-row.set-match{border:2px solid var(--accent);}
+  .match-row.set-match .art{box-shadow:0 0 0 3px var(--accent);}
   .graffiti-label{height:21px;width:auto;display:block;}
   .graffiti-label text{font-family:'Rubik Wet Paint', cursive;fill:#fff;stroke:#111;stroke-width:2.6;}
 
@@ -868,6 +893,11 @@
   .setb-saved-row-main{display:flex;align-items:center;gap:10px;}
   .setb-played-badge{font-size:var(--text-micro);font-weight:700;color:var(--dim);background:var(--bg);
     border-radius:var(--radius-tight);padding:3px 8px;flex-shrink:0;}
+  /* ---- "▶ Play this set" (Decision 1C, entry point 2 of 2 — the other is
+     the "Set: …" pill in Play) — one activateSet() call either way. ---- */
+  .setb-play-set-btn{font-size:var(--text-micro);font-weight:700;color:var(--accent);background:none;
+    border:1px solid var(--accent);border-radius:999px;padding:5px 10px;flex-shrink:0;cursor:pointer;white-space:nowrap;}
+  .setb-play-set-btn.live{color:#fff;background:var(--accent);border-color:var(--accent);}
   .setb-played-match{display:flex;align-items:center;gap:10px;background:var(--bg);border-radius:var(--radius-control);
     padding:8px 10px;}
   .setb-played-match span{flex:1;font-size:var(--text-caption);color:var(--text);}
@@ -1152,6 +1182,10 @@
         <svg viewBox="0 0 24 24" width="14" height="14"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M4 6h16M8 12h12M4 18h16M8 6a2 2 0 100-4 2 2 0 000 4zM16 14a2 2 0 100-4 2 2 0 000 4z"/></svg>
         <select id="crate-filter-select"><option value="">All Tracks</option></select>
       </label>
+      <label class="filters-pill" for="active-set-select" title="Play a saved Set — its order gets pinned in deck search and the top suggestion">
+        <svg viewBox="0 0 24 24" width="13" height="13"><path fill="currentColor" d="M6 4l14 8-14 8z"/></svg>
+        <select id="active-set-select"><option value="">No active set</option></select>
+      </label>
       <button class="filter-icon-btn" id="deck-undo-btn" title="Undo last deck load" aria-label="Undo last deck load" disabled>
         <svg viewBox="0 0 24 24" width="16" height="16"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M9 15 4 10l5-5M4 10h10a6 6 0 016 6v1"/></svg>
       </button>
@@ -1349,7 +1383,7 @@ document.querySelectorAll('.tabs button').forEach(btn=>{
     document.getElementById('footnote').style.display = (currentTab==='import') ? 'block':'none';
     if(currentTab!=='import') stopCurrentPreview();
     if(currentTab==='organise') renderOrganise(true);
-    if(currentTab==='match'){ requestWakeLock(); renderNowChip(); populateCrateFilterSelect(); if(suggestionsEverRendered) renderDecks(); else renderMatches(); }
+    if(currentTab==='match'){ requestWakeLock(); renderNowChip(); populateCrateFilterSelect(); populateActiveSetSelect(); if(suggestionsEverRendered) renderDecks(); else renderMatches(); }
     else{ releaseWakeLock(); renderNowChip(); }
   });
 });
@@ -3494,6 +3528,7 @@ function selectNowPlaying(id, deck){
   else deckB = {trackId:id, insertedAt:Date.now()};
   pendingFlowAnchorId = null;
   updateChainProgress(id);
+  updateActiveSetProgress(id);
   renderNowPlayingSelect();
   selectedMatchId = null;
   renderPlayHistory();
@@ -3984,6 +4019,10 @@ document.getElementById('crate-filter-select').addEventListener('change', e=>{
   suggestionsCrateFilterId = e.target.value;
   renderMatches();
 });
+document.getElementById('active-set-select').addEventListener('change', e=>{
+  if(e.target.value) activateSet(e.target.value);
+  else deactivateSet();
+});
 const BAND_KEYS=['low','lowmid','himid','high'];
 
 let selectedMatchId = null;
@@ -4124,23 +4163,46 @@ function renderDeckSearchResults(letter, query){
   const box = document.getElementById('deck-search-results-'+letter);
   if(!box) return;
   const q = query.trim().toLowerCase();
-  let matches = getSearchableLibrary().filter(t => !q || t.name.toLowerCase().includes(q) || (t.artist||'').toLowerCase().includes(q));
+  const matchesQuery = t => !q || t.name.toLowerCase().includes(q) || (t.artist||'').toLowerCase().includes(q);
+  const otherDeck = letter==='A' ? deckB : deckA;
+  const otherT = otherDeck ? library.find(t=>t.id===otherDeck.trackId) : null;
+  const rowHtml = (t, setPos) => {
+    const score = otherT ? quickScoreTrack(otherT, t) : null;
+    const scoreHtml = score==null ? '' : `<span class="now-sugg-score" style="color:${pctColor(score)}">${score}%</span>`;
+    const posLabel = setPos!=null ? `<span class="deck-search-set-pos">${setPos}.</span>` : '';
+    return `<div class="now-suggestion-row" data-deck-search-pick="${t.id}">
+      ${posLabel}<img src="${t.icon}">
+      <div class="now-sugg-info"><div class="t">${escapeHtml(t.name)}</div><div class="a">${t.bpm} bpm · ${escapeHtml(t.artist||'Unknown artist')}</div></div>
+      ${scoreHtml}
+    </div>`;
+  };
+
+  // Decision 2B ("Set Builder → Play" pitch): while a Set is active, its
+  // still-to-come tracks are pinned above the rest of the library, in set
+  // order, under their own small label — the full library stays reachable
+  // right below for a wildcard pick, it's just no longer what's on top.
+  const activeSet = activeSetId ? sets.find(s=>s.id===activeSetId) : null;
+  let setSectionHtml = '';
+  const setIds = new Set();
+  if(activeSet){
+    const upcoming = activeSet.trackIds.slice(activeSetIndex+1)
+      .map((id,i)=>({t:library.find(x=>x.id===id), pos:activeSetIndex+2+i}))
+      .filter(x=>x.t && matchesQuery(x.t));
+    if(upcoming.length){
+      upcoming.forEach(x=>setIds.add(x.t.id));
+      setSectionHtml = `<div class="deck-search-set-label">${escapeHtml(activeSet.name)}</div>` +
+        upcoming.map(x=>rowHtml(x.t, x.pos)).join('') +
+        `<div class="deck-search-set-label rest">Rest of library</div>`;
+    }
+  }
+
+  let matches = getSearchableLibrary().filter(t => !setIds.has(t.id) && matchesQuery(t));
   const sort = deckSearchSort[letter];
   if(sort==='asc') matches = [...matches].sort((a,b)=>a.bpm-b.bpm);
   else if(sort==='desc') matches = [...matches].sort((a,b)=>b.bpm-a.bpm);
   matches = matches.slice(0,60);
-  if(matches.length===0){ box.innerHTML = `<div class="empty-state" style="padding:14px 0;">No tracks to browse</div>`; return; }
-  const otherDeck = letter==='A' ? deckB : deckA;
-  const otherT = otherDeck ? library.find(t=>t.id===otherDeck.trackId) : null;
-  box.innerHTML = matches.map(t=>{
-    const score = otherT ? quickScoreTrack(otherT, t) : null;
-    const scoreHtml = score==null ? '' : `<span class="now-sugg-score" style="color:${pctColor(score)}">${score}%</span>`;
-    return `<div class="now-suggestion-row" data-deck-search-pick="${t.id}">
-      <img src="${t.icon}">
-      <div class="now-sugg-info"><div class="t">${escapeHtml(t.name)}</div><div class="a">${t.bpm} bpm · ${escapeHtml(t.artist||'Unknown artist')}</div></div>
-      ${scoreHtml}
-    </div>`;
-  }).join('');
+  if(matches.length===0 && !setSectionHtml){ box.innerHTML = `<div class="empty-state" style="padding:14px 0;">No tracks to browse</div>`; return; }
+  box.innerHTML = setSectionHtml + matches.map(t=>rowHtml(t)).join('');
   box.querySelectorAll('[data-deck-search-pick]').forEach(row=>{
     row.addEventListener('click', ()=>{
       deckSearchOpen = null;
@@ -4222,7 +4284,28 @@ function renderMatches(animateNew){
     }
   }
   const chainPick = chainNextId ? eligible.find(t=>t.id===chainNextId) : null;
-  const restEligible = chainPick ? eligible.filter(t=>t.id!==chainPick.id) : eligible;
+
+  // An active Set (Decision 3B, "Set Builder → Play" pitch) pins its own
+  // next track too — and outranks a Chain pick when the two disagree, since
+  // a Set is the plan the DJ explicitly committed to for the whole night,
+  // not just one proven pair. If they happen to agree, it's shown once, as
+  // the Set pin.
+  let setName = '';
+  if(activeSetId){
+    const s = sets.find(x=>x.id===activeSetId);
+    if(!s){ activeSetId=null; activeSetIndex=-1; }
+    else setName = s.name;
+  }
+  const activeSet = activeSetId ? sets.find(x=>x.id===activeSetId) : null;
+  const setNextId = (activeSet && activeSetIndex < activeSet.trackIds.length-1) ? activeSet.trackIds[activeSetIndex+1] : null;
+  const setPick = setNextId ? eligible.find(t=>t.id===setNextId) : null;
+  const chainPickIsDupe = !!(setPick && chainPick && chainPick.id===setPick.id);
+
+  const pinnedPicks = [];
+  if(setPick) pinnedPicks.push(setPick);
+  if(chainPick && !chainPickIsDupe) pinnedPicks.push(chainPick);
+  const pinnedIdSet = new Set(pinnedPicks.map(t=>t.id));
+  const restEligible = pinnedPicks.length ? eligible.filter(t=>!pinnedIdSet.has(t.id)) : eligible;
 
   // A saved Flow (from=now playing) means "last time, going into this track
   // worked great" — those get pinned above the algorithmic ranking.
@@ -4233,9 +4316,10 @@ function renderMatches(animateNew){
     if(renderToken !== matchesRenderToken) return; // superseded by a newer call — drop these stale results
     const flowResults = scored.filter(r=>flowToIds.has(r.t.id)).sort((a,b)=>b.overall-a.overall);
     const regularResults = scored.filter(r=>!flowToIds.has(r.t.id)).sort((a,b)=>b.overall-a.overall);
-    let results = [...flowResults, ...regularResults].slice(0, chainPick?14:15);
-    if(chainPick) results = [scoreTrack(chainPick), ...results];
-    const chainPickId = chainPick ? chainPick.id : null;
+    let results = [...flowResults, ...regularResults].slice(0, 15-pinnedPicks.length);
+    if(pinnedPicks.length) results = [...pinnedPicks.map(scoreTrack), ...results];
+    const setPickId = setPick ? setPick.id : null;
+    const chainPickId = (chainPick && !chainPickIsDupe) ? chainPick.id : null;
 
     if(!results.some(r=>r.t.id===selectedMatchId)) selectedMatchId=null;
 
@@ -4254,7 +4338,7 @@ function renderMatches(animateNew){
     // Skip the rebuild entirely if the result set is identical to what's
     // already on screen — a real, frequent case (switching tabs, a
     // re-render triggered by something that didn't actually change scores).
-    const resultsKey = results.map(r=>r.t.id+':'+r.overall).join(',')+'|'+chainPickId+'|'+selectedMatchId;
+    const resultsKey = results.map(r=>r.t.id+':'+r.overall).join(',')+'|'+chainPickId+'|'+setPickId+'|'+selectedMatchId;
     if(!animateNew && resultsKey===lastRenderedResultsKey) return;
     lastRenderedResultsKey = resultsKey;
 
@@ -4277,14 +4361,16 @@ function renderMatches(animateNew){
       const loudText = r.loudDiff<0.3 ? 'Exact loudness' : `${loudArrow} ${r.loudDiff.toFixed(1)} dB ${r.t.loudness<now.loudness?'quieter':'louder'}`;
       loudRow = `<span class="bd-text" style="color:${loudnessDiffColor(r.loudDiff)}">${loudText}</span>`;
     }
-    const isChain = r.t.id===chainPickId;
-    const isFlow = !isChain && flowToIds.has(r.t.id);
+    const isSet = r.t.id===setPickId;
+    const isChain = !isSet && r.t.id===chainPickId;
+    const isFlow = !isChain && !isSet && flowToIds.has(r.t.id);
     const flowObj = isFlow ? flows.find(f=>f.from===now.id && f.to===r.t.id) : null;
     const hasFlowNote = !!(flowObj && flowObj.comment);
     const flowNoteBadge = hasFlowNote ? `<span class="flow-note-peek" title="Has a saved note — tap for details">
       <svg viewBox="0 0 24 24" width="11" height="11"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" d="M4 5h16v10H10l-4 4V5z"/></svg>
     </span>` : '';
-    const startsChain = showFlowChainSuggestions && !isChain && chains.some(c=>c.trackIds[0]===r.t.id);
+    const startsChain = showFlowChainSuggestions && !isChain && !isSet && chains.some(c=>c.trackIds[0]===r.t.id);
+    const setBadge = isSet ? `<div class="set-badge">▶ Next in ${escapeHtml(setName)}</div>` : '';
     const chainBadge = isChain ? `<div class="chain-badge">⛓️ ${chainIsLast?'Final chain track':'Chain suggestion'}</div>` : '';
     const flowBadge = (isFlow && startsChain) ? `<span class="chain-start-icon" title="Starts a saved chain">⛓️</span>` : '';
     const isFav = favourites.includes(r.t.id);
@@ -4295,14 +4381,14 @@ function renderMatches(animateNew){
       ? `<span style="font-size:var(--text-caption);color:var(--dim);">No spectrum data for this track</span>`
       : bandCompareChartSvg(now.bands, r.t.bands, true);
     return `
-    <div class="match-row drag-row${r.t.id===selectedMatchId?' open':''}${isChain?' chain-match':(isFlow?' flow-match':'')}${animateNew?' row-fresh':''}" data-id="${r.t.id}"${animateNew?` style="animation-delay:${i*35}ms;"`:''}>
+    <div class="match-row drag-row${r.t.id===selectedMatchId?' open':''}${isSet?' set-match':(isChain?' chain-match':(isFlow?' flow-match':''))}${animateNew?' row-fresh':''}" data-id="${r.t.id}"${animateNew?` style="animation-delay:${i*35}ms;"`:''}>
       <div class="match-main drag-content">
         <div class="rank">${i+1}</div>
         <div class="drag-sleeve">
           <img class="art" src="${r.t.icon}" style="width:56px;height:56px;border-radius:var(--radius-thumb);">
         </div>
         <div class="match-info drag-info">
-          ${chainBadge}${flowBadge}
+          ${setBadge}${chainBadge}${flowBadge}
           <div class="t">${favBadge}${escapeHtml(r.t.name)}${flowNoteBadge}</div>
           <div class="a">${escapeHtml(r.t.artist||'Unknown artist')}</div>
         </div>
@@ -4848,17 +4934,19 @@ document.getElementById('clock-drift').addEventListener('input', async e=>{
 /* ---- Play Reset: clear played-track history for a clean-slate session ---- */
 document.getElementById('play-reset-btn').addEventListener('click', ()=>{
   if(playedTrackIds.size===0 && !nowPlayingId && playHistory.length===0 && !deckA && !deckB) return;
-  if(!confirm("Reset your DJ session? This clears played-track history, your recent-tracks strip, and both decks — every track in your crate becomes eligible for suggestions again. Your saved Flows and Chains are kept.")) return;
+  if(!confirm("Reset your DJ session? This clears played-track history, your recent-tracks strip, and both decks — every track in your crate becomes eligible for suggestions again, and any active Set switches off. Your saved Flows, Chains and Sets are kept.")) return;
   playedTrackIds.clear();
   playHistory = [];
   pendingFlowAnchorId = null;
   currentChainId = null; currentChainIndex = -1;
+  activeSetId = null; activeSetIndex = -1;
   nowPlayingId='';
   deckA = null; deckB = null; activeDeck = 'A';
   deckLoadHistory = [];
   selectedMatchId=null;
   renderPlayHistory();
   renderMatches();
+  populateActiveSetSelect();
   updateDeckUndoBtn();
 });
 
@@ -5058,11 +5146,92 @@ async function saveSets(){
     else localStorage.setItem(SETS_KEY, JSON.stringify(sets));
   }catch(e){ console.error('sets save failed', e); }
 }
+
+// ---- Active Set in Play ("Set Builder → Play: Live Set Mode" pitch, picks
+// 1C/2B/3B/4B) — a saved Set can be switched on either from its row in
+// Organise or from the picker pill in Play; both funnel through
+// activateSet(), the same one-chokepoint pattern currentChainId already
+// uses for Chains. activeSetIndex tracks the trackIds index of the last
+// track from the set that was actually played — the next suggestion/search
+// pin is always activeSetIndex+1. ----
+let activeSetId = null, activeSetIndex = -1;
+function activateSet(id){
+  const s = sets.find(x=>x.id===id);
+  if(!s) return;
+  activeSetId = s.id;
+  // If the deck already has a track from this set loaded (e.g. activated
+  // mid-gig from Organise), sync to its position instead of assuming we're
+  // starting from the very top.
+  activeSetIndex = nowPlayingId ? s.trackIds.indexOf(nowPlayingId) : -1;
+  renderMatches();
+  populateActiveSetSelect();
+  hapticTap();
+}
+function deactivateSet(){
+  activeSetId = null; activeSetIndex = -1;
+  renderMatches();
+  populateActiveSetSelect();
+}
+// Forgiving re-sync (Decision 4B) — mirrors updateChainProgress's tolerance
+// for a DJ playing off-script: the immediate next track advances the
+// pointer and, if it's a real transition (not the very first track),
+// quietly writes it into a proven Flow via the same saveFlow() the rest of
+// the app already uses — no more waiting on an after-the-gig History match
+// to guess it happened. A track found further along the Set jumps the
+// pointer forward with no Flow write (tracks in between were skipped, not
+// blended into each other). Anything else — an earlier track, or one not
+// in the Set at all — leaves the pointer exactly where it was, so the very
+// next suggestion still nudges back toward the plan instead of losing it
+// over one improvised pick.
+function updateActiveSetProgress(id){
+  if(!activeSetId) return;
+  const s = sets.find(x=>x.id===activeSetId);
+  if(!s){ activeSetId=null; activeSetIndex=-1; return; }
+  if(s.trackIds[activeSetIndex+1]===id){
+    if(activeSetIndex>=0){
+      const fromId = s.trackIds[activeSetIndex];
+      // Exact-direction check, not findFlowBetween's either-direction one —
+      // this only needs to skip a genuine repeat (the DJ replaying a set
+      // whose transitions are already proven), not stay silent just because
+      // the reverse pairing happens to exist from somewhere else.
+      if(!flows.some(f=>f.from===fromId && f.to===id)) saveFlow(fromId, id);
+    }
+    activeSetIndex++;
+    if(activeSetIndex===s.trackIds.length-1) setTimeout(()=>completeActiveSet(s), 400);
+    return;
+  }
+  const idx = s.trackIds.indexOf(id);
+  if(idx>activeSetIndex) activeSetIndex = idx;
+}
+async function completeActiveSet(s){
+  if(!s.played){ s.played = true; s.playedAt = Date.now(); await saveSets(); }
+  showInfoToast(`Set complete — ${s.name}`, false);
+  activeSetId = null; activeSetIndex = -1;
+  renderMatches();
+  populateActiveSetSelect();
+}
+function populateActiveSetSelect(){
+  const sel = document.getElementById('active-set-select');
+  if(!sel) return;
+  sel.innerHTML = `<option value="">No active set</option>` +
+    sets.map(s=>`<option value="${s.id}">${escapeHtml(s.name)}</option>`).join('');
+  sel.value = sets.some(s=>s.id===activeSetId) ? activeSetId : '';
+  if(!sel.value && activeSetId){ activeSetId=null; activeSetIndex=-1; }
+}
+
 let setbChain = []; // array of track ids being built right now
 // ---- Set Builder v2 state (this session's locked spec) ----
 let setbCheckpoints = []; // [{track:<1-based position in the chain>, energy:<1-10>}], sorted by track asc
 let setbEditingArc = false; // whether the tap-to-place arc grid is open
-const SETB_ARC_SPAN = 10; // default horizon (in tracks) the arc strip/editor covers with no checkpoints yet
+let setbCrateFilterId = ''; // '' = whole library; else restricts both the anchor picker and every candidate list to one crate
+// A real opener set runs far longer than 10 tracks. Long-blend techno opener
+// sets average roughly one track every 5 minutes, which puts a 2-hour set
+// around ~24 tracks (source: setflow.app's set-length breakdown) — but that's
+// an average, and plenty of opener/warm-up sets run tighter, faster-turnover
+// selections that land closer to 40 tracks over 2 hours. Bumped the default
+// horizon up to 40 so the arc strip/editor plans for the longer end of that
+// range before any checkpoint stretches it further.
+const SETB_ARC_SPAN = 40;
 const SETB_FLOW_BOOST = 18; // max points a Proven (saved-Flow) candidate gets added on top of its compat score
 const SETB_FLOW_BOOST_HALFLIFE_DAYS = 120; // a Flow this old still keeps ~50% of its boost — old, untouched Flows fade rather than permanently outranking a fresher match
 
@@ -5115,7 +5284,9 @@ function computeSetbCandidates(){
     const existing = flowMap.get(f.to);
     if(!existing || f.savedAt>existing.savedAt) flowMap.set(f.to, f);
   });
-  const eligible = library.filter(t=>t.id!==lastId && !setbChain.includes(t.id));
+  const crateFilter = setbCrateFilterId ? crates.find(c=>c.id===setbCrateFilterId) : null;
+  const crateFilterSet = crateFilter ? new Set(crateFilter.trackIds) : null;
+  const eligible = library.filter(t=>t.id!==lastId && !setbChain.includes(t.id) && (!crateFilterSet || crateFilterSet.has(t.id)));
   const scored = eligible.map(t=>{
     const compat = computeCompatScore(now, t);
     let fit = compat;
@@ -5196,7 +5367,7 @@ function setbArcStripSvg(){
   return `<svg width="100%" height="70" viewBox="0 0 ${w} ${h}" preserveAspectRatio="none" style="display:block;" aria-label="Tension arc: target energy shape versus what's been built so far">${targetLine}${builtLine}${builtDots}</svg>`;
 }
 function setbArcEditorHtml(){
-  const horizon = Math.min(setbArcHorizon(), 16);
+  const horizon = Math.min(setbArcHorizon(), 40);
   const rows = [10,9,8,7,6,5,4,3,2,1];
   return `
     <div class="setb-arc-grid-wrap">
@@ -5961,8 +6132,14 @@ function renderSetBuilder(){
   const candidates = setbChain.length ? computeSetbCandidates() : [];
   el.innerHTML = `
     <div class="section-lbl">${ICON_HEADPHONES} Set Builder</div>
+    <div class="crate-filter-row">
+      <label class="filters-pill" for="setb-crate-filter-select">
+        <svg viewBox="0 0 24 24" width="14" height="14"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M4 6h16M8 12h12M4 18h16M8 6a2 2 0 100-4 2 2 0 000 4zM16 14a2 2 0 100-4 2 2 0 000 4z"/></svg>
+        <select id="setb-crate-filter-select"><option value="">Whole Library</option></select>
+      </label>
+    </div>
     ${setbChain.length===0 ? `
-      <div class="lib-empty" style="margin-bottom:12px;">Pick a track to start your set — every step after that ranks your whole library, boosting anything you've already proven with a saved Flow.</div>
+      <div class="lib-empty" style="margin-bottom:12px;">Pick a track to start your set — every step after that ranks your whole library${setbCrateFilterId?' (or just the crate above, if you’ve picked one)':''}, boosting anything you've already proven with a saved Flow.</div>
       ${trackPickerHtml('setb-anchor','Start with…')}
     ` : `
       <div class="setb-chain-strip">
@@ -5999,10 +6176,12 @@ function renderSetBuilder(){
     ${sets.length===0 ? `<div class="lib-empty">No sets saved yet.</div>` :
       sets.map(s=>{
         const match = !s.played ? setbFindPlayedMatch(s) : null;
+        const isLiveNow = activeSetId===s.id;
         return `<div class="setb-saved-row">
         <div class="setb-saved-row-main">
           <div class="now-sugg-info" style="flex:1;"><div class="t">${escapeHtml(s.name)}</div><div class="a">${s.trackIds.length} track${s.trackIds.length===1?'':'s'}</div></div>
           ${s.played ? `<span class="setb-played-badge">Played</span>` : ''}
+          <button type="button" class="setb-play-set-btn${isLiveNow?' live':''}" data-play-set="${s.id}" title="${isLiveNow?'Playing now — open Play':'Switch this on in Play, in order'}">${isLiveNow?'● Live in Play':'▶ Play this set'}</button>
           <button class="remove-btn" data-remove-set="${s.id}">✕</button>
         </div>
         ${s.played ? '' : match ? `
@@ -6017,8 +6196,19 @@ function renderSetBuilder(){
       </div>`;
       }).join('')}
   `;
+  const crateFilterSel = document.getElementById('setb-crate-filter-select');
+  crateFilterSel.innerHTML = `<option value="">Whole Library</option>` +
+    crates.map(c=>`<option value="${c.id}">${escapeHtml(c.name)}</option>`).join('');
+  crateFilterSel.value = crates.some(c=>c.id===setbCrateFilterId) ? setbCrateFilterId : '';
+  setbCrateFilterId = crateFilterSel.value;
+  crateFilterSel.addEventListener('change', e=>{ setbCrateFilterId = e.target.value; renderSetBuilder(); });
+  const setbCrate = setbCrateFilterId ? crates.find(c=>c.id===setbCrateFilterId) : null;
   if(setbChain.length===0){
-    wireTrackPicker('setb-anchor', null, (id)=>{ setbChain=[id]; renderSetBuilder(); }, true);
+    // Restrict the anchor choice to the chosen crate too, via wireTrackPicker's
+    // excludeIds — everything NOT in the crate gets excluded, same effect as an
+    // include-only filter.
+    const anchorExclude = setbCrate ? library.filter(t=>!setbCrate.trackIds.includes(t.id)).map(t=>t.id) : null;
+    wireTrackPicker('setb-anchor', anchorExclude, (id)=>{ setbChain=[id]; renderSetBuilder(); }, true);
   } else {
     el.querySelectorAll('[data-setb-add]').forEach(btn=>{
       btn.addEventListener('click', ()=>{
@@ -6087,6 +6277,12 @@ function renderSetBuilder(){
       });
     });
   });
+  el.querySelectorAll('[data-play-set]').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      activateSet(btn.dataset.playSet);
+      document.querySelector('.tabs button[data-tab="match"]').click();
+    });
+  });
   el.querySelectorAll('[data-setb-promote]').forEach(btn=>{
     btn.addEventListener('click', ()=>{
       const set = sets.find(s=>s.id===btn.dataset.setbPromote);
@@ -6104,13 +6300,16 @@ function renderSetBuilder(){
 /* =========================================================
    INIT
 ========================================================= */
-const APP_VERSION = '1.36';
+const APP_VERSION = '1.39';
 const APP_BUILD = '2026-09-28';
 document.getElementById('version-display').textContent = `${APP_VERSION} · ${APP_BUILD}`;
 // Reconstructed from this build session's history — not tracked in real time
 // from the very start, but accurate to the best of what was actually shipped.
 // Add one line here with each future update.
 const CHANGELOG = [
+  {v:'1.39', notes:'The "Set Builder → Play: Live Set Mode" pitch deck, built (picks 1C · 2B · 3B · 4B): a saved Set can now be switched on either from a "▶ Play this set" button on its row in Organise, or from a new "Set:" pill in Play next to the crate filter — both flip the same switch. With one active, deck search pins that Set’s still-to-come tracks in order at the top, under their own label, with the rest of your library staying reachable right below. Play’s suggestion list gets a new accent-colored "▶ Next in <Set>" badge and ring for whichever track is next — its own color, not the grey Chain/Flow one, and it takes the #1 slot over a Chain pick if the two ever disagree. Playing off-script doesn’t drop the plan: it forgivingly re-syncs the same way a Chain already does, and every real in-order transition quietly writes itself into a proven Flow as it happens — no more waiting on an after-the-gig History match to guess whether a set got played. Finishing a Set’s last track shows a quiet "Set complete" toast and switches back off on its own.'},
+  {v:'1.38', notes:'Set Builder’s Tension Arc horizon bumped from 24 to 40 tracks — 24 was an average for long-blend opener sets, but plenty of opener/warm-up sets run a tighter, faster-turnover selection that’s closer to 40 tracks over 2 hours, so the arc strip and grid now default to the longer end of that range.'},
+  {v:'1.37', notes:'Three fixes: (1) The header glow still showed a visible edge on a wide browser after 1.35’s fix — turned out the transparent cutoff was forced at 55-60% of the glow’s own radius, squeezing its whole fade into a band that the header happened to sit right on top of. Removed that forced cutoff (a plain "color, transparent" spreads the fade across the entire shape instead of the first half) and enlarged the glow to match, so it now fades out with no perceptible line at any window size. (2) Set Builder’s Tension Arc was planned around a 10-track set — a real 2-hour opener set runs closer to ~24 tracks with the long blends that style uses, so the arc strip and its tap-to-place grid now default to a 24-track horizon (and the grid’s display cap was raised so it can stretch further for a longer chain, scrolling horizontally past what fits on screen). (3) New: a crate filter at the top of Set Builder, matching the one already in Play — pick a crate and both the starting-track picker and every candidate list that follows are scoped to just that crate instead of your whole library.'},
   {v:'1.36', notes:'Set Builder, rebuilt on the "Cold Start & The Tension Arc" pitch deck (all 4 picks were the recommendation): it no longer dead-ends when a track has no saved Flow leading anywhere — every step now ranks your whole library with the same compatibility engine Play already uses, with a saved Flow boosting (not gating) its candidate and staying marked "Proven" with a grey ring on its artwork, the boost fading the older that Flow gets so a transition proven once, long ago, can’t permanently outrank a fresher match. New: a Tension Arc — tap a track#/energy grid to pin a couple of checkpoints ("peak by track 10") and the system interpolates the rest, blending each candidate’s fit to that target energy into its score; a persistent strip above the candidate list always shows the target arc against what’s actually been built so far. Candidate rows use the same tap-to-preview, tap-again-to-add pattern as the Memory Game. Saved Sets stay provisional — their transitions only get written into real Flows once marked played, either by hand or via a "Matched to your History — promote?" prompt that finds the set’s own track order inside a saved History session automatically.'},
   {v:'1.35', notes:'Fixed the ambient glow behind the header reading as a hard-edged, unnatural rectangle on a wide desktop/landscape browser. The glow was painted on the app column’s own 640px-wide box, so it got clipped dead straight at that box’s edges — invisible on a phone (where the column fills the screen anyway) but very visible on a wide window, sitting like a boxed panel against the black margins on either side. It now paints on a full-viewport-wide layer instead, so it fades out on its own same as it always visually intended to, with no hard line, at any window width.'},
   {v:'1.34', notes:'Fixed the edit panel (Import/Organise/Play, tap ✎ on any track) being cramped and unreadable, and a real clipping bug: a stale max-height cap from before Tags and Energy existed was silently cutting off the bottom of the panel. Picture, Title, Artist, and BPM/Key now live together in their own "Track Details" dropdown nested inside the edit panel (collapsed by default, with a quick bpm/key caption visible even while closed) — Tags and Energy stay where they were, right below it.'},
@@ -6181,7 +6380,7 @@ bootPromises.push(loadClockSettings());
 bootPromises.push(loadHistorySessions());
 bootPromises.push(loadGigModeSetting());
 bootPromises.push(loadGameScores());
-bootPromises.push(loadSets());
+bootPromises.push(loadSets().then(populateActiveSetSelect));
 
 /* Landscape-only clock next to the play-history strip — CSS handles when
    it's actually visible. Rendered as real 7-segment shapes (not a font)
@@ -6420,6 +6619,7 @@ Promise.all(bootPromises).then(()=>{
   requestWakeLock();
   renderNowChip();
   populateCrateFilterSelect();
+  populateActiveSetSelect();
   renderMatches();
   const elapsed = Date.now() - splashShownAt;
   setTimeout(hideSplash, Math.max(0, 450 - elapsed));
