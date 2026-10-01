@@ -439,6 +439,28 @@
   .tick-row{display:flex;justify-content:space-between;margin:2px 0 10px;padding:0 8px;}
   .tick-row span{width:2px;height:8px;border-radius:1px;background:#9ca3af;}
 
+  /* v1.43: search bars (Import, Organise, inside Organise folders) */
+  .search-bar{display:flex;align-items:center;gap:8px;background:var(--card);border:1px solid var(--line);border-radius:999px;
+    padding:0 5px 0 14px;margin-bottom:12px;box-shadow:var(--shadow-1);color:var(--dim);transition:border-color 0.15s ease;}
+  .search-bar:focus-within{border-color:var(--accent);}
+  .search-bar svg{flex-shrink:0;}
+  .search-bar-input{flex:1;min-width:0;background:none;border:none;outline:none;color:var(--text);font-family:inherit;
+    font-size:16px;padding:10px 0;-webkit-appearance:none;appearance:none;}
+  .search-bar-input::-webkit-search-cancel-button{-webkit-appearance:none;display:none;}
+  .search-bar-input::placeholder{color:var(--dim);opacity:0.8;}
+  .search-clear{display:none;align-items:center;justify-content:center;width:30px;height:30px;border-radius:50%;flex-shrink:0;
+    background:var(--line);border:none;color:var(--text);font-size:12px;cursor:pointer;padding:0;}
+  .search-bar.has-q .search-clear{display:flex;}
+  .search-hidden{display:none!important;}
+  .org-search-lbl{margin-top:4px;}
+  .org-search-track{display:flex;align-items:flex-start;gap:12px;background:var(--card);border-radius:var(--radius-card);
+    box-shadow:var(--shadow-1);padding:10px 12px;margin-bottom:8px;}
+  .org-search-track img{width:44px;height:44px;border-radius:var(--radius-thumb);object-fit:cover;flex-shrink:0;}
+  .org-search-track .t{font-size:var(--text-body);font-weight:700;color:var(--text);}
+  .org-search-track .a{font-size:var(--text-caption);color:var(--dim);margin-top:1px;}
+  .org-search-in{display:flex;flex-wrap:wrap;align-items:center;gap:5px;margin-top:6px;font-size:var(--text-caption);color:var(--dim);}
+  .crate-chip{background:color-mix(in srgb, var(--accent) 12%, var(--card));border:1px solid color-mix(in srgb, var(--accent) 35%, var(--line));
+    color:var(--accent);border-radius:999px;padding:3px 10px;font-family:inherit;font-size:var(--text-caption);font-weight:700;cursor:pointer;}
   .crate-filter-row{display:flex;align-items:center;gap:8px;margin-bottom:14px;flex-wrap:wrap;}
   .filters-pill{display:inline-flex;align-items:center;gap:6px;background:var(--card);border:1px solid var(--line);
     border-radius:999px;padding:8px 14px;color:var(--text);cursor:pointer;}
@@ -467,7 +489,7 @@
     padding:14px;z-index:60;display:none;}
   .priorities-dropdown.open{display:block;}
   .now-search{position:relative;flex:1;min-width:0;}
-  .now-search input{width:100%;background:var(--card);color:var(--text);border:1px solid var(--line);border-radius:var(--radius-control);
+  .now-search input{box-sizing:border-box;width:100%;background:var(--card);color:var(--text);border:1px solid var(--line);border-radius:var(--radius-control);
     padding:9px 11px;font-size:var(--text-body);box-shadow:none;}
   .now-suggestions{position:absolute;left:0;right:0;top:calc(100% + 6px);background:var(--card);
     border-radius:var(--radius-panel);box-shadow:var(--shadow-2);z-index:50;max-height:0;
@@ -630,6 +652,15 @@
   .deck-edit-btn{background:none;border:none;color:var(--deck-color);padding:2px;margin:2px 0 4px;cursor:pointer;
     display:flex;align-items:center;justify-content:center;opacity:0.75;}
   .deck-edit-btn:active{opacity:1;}
+  .deck-remove-btn{background:none;border:none;color:var(--deck-color);padding:2px;margin:2px 0 4px;cursor:pointer;
+    display:flex;align-items:center;justify-content:center;opacity:0.75;}
+  .deck-remove-btn:active{opacity:1;}
+  .bd-remove-btn{display:inline-flex;align-items:center;gap:6px;background:none;border:1px solid var(--line);border-radius:999px;
+    color:var(--dim);font-family:inherit;font-size:var(--text-caption);font-weight:700;padding:6px 12px;margin:0 0 10px;cursor:pointer;}
+  .bd-remove-btn.is-destructive{color:#E5484D;border-color:color-mix(in srgb, #E5484D 45%, var(--line));}
+  .toast-undo{flex-shrink:0;background:none;border:none;color:#5ac8fa;font-family:inherit;font-weight:700;
+    font-size:var(--text-body-sm);padding:4px 2px 4px 10px;cursor:pointer;}
+  html.gig-mode .deck-remove-btn.is-destructive, html.gig-mode .bd-remove-btn.is-destructive{display:none!important;}
   .deck-label-icons .fav-star{padding:2px;margin:2px 0 4px;}
   .deck-eject-btn{background:none;border:none;color:var(--deck-color);padding:2px;margin:2px 2px 4px 0;cursor:pointer;
     display:flex;align-items:center;justify-content:center;opacity:0.75;}
@@ -1195,6 +1226,7 @@
       <button id="export-btn">⭳ Export library and preferences</button>
       <input type="file" id="import-file-input" accept="application/json" style="display:none;">
     </div>
+    <div class="search-bar" id="lib-search-bar"><svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><circle cx="11" cy="11" r="6.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M16 16l4.5 4.5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg><input type="search" class="search-bar-input" id="lib-search-input" placeholder="Search name, artist, tag, key or BPM…" autocomplete="off" autocorrect="off" spellcheck="false" enterkeyhint="search"><button type="button" class="search-clear" id="lib-search-clear" aria-label="Clear search">✕</button></div>
     <div class="lib-toolbar" id="lib-toolbar"></div>
     <div class="lib-filter-panel" id="lib-filter-panel"></div>
     <div class="collection-heading">
@@ -1210,6 +1242,9 @@
     <div id="organise-list-view">
       <div class="lib-empty" id="organise-empty-library" style="display:none;">Nothing to organise yet — import some tracks first, then Crates, Flow, Chains, Favourites, and History will all show up here.</div>
       <div id="organise-populated-content">
+      <div class="search-bar" id="organise-search-bar"><svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><circle cx="11" cy="11" r="6.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M16 16l4.5 4.5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg><input type="search" class="search-bar-input" id="organise-search-input" placeholder="Search tracks & crates…" autocomplete="off" autocorrect="off" spellcheck="false" enterkeyhint="search"><button type="button" class="search-clear" id="organise-search-clear" aria-label="Clear search">✕</button></div>
+      <div id="organise-search-results" style="display:none;"></div>
+      <div id="organise-browse">
       <div class="section-lbl">Your Crates</div>
       <div id="crates-list"></div>
       <button class="new-crate-btn" id="new-crate-btn">+ New Crate</button>
@@ -1256,11 +1291,14 @@
         <div class="chev">›</div>
       </div>
       </div>
+      </div>
     </div>
 
     <div id="organise-detail-view" style="display:none;">
       <button class="back-btn" id="organise-back-btn">‹ Back to Organise</button>
+      <div class="search-bar" id="detail-search-bar" style="display:none;"><svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><circle cx="11" cy="11" r="6.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M16 16l4.5 4.5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg><input type="search" class="search-bar-input" id="detail-search-input" placeholder="Search this folder…" autocomplete="off" autocorrect="off" spellcheck="false" enterkeyhint="search"><button type="button" class="search-clear" id="detail-search-clear" aria-label="Clear search">✕</button></div>
       <div id="organise-detail-content"></div>
+      <div class="lib-empty" id="detail-search-empty" style="display:none;"></div>
     </div>
   </section>
 
@@ -3106,7 +3144,8 @@ function renderLibToolbar(){
     });
     return;
   }
-  const allSelected = library.every(t=>selectedTrackIds.has(t.id));
+  const selectable = getFilteredLibrary();
+  const allSelected = selectable.length>0 && selectable.every(t=>selectedTrackIds.has(t.id));
   el.innerHTML = `
     <button id="select-all-btn">${allSelected?'Deselect All':'Select All'}</button>
     <span class="sel-count">${selectedTrackIds.size} selected</span>
@@ -3116,7 +3155,7 @@ function renderLibToolbar(){
     <div class="crate-picker" id="crate-picker"></div>`;
   document.getElementById('select-all-btn').addEventListener('click', ()=>{
     if(allSelected) selectedTrackIds.clear();
-    else library.forEach(t=>selectedTrackIds.add(t.id));
+    else selectable.forEach(t=>selectedTrackIds.add(t.id));
     document.querySelectorAll('#library-list .track-row').forEach(row=>{
       const isSel = selectedTrackIds.has(row.dataset.id);
       row.classList.toggle('selected', isSel);
@@ -3194,13 +3233,48 @@ if(document.fonts && document.fonts.ready){
   document.fonts.ready.then(alignLogoToTrackIcons); // the logo font loads async — re-measure once it's actually swapped in
 }
 
+// ---- v1.43: one shared text search for Import, Organise and its folders.
+// Every word typed has to appear somewhere in the track's name, artist, tags,
+// key (Camelot or name) or BPM — so "foreshadow 124" or "8a peak" both work. ----
+function trackMatchesSearch(t, q){
+  const tokens = (q||'').toLowerCase().split(/\s+/).filter(Boolean);
+  if(!tokens.length) return true;
+  const hay = [t.name, t.artist, ...(t.tags||[]), t.key&&t.key.camelot, t.key&&t.key.name, t.bpm!=null?String(t.bpm):'']
+    .filter(Boolean).join(' ').toLowerCase();
+  return tokens.every(tok=>hay.includes(tok));
+}
+function wireSearchBar(prefix, onChange){
+  const bar = document.getElementById(prefix+'-bar');
+  const input = document.getElementById(prefix+'-input');
+  const clear = document.getElementById(prefix+'-clear');
+  if(!bar || !input) return;
+  const sync = ()=>bar.classList.toggle('has-q', !!input.value);
+  input.addEventListener('input', ()=>{ sync(); onChange(input.value); });
+  input.addEventListener('keydown', e=>{ if(e.key==='Escape' && input.value){ input.value=''; sync(); onChange(''); } });
+  clear.addEventListener('click', ()=>{ input.value=''; sync(); onChange(''); input.focus(); });
+}
+function setSearchBarValue(prefix, value){
+  const bar = document.getElementById(prefix+'-bar');
+  const input = document.getElementById(prefix+'-input');
+  if(!bar || !input) return;
+  input.value = value||'';
+  bar.classList.toggle('has-q', !!input.value);
+}
+let libSearchQuery = '';
+wireSearchBar('lib-search', q=>{
+  libSearchQuery = q;
+  importRenderedCount = LIBRARY_BATCH_SIZE;
+  renderLibrary();
+});
+
 // ---- Library filter by tag / energy band (v1.32, Q9-B) ----
 let libTagFilter = new Set();
 let libEnergyFilter = new Set(); // band labels: Chill / Warmup / Buildup/Peak / High Energy/Impact
 let libFilterPanelOpen = false;
 function getFilteredLibrary(){
-  if(libTagFilter.size===0 && libEnergyFilter.size===0) return library;
+  if(libTagFilter.size===0 && libEnergyFilter.size===0 && !libSearchQuery.trim()) return library;
   return library.filter(t=>{
+    if(!trackMatchesSearch(t, libSearchQuery)) return false;
     if(libTagFilter.size && !(t.tags||[]).some(tag=>libTagFilter.has(tag))) return false;
     if(libEnergyFilter.size && !libEnergyFilter.has(energyBandLabel(t.energy)||'')) return false;
     return true;
@@ -3246,9 +3320,10 @@ function renderLibrary(){
   const el = document.getElementById('library-list');
   renderLibToolbar();
   renderLibFilterPanel();
+  document.getElementById('lib-search-bar').style.display = library.length ? '' : 'none';
   if(library.length===0){ el.innerHTML = `<div class="lib-empty">Your imported tracks will show up here.</div>`; return; }
   const filtered = getFilteredLibrary();
-  if(filtered.length===0){ el.innerHTML = `<div class="lib-empty">No tracks match this filter.</div>`; return; }
+  if(filtered.length===0){ el.innerHTML = `<div class="lib-empty">${libSearchQuery.trim() ? `No tracks match "${escapeHtml(libSearchQuery.trim())}"${(libTagFilter.size||libEnergyFilter.size)?' with this filter':''}.` : 'No tracks match this filter.'}</div>`; return; }
   const visibleCount = Math.min(Math.max(importRenderedCount, LIBRARY_BATCH_SIZE), filtered.length);
   el.innerHTML = filtered.slice(0, visibleCount).map(trackRowHtml).join('');
   freshlyAddedIds.clear();
@@ -4183,6 +4258,60 @@ function energyBandKey(v){
   if(v<=8) return 'peak';
   return 'high';
 }
+// v1.43: "remove from playlist" in Play. With a crate picked in Play's crate
+// filter, it takes the track out of that crate (saved). On All Tracks there's
+// no list to edit, so it hides the track from suggestions + deck search for
+// this session only — Reset brings it back. Both come with an Undo toast.
+let sessionHiddenTrackIds = new Set();
+function playRemoveTarget(){
+  return suggestionsCrateFilterId ? crates.find(c=>c.id===suggestionsCrateFilterId) || null : null;
+}
+function playRemoveLabel(){
+  const c = playRemoveTarget();
+  return c ? `Remove from ${c.name}` : 'Hide for this session';
+}
+function showUndoToast(message, onUndo){
+  const stack = document.getElementById('toast-stack');
+  const t = document.createElement('div');
+  t.className = 'toast success';
+  t.innerHTML = `${CHECK_SVG}<div class="tbody"><div class="tname">${escapeHtml(message)}</div></div><button class="toast-undo">Undo</button>`;
+  stack.appendChild(t);
+  requestAnimationFrame(()=>t.classList.add('show'));
+  let done = false;
+  const close = ()=>{ if(done) return; done = true; t.classList.remove('show'); setTimeout(()=>t.remove(),250); };
+  t.querySelector('.toast-undo').addEventListener('click', ()=>{ close(); onUndo(); });
+  setTimeout(close, 5000);
+}
+async function removeFromPlayPool(id){
+  const t = library.find(x=>x.id===id);
+  if(!t) return;
+  const crate = playRemoveTarget();
+  hapticTap(18);
+  if(crate){
+    const idx = crate.trackIds.indexOf(id);
+    if(idx<0) return;
+    crate.trackIds.splice(idx,1);
+    await saveCrates();
+    if(selectedMatchId===id) selectedMatchId = null;
+    renderMatches();
+    showUndoToast(`Removed "${t.name}" from ${crate.name}`, async ()=>{
+      if(!crate.trackIds.includes(id)) crate.trackIds.splice(Math.min(idx, crate.trackIds.length), 0, id);
+      await saveCrates();
+      renderMatches();
+    });
+  } else {
+    sessionHiddenTrackIds.add(id);
+    if(selectedMatchId===id) selectedMatchId = null;
+    renderMatches();
+    showUndoToast(`"${t.name}" hidden for this session`, ()=>{
+      sessionHiddenTrackIds.delete(id);
+      renderMatches();
+    });
+  }
+}
+function removeIconSvg(size){
+  return `<svg viewBox="0 0 24 24" width="${size}" height="${size}"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2"/><path d="M8 12h8" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>`;
+}
 function passesEnergyFilter(t){
   return !energyFilterBands.size || energyFilterBands.has(energyBandKey(t.energy));
 }
@@ -4204,6 +4333,10 @@ let selectedMatchId = null;
 
 function renderDecks(){
   const holder=document.getElementById('now-card-holder');
+  // v1.43: keep whatever was typed into an open deck search when the decks
+  // re-render (e.g. toggling an energy filter while browsing).
+  const keptDeckQuery = {};
+  ['A','B'].forEach(l=>{ const inp=document.getElementById('deck-search-input-'+l); if(inp) keptDeckQuery[l]=inp.value; });
   if(library.length===0){
     holder.innerHTML = `<div class="lib-empty">Import some tracks first, then load them into Deck A and Deck B here.</div>`;
     return;
@@ -4244,6 +4377,9 @@ function renderDecks(){
               <path class="star-fill" d="M12 2 L14.9 8.6 L22 9.3 L16.7 14.1 L18.2 21 L12 17.4 L5.8 21 L7.3 14.1 L2 9.3 L9.1 8.6 Z" fill="#eab308" opacity="${favourites.includes(t.id)?'1':'0'}"/>
             </svg>
           </button>
+          ${(!playRemoveTarget() || playRemoveTarget().trackIds.includes(t.id)) ? `<button class="deck-remove-btn${playRemoveTarget()?' is-destructive':''}" data-play-remove="${t.id}" title="${escapeHtml(playRemoveLabel())}" aria-label="${escapeHtml(playRemoveLabel())}: ${escapeHtml(t.name)}">
+            ${removeIconSvg(12)}
+          </button>` : ''}
           <button class="deck-eject-btn" data-deck-eject="${letter}" title="Eject" aria-label="Eject ${label}">
             <svg viewBox="0 0 24 24" width="12" height="12"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M12 4l6 8H6z M6 17h12"/></svg>
           </button>
@@ -4326,6 +4462,9 @@ function renderDecks(){
     hapticTap(10);
   });
 
+  holder.querySelectorAll('[data-play-remove]').forEach(btn=>{
+    btn.addEventListener('click', e=>{ e.stopPropagation(); removeFromPlayPool(btn.dataset.playRemove); });
+  });
   holder.querySelectorAll('[data-deck-eject]').forEach(btn=>{
     btn.addEventListener('click', e=>{
       e.stopPropagation();
@@ -4383,7 +4522,8 @@ function renderDecks(){
     const input = document.getElementById('deck-search-input-'+letter);
     if(!input) return;
     input.addEventListener('input', ()=>renderDeckSearchResults(letter, input.value));
-    renderDeckSearchResults(letter, '');
+    if(keptDeckQuery[letter]) input.value = keptDeckQuery[letter];
+    renderDeckSearchResults(letter, input.value);
   });
 }
 function renderDeckSearchResults(letter, query){
@@ -4420,7 +4560,7 @@ function renderDeckSearchResults(letter, query){
   if(activeSet){
     const upcoming = activeSet.trackIds.slice(activeSetIndex+1)
       .map((id,i)=>({t:library.find(x=>x.id===id), pos:activeSetIndex+2+i}))
-      .filter(x=>x.t && matchesQuery(x.t));
+      .filter(x=>x.t && matchesQuery(x.t) && passesEnergyFilter(x.t) && !sessionHiddenTrackIds.has(x.t.id));
     if(upcoming.length){
       upcoming.forEach(x=>setIds.add(x.t.id));
       setSectionHtml = `<div class="deck-search-set-label">${escapeHtml(activeSet.name)}</div>` +
@@ -4429,12 +4569,14 @@ function renderDeckSearchResults(letter, query){
     }
   }
 
-  let matches = getSearchableLibrary().filter(t => !setIds.has(t.id) && matchesQuery(t));
+  // v1.43: deck search follows Play's energy filter too, and skips tracks
+  // hidden for this session.
+  let matches = getSearchableLibrary().filter(t => !setIds.has(t.id) && matchesQuery(t) && passesEnergyFilter(t) && !sessionHiddenTrackIds.has(t.id));
   const sort = deckSearchSort[letter];
   if(sort==='asc') matches = [...matches].sort((a,b)=>a.bpm-b.bpm);
   else if(sort==='desc') matches = [...matches].sort((a,b)=>b.bpm-a.bpm);
   matches = matches.slice(0,60);
-  if(matches.length===0 && !setSectionHtml){ box.innerHTML = `<div class="empty-state" style="padding:14px 0;">No tracks to browse</div>`; return; }
+  if(matches.length===0 && !setSectionHtml){ box.innerHTML = `<div class="empty-state" style="padding:14px 0;">${energyFilterBands.size ? 'No tracks in the selected energy level'+(energyFilterBands.size>1?'s':'') : 'No tracks to browse'}</div>`; return; }
   box.innerHTML = setSectionHtml + matches.map(t=>rowHtml(t)).join('');
   box.querySelectorAll('[data-deck-search-pick]').forEach(row=>{
     row.addEventListener('click', ()=>{
@@ -4502,7 +4644,7 @@ function renderMatches(animateNew){
 
   const activeCrateFilter = suggestionsCrateFilterId ? crates.find(c=>c.id===suggestionsCrateFilterId) : null;
   const crateFilterSet = activeCrateFilter ? new Set(activeCrateFilter.trackIds) : null;
-  const eligible = library.filter(t=>t.id!==now.id && !playedTrackIds.has(t.id) && (!crateFilterSet || crateFilterSet.has(t.id)) && passesEnergyFilter(t));
+  const eligible = library.filter(t=>t.id!==now.id && !playedTrackIds.has(t.id) && (!crateFilterSet || crateFilterSet.has(t.id)) && passesEnergyFilter(t) && !sessionHiddenTrackIds.has(t.id));
 
   // If we're mid-chain, the chain's next step gets pinned above even the
   // Flow matches — it's not just one proven transition, it's a whole
@@ -4573,7 +4715,7 @@ function renderMatches(animateNew){
     // Skip the rebuild entirely if the result set is identical to what's
     // already on screen — a real, frequent case (switching tabs, a
     // re-render triggered by something that didn't actually change scores).
-    const resultsKey = results.map(r=>r.t.id+':'+r.overall).join(',')+'|'+chainPickId+'|'+setPickId+'|'+selectedMatchId;
+    const resultsKey = results.map(r=>r.t.id+':'+r.overall).join(',')+'|'+chainPickId+'|'+setPickId+'|'+selectedMatchId+'|'+suggestionsCrateFilterId;
     if(!animateNew && resultsKey===lastRenderedResultsKey) return;
     lastRenderedResultsKey = resultsKey;
 
@@ -4587,7 +4729,10 @@ function renderMatches(animateNew){
     const pitchNote = beyondPitchRange
       ? `<div class="bd-pitch-note" title="Most controllers max out around ±8% pitch adjustment — this gap may need a key change to bridge">Beyond a typical ±8% pitch range</div>` : '';
     const compatible = r.kd.score>=40;
-    const keyText = compatible ? '✓ Harmonically Compatible' : '✕ Not Harmonically Compatible';
+    // v1.43: the exact same key gets its own label, so "Harmonically
+    // Compatible" now only means a different-but-workable key.
+    const keyText = r.kd.score===100 ? '✓ Exact Same Key'
+      : compatible ? '✓ Harmonically Compatible' : '✕ Not Harmonically Compatible';
     let loudRow;
     if(r.loudDiff==null){
       loudRow = `<span class="bd-text" style="color:var(--dim);font-weight:500;">No loudness data</span>`;
@@ -4647,6 +4792,7 @@ function renderMatches(animateNew){
         <div class="chev" title="Show details">▾</div>
       </div>
       <div class="breakdown"><div class="breakdown-inner">
+        <button class="bd-remove-btn${playRemoveTarget()?' is-destructive':''}" data-play-remove="${r.t.id}">${removeIconSvg(14)}<span>${escapeHtml(playRemoveLabel())}</span></button>
         ${hasFlowNote ? `<div class="bd-flow-note"><span class="bd-flow-note-icon">
           <svg viewBox="0 0 24 24" width="14" height="14"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" d="M4 5h16v10H10l-4 4V5z"/></svg>
         </span><span>"${escapeHtml(flowObj.comment)}"</span></div>` : ''}
@@ -4677,6 +4823,9 @@ function renderMatches(animateNew){
     });
   });
   wireTrackEditActions(list);
+  list.querySelectorAll('[data-play-remove]').forEach(btn=>{
+    btn.addEventListener('click', e=>{ e.stopPropagation(); removeFromPlayPool(btn.dataset.playRemove); });
+  });
 
   list.querySelectorAll('.match-row').forEach(row=>{
     const main = row.querySelector('.match-main');
@@ -5206,6 +5355,7 @@ document.getElementById('play-reset-btn').addEventListener('click', ()=>{
   if(playedTrackIds.size===0 && !nowPlayingId && playHistory.length===0 && !deckA && !deckB) return;
   if(!confirm("Reset your DJ session? This clears played-track history, your recent-tracks strip, and both decks — every track in your crate becomes eligible for suggestions again, and any active Set switches off. Your saved Flows, Chains and Sets are kept.")) return;
   playedTrackIds.clear();
+  sessionHiddenTrackIds.clear();
   playHistory = [];
   pendingFlowAnchorId = null;
   currentChainId = null; currentChainIndex = -1;
@@ -5674,6 +5824,7 @@ function renderOrganise(skipAnim){
   const hideEl = goingToDetail ? listView : detailView;
   hideEl.style.display = 'none';
   if(goingToDetail){
+    syncDetailSearchBar();
     if(openCrateId==='__flow__') renderFlowDetail();
     else if(openCrateId==='__chain__') renderChainDetail();
     else if(openCrateId==='__fav__') renderFavDetail();
@@ -5685,8 +5836,11 @@ function renderOrganise(skipAnim){
     }
     else renderCrateDetail();
   } else {
+    lastDetailKey = null; detailSearchQuery = '';
+    document.getElementById('detail-search-empty').style.display = 'none';
     renderOrganiseList();
   }
+  applyDetailSearch();
   showEl.style.display = 'block';
   if(skipAnim){
     showEl.classList.remove('organise-slide-in');
@@ -5696,6 +5850,115 @@ function renderOrganise(skipAnim){
     void showEl.offsetWidth;
     showEl.classList.add('organise-slide-in');
   }
+}
+
+let organiseSearchQuery = '';
+let detailSearchQuery = '';
+let carryDetailSearch = false;
+let lastDetailKey = null;
+function renderOrganiseSearch(){
+  const results = document.getElementById('organise-search-results');
+  const browse = document.getElementById('organise-browse');
+  const q = organiseSearchQuery.trim();
+  if(!q){ results.style.display='none'; results.innerHTML=''; browse.style.display=''; return; }
+  browse.style.display='none';
+  results.style.display='block';
+  const ql = q.toLowerCase().split(/\s+/).filter(Boolean);
+  const crateHits = crates.filter(c=>ql.every(tok=>c.name.toLowerCase().includes(tok)));
+  const allTrackHits = library.filter(t=>trackMatchesSearch(t, q));
+  const trackHits = allTrackHits.slice(0, 40);
+  let html = '';
+  if(crateHits.length){
+    html += `<div class="section-lbl org-search-lbl">Crates</div>` + crateHits.map(c=>`
+      <div class="crate-card" data-search-open-crate="${c.id}">
+        <div class="crate-card-icon">▤</div>
+        <div class="crate-card-info"><div class="t">${escapeHtml(c.name)}</div><div class="a">${c.trackIds.length} track${c.trackIds.length===1?'':'s'}</div></div>
+        <div class="chev">›</div>
+      </div>`).join('');
+  }
+  html += `<div class="section-lbl org-search-lbl">Tracks${allTrackHits.length>trackHits.length?` — first ${trackHits.length} of ${allTrackHits.length}`:''}</div>`;
+  if(!trackHits.length){
+    html += `<div class="lib-empty">No tracks match "${escapeHtml(q)}".</div>`;
+  } else {
+    html += trackHits.map(t=>{
+      const inCrates = crates.filter(c=>c.trackIds.includes(t.id));
+      const chips = inCrates.map(c=>`<button class="crate-chip" data-search-open-crate="${c.id}" data-carry="1">${escapeHtml(c.name)}</button>`);
+      if(favourites.includes(t.id)) chips.push(`<button class="crate-chip" data-search-open-crate="__fav__" data-carry="1">★ Favourites</button>`);
+      return `<div class="org-search-track" data-id="${t.id}">
+        <img src="${t.icon}">
+        <div class="now-sugg-info">
+          <div class="t">${escapeHtml(t.name)}</div>
+          <div class="a">${t.bpm} bpm · ${escapeHtml((t.key&&t.key.camelot)||'')} · ${escapeHtml(t.artist||'Unknown artist')}</div>
+          ${rowBadgesHtml(t)}
+          <div class="org-search-in">${chips.length ? `<span>In:</span>${chips.join('')}` : '<span>Not in any crate yet</span>'}</div>
+        </div>
+      </div>`;
+    }).join('');
+  }
+  results.innerHTML = html;
+  results.querySelectorAll('[data-search-open-crate]').forEach(el=>{
+    el.addEventListener('click', e=>{
+      e.stopPropagation();
+      openCrateId = el.dataset.searchOpenCrate;
+      // Tapping a crate chip under a track opens that crate already filtered
+      // to the same search, so the track is right there.
+      detailSearchQuery = el.dataset.carry ? q : '';
+      carryDetailSearch = true;
+      renderOrganise();
+    });
+  });
+}
+wireSearchBar('organise-search', q=>{ organiseSearchQuery = q; renderOrganiseSearch(); });
+
+// ---- v1.43: search inside an Organise folder. Filters the rows that are
+// already rendered (no re-render, so open edit panels and wiring stay put),
+// and re-applies itself whenever the folder re-renders. ----
+const DETAIL_SEARCH_ROWS = '#crate-tracks-list > .track-row, #fav-tracks-list > .track-row, [data-search-ids]';
+function detailSearchSupported(){
+  if(!openCrateId) return false;
+  if(openCrateId==='__game__' || openCrateId==='__setbuilder__') return false;
+  if(openCrateId==='__history__') return !!openHistorySessionId;
+  return true; // a crate, Favourites, Flow, Chains
+}
+function applyDetailSearch(){
+  const content = document.getElementById('organise-detail-content');
+  const empty = document.getElementById('detail-search-empty');
+  const q = detailSearchQuery.trim();
+  let total = 0, shown = 0;
+  content.querySelectorAll(DETAIL_SEARCH_ROWS).forEach(row=>{
+    total++;
+    let match = true;
+    if(q){
+      const ids = row.dataset.searchIds ? row.dataset.searchIds.split(',') : [row.dataset.id];
+      match = ids.some(id=>{ const t = library.find(x=>x.id===id); return t && trackMatchesSearch(t, q); });
+    }
+    row.classList.toggle('search-hidden', !match);
+    if(match) shown++;
+  });
+  if(q && total>0 && shown===0){
+    empty.textContent = `Nothing in here matches "${q}".`;
+    empty.style.display = 'block';
+  } else {
+    empty.style.display = 'none';
+  }
+}
+new MutationObserver(()=>applyDetailSearch()).observe(document.getElementById('organise-detail-content'), {childList:true});
+wireSearchBar('detail-search', q=>{ detailSearchQuery = q; applyDetailSearch(); });
+function syncDetailSearchBar(){
+  const key = openCrateId + '|' + (openHistorySessionId||'');
+  if(key!==lastDetailKey && !carryDetailSearch) detailSearchQuery = '';
+  carryDetailSearch = false;
+  lastDetailKey = key;
+  const supported = detailSearchSupported();
+  document.getElementById('detail-search-bar').style.display = supported ? '' : 'none';
+  if(!supported) detailSearchQuery = '';
+  const input = document.getElementById('detail-search-input');
+  input.placeholder = openCrateId==='__flow__' ? 'Search your Flows…'
+    : openCrateId==='__chain__' ? 'Search your Chains…'
+    : openCrateId==='__fav__' ? 'Search Favourites…'
+    : openCrateId==='__history__' ? 'Search this session…'
+    : 'Search this crate…';
+  setSearchBarValue('detail-search', detailSearchQuery);
 }
 
 function renderOrganiseList(){
@@ -5752,6 +6015,7 @@ function renderOrganiseList(){
       });
     });
   }
+  renderOrganiseSearch();
 }
 document.getElementById('open-chain-crate').addEventListener('click', ()=>{ openCrateId='__chain__'; renderOrganise(); });
 document.getElementById('open-flow-crate').addEventListener('click', ()=>{ openCrateId='__flow__'; renderOrganise(); });
@@ -5864,7 +6128,7 @@ function renderChainDetail(){
     ? `<div class="lib-empty">No chains saved yet.</div>`
     : chains.map(c=>{
         const tracks = c.trackIds.map(id=>library.find(t=>t.id===id)).filter(Boolean);
-        return `<div class="organise-row" style="align-items:center;">
+        return `<div class="organise-row" style="align-items:center;" data-search-ids="${c.trackIds.join(',')}">
           <div style="display:flex;flex:1;overflow-x:auto;">
             ${tracks.map(t=>`<img src="${t.icon}" style="width:28px;height:28px;border-radius:var(--radius-tight);object-fit:cover;margin-right:-8px;border:2px solid var(--card);flex-shrink:0;">`).join('')}
           </div>
@@ -5951,7 +6215,7 @@ function renderHistorySessionDetail(){
   el.innerHTML = `<div class="section-lbl">${escapeHtml(session.name)}</div>` +
     (tracks.length===0 ? `<div class="lib-empty">None of these tracks are in your library anymore.</div>` :
      tracks.map((t,i)=>`
-      <div class="organise-row">
+      <div class="organise-row" data-search-ids="${t.id}">
         <span style="color:var(--dim);font-size:var(--text-caption);width:16px;flex-shrink:0;">${i+1}</span>
         <img src="${t.icon}">
         <div class="now-sugg-info"><div class="t">${escapeHtml(t.name)}</div><div class="a">${escapeHtml(t.artist||'Unknown artist')}</div></div>
@@ -6040,7 +6304,7 @@ function renderFlowDetail(){
     const fromT = library.find(t=>t.id===f.from), toT = library.find(t=>t.id===f.to);
     if(!fromT || !toT) return '';
     const comment = f.comment || '';
-    return `<div class="flow-pair-row">
+    return `<div class="flow-pair-row" data-search-ids="${f.from},${f.to}">
       <div class="flow-pair-main">
         <img src="${fromT.icon}">
         <span class="flow-pair-arrow">→</span>
@@ -6570,9 +6834,9 @@ function renderSetBuilder(){
 /* =========================================================
    INIT
 ========================================================= */
-const APP_VERSION = '1.42';
+const APP_VERSION = '1.43';
 const APP_BUILD = '2026-10-01';
-const APP_BUILD_TIME = '10:55';
+const APP_BUILD_TIME = '11:23';
 document.getElementById('version-display').textContent = `${APP_VERSION} · ${APP_BUILD} ${APP_BUILD_TIME}`;
 (function(){
   const el = document.getElementById('splash-version');
@@ -6585,6 +6849,7 @@ document.getElementById('version-display').textContent = `${APP_VERSION} · ${AP
 // from the very start, but accurate to the best of what was actually shipped.
 // Add one line here with each future update.
 const CHANGELOG = [
+  {v:'1.43', notes:'Four changes. (1) Play’s energy filter now also applies to deck search: with Peak on, browsing a deck only shows Peak tracks (anything you’d already typed in the search box stays put when you flip a filter). (2) Search bars everywhere you browse tracks: Import (filters the collection list, and Select All now only selects what the search shows), the top of Organise (finds tracks across your whole library and shows which crates each one is in; tap a crate chip to jump straight into that crate, already filtered to the track), plus one inside every folder (crates, Favourites, Flow, Chains and History sessions). Every word you type has to match somewhere in the name, artist, tags, key or BPM, so "foreshadow 124" or "8a peak" both work. (3) The Key line in a suggestion’s details now says "Exact Same Key" when the keys are identical, so "Harmonically Compatible" only means a different key that still mixes. (4) Remove from playlist in Play: there’s a minus button on each loaded deck and a remove button in each suggestion’s details. With a crate picked in Play’s crate filter, it takes the track out of that crate; on All Tracks it hides the track from suggestions and deck search for this session (Reset brings it back). Both show an Undo toast. Gig Mode hides the crate version, like other edits, but keeps the hide-for-this-session version. Also fixed: the "Add a track…" pickers in Organise (crates, Flow, Set Builder) stuck out past the right edge of the screen.'},
   {v:'1.42', notes:'New: an energy filter in Play — four buttons (Chill, Warmup, Peak, Impact) right under the crate/set pills. Tap one to switch it on and it lights up in that band’s own color; tap again and it greys back out. Any mix can be on at once, and with none on, every energy level shows just like before. It narrows Top Matches the same way the crate filter does (tracks with no energy set are left out while a filter is on). Background, the sides this time: the glow layer was only 460px tall while the color inside it reached further down, so out at the left/right edges of a desktop or landscape window it stopped in a hard horizontal line. The glow now lives on a fixed, full-screen layer sized as a proportion of the screen in both directions, with an eased fade that tapers off to nothing well before any edge — smooth in portrait and landscape alike. And: the loading screen now shows the app version plus the date and time of the update under the logo (with the wordmark properly centered above it). Small fix spotted along the way: in light mode the All Tracks / Set / Filters pills and the undo button had a hard-coded dark fill, so their labels vanished into black blobs — they now follow the theme like every other card.'},
   {v:'1.41', notes:'The "Play, Upgraded" pitch deck, built (picks 1B · 2B · 3C), plus one more Sam asked for alongside it. A loaded deck card now carries its own ✎ edit button, opening the exact same Track Details/Tags/Energy panel used in Import and Organise in a bottom sheet — change a track’s BPM, key, art, tags or energy without ejecting it first. The favourite star is back in Play too, now living right on the deck label (next to Deck A/B’s own name) instead of only in Import/Organise — tap it mid-set to favourite whatever’s loaded. New: a thumbs-down button sits in the same row as Flow and the tonal/analytics button, between the decks — mark a transition unfavourable and it’s logged quietly (no scoring change, nothing hidden or blocked); if that same pairing ever comes back around in a suggestion row or deck search, a small red flag badge gives you a heads-up before you load it again. And: the energy-level dot + tag pill that Import and Organise already show under every track now show up everywhere in Play too — Top Matches rows, deck search results, and both loaded deck cards — so energy is visible at a glance wherever a track appears, not just while organising your crates.'},
   {v:'1.40', notes:'Two visual fixes Sam flagged from a real desktop-width screenshot. (1) The A/B deck-allocate buttons on each suggestion row now carry the same dashed "bracket" the deck cards already use for whichever deck isn’t currently active — so you can tell at a glance, straight from the suggestion list, which deck (A or B) is the one that’ll actually receive your next pick, without looking up at the decks themselves. (2) The header used to carry its own frosted box at all times, and the ambient glow behind it was still tuned in fixed pixels for the ~640px mobile column — on a real desktop-width window that meant a hard-edged bar sitting on a visible pink→teal seam. The glow’s two blobs are now sized and positioned as a percentage of the viewport instead of fixed px, so they stay deeply overlapped (and blend smoothly) at any window width; and the header itself is transparent by default — the wordmark and settings gear now drift directly over that glow — picking up its frosted tint and blur only once you actually scroll, so it stays legible over content passing underneath.'},
