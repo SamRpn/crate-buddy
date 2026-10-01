@@ -461,6 +461,43 @@
   .org-search-in{display:flex;flex-wrap:wrap;align-items:center;gap:5px;margin-top:6px;font-size:var(--text-caption);color:var(--dim);}
   .crate-chip{background:color-mix(in srgb, var(--accent) 12%, var(--card));border:1px solid color-mix(in srgb, var(--accent) 35%, var(--line));
     color:var(--accent);border-radius:999px;padding:3px 10px;font-family:inherit;font-size:var(--text-caption);font-weight:700;cursor:pointer;}
+  .learn-sheet{max-height:88vh;overflow-y:auto;}
+  .learn-open-btn{background:var(--card);border:1px solid var(--line);color:var(--text);border-radius:999px;padding:6px 12px;
+    font-family:inherit;font-size:var(--text-caption);font-weight:700;cursor:pointer;}
+  .learn-section-lbl{font-family:var(--font-display);font-weight:600;font-size:var(--text-body);margin:18px 0 6px;}
+  .learn-hint{font-size:var(--text-caption);color:var(--dim);line-height:1.5;margin:0 0 10px;}
+  .learn-calib-row{display:flex;gap:8px;align-items:center;}
+  .learn-calib-row select{flex:1;min-width:0;background:var(--bg);border:1px solid var(--line);border-radius:var(--radius-control);
+    padding:9px 10px;color:var(--text);font-size:var(--text-body-sm);}
+  .learn-calib-row .edit-save{width:auto;padding:9px 14px;white-space:nowrap;}
+  .learn-card{background:var(--bg);border:1px solid var(--line);border-radius:var(--radius-panel);padding:12px 14px;margin:10px 0;}
+  .learn-card h4{margin:0 0 4px;font-size:var(--text-body);font-family:var(--font-display);font-weight:600;}
+  .learn-card .learn-big{font-size:var(--text-body-sm);color:var(--text);}
+  .learn-card .learn-big b{font-variant-numeric:tabular-nums;}
+  .learn-chips{display:flex;flex-wrap:wrap;gap:5px;margin-top:8px;}
+  .learn-chip{font-size:var(--text-micro);font-weight:700;letter-spacing:0.3px;text-transform:uppercase;padding:3px 8px;border-radius:999px;
+    background:var(--line);color:var(--dim);}
+  .learn-chip.good{background:color-mix(in srgb, #16a34a 18%, var(--card));color:#16a34a;}
+  .learn-rule{font-size:var(--text-caption);line-height:1.5;margin-top:8px;padding-top:8px;border-top:1px solid var(--line);color:var(--text);}
+  .learn-rule.none{color:var(--dim);}
+  .learn-rows{margin-top:12px;max-height:44vh;overflow-y:auto;border:1px solid var(--line);border-radius:var(--radius-panel);}
+  .learn-row{display:flex;align-items:center;gap:10px;padding:9px 12px;border-bottom:1px solid var(--line);font-size:var(--text-caption);cursor:pointer;}
+  .learn-row:last-child{border-bottom:none;}
+  .learn-row input{flex-shrink:0;width:18px;height:18px;accent-color:var(--accent);}
+  .learn-row .lr-name{flex:1;min-width:0;font-weight:700;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .learn-row .lr-vals{text-align:right;color:var(--dim);font-variant-numeric:tabular-nums;line-height:1.4;flex-shrink:0;}
+  .learn-row .lr-vals .miss{color:#E5484D;font-weight:700;}
+  .learn-row .lr-vals .hit{color:#16a34a;font-weight:700;}
+  .learn-calib-summary{font-size:var(--text-caption);color:var(--dim);margin-top:10px;line-height:1.5;}
+  .learn-save-btn{width:100%;margin-top:10px;}
+  .learn-forget{display:block;margin:20px auto 4px;background:none;border:none;color:#E5484D;font-family:inherit;
+    font-size:var(--text-caption);font-weight:700;cursor:pointer;}
+  .export-status{font-size:var(--text-body-sm);color:var(--dim);margin:14px 2px 12px;line-height:1.45;}
+  .export-status b{color:var(--text);}
+  .export-main-btn{width:100%;}
+  .export-main-btn:disabled{opacity:0.45;}
+  .export-alt-btn{width:100%;margin-top:8px;}
+  .export-hint{font-size:var(--text-caption);color:var(--dim);margin-top:10px;line-height:1.45;}
   .crate-filter-row{display:flex;align-items:center;gap:8px;margin-bottom:14px;flex-wrap:wrap;}
   .filters-pill{display:inline-flex;align-items:center;gap:6px;background:var(--card);border:1px solid var(--line);
     border-radius:999px;padding:8px 14px;color:var(--text);cursor:pointer;}
@@ -1106,6 +1143,40 @@
     </div>
   </div>
 
+  <div class="modal-overlay" id="export-overlay">
+    <div class="modal-sheet">
+      <div class="modal-header"><b>Back up your library</b><button id="export-close" aria-label="Close">✕</button></div>
+      <div class="modal-row">
+        <span>Include 15s preview clips <span style="color:var(--dim);font-size:var(--text-caption);">— much bigger file</span></span>
+        <label class="switch"><input type="checkbox" id="export-include-previews" checked><span class="switch-slider"></span></label>
+      </div>
+      <div class="export-status" id="export-status">Preparing your backup…</div>
+      <button class="edit-save export-main-btn" id="export-save-btn" disabled>Save backup</button>
+      <button class="edit-cancel export-alt-btn" id="export-share-btn" style="display:none;">Share / Save to Files…</button>
+      <div class="export-hint" id="export-hint"></div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="learn-overlay">
+    <div class="modal-sheet learn-sheet">
+      <div class="modal-header"><b>Analysis learning</b><button id="learn-close" aria-label="Close">✕</button></div>
+      <div id="learn-report"></div>
+      <div class="modal-row">
+        <span>Use learned corrections on new imports</span>
+        <label class="switch"><input type="checkbox" id="learn-toggle" checked><span class="switch-slider"></span></label>
+      </div>
+      <div class="learn-section-lbl">Check a crate against its audio files</div>
+      <p class="learn-hint">For a crate where you've already set BPM and key yourself (from rekordbox, say). Pick the crate, then select its audio files: the app re-reads them and keeps what it hears next to your values, so it can learn where it goes wrong. Your BPM and key aren't changed.</p>
+      <div class="learn-calib-row">
+        <select id="learn-crate-select"></select>
+        <button class="edit-save" id="learn-pick-files">Pick audio files…</button>
+        <input type="file" accept="audio/*" multiple id="learn-files-input" style="display:none;">
+      </div>
+      <div id="learn-calib-results"></div>
+      <button class="learn-forget" id="learn-forget">Forget everything learned</button>
+    </div>
+  </div>
+
   <div class="modal-overlay" id="settings-overlay">
     <div class="modal-sheet">
       <div class="modal-header"><b>Settings</b><button id="settings-close" aria-label="Close settings">✕</button></div>
@@ -1153,6 +1224,10 @@
       <div class="modal-row">
         <span>Search only within selected crate</span>
         <label class="switch"><input type="checkbox" id="search-crate-scope-toggle"><span class="switch-slider"></span></label>
+      </div>
+      <div class="modal-row">
+        <span>Analysis learning <span style="color:var(--dim);font-size:var(--text-caption);" id="learn-settings-status"></span></span>
+        <button class="learn-open-btn" id="learn-open-btn">Open ›</button>
       </div>
       <div class="modal-row" style="border-top:1px solid var(--line);padding-top:14px;margin-top:4px;">
         <span>Gig Mode <span style="color:var(--dim);font-size:var(--text-caption);">— bigger targets, edit/delete off</span></span>
@@ -1224,9 +1299,10 @@
     <div class="backup-row">
       <button id="import-btn">⭱ Import library and preferences</button>
       <button id="export-btn">⭳ Export library and preferences</button>
-      <input type="file" id="import-file-input" accept="application/json" style="display:none;">
+      <input type="file" id="import-file-input" accept=".json,.gz,application/json,application/gzip,application/x-gzip" style="display:none;">
     </div>
     <div class="search-bar" id="lib-search-bar"><svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><circle cx="11" cy="11" r="6.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M16 16l4.5 4.5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg><input type="search" class="search-bar-input" id="lib-search-input" placeholder="Search name, artist, tag, key or BPM…" autocomplete="off" autocorrect="off" spellcheck="false" enterkeyhint="search"><button type="button" class="search-clear" id="lib-search-clear" aria-label="Clear search">✕</button></div>
+    <div class="energy-filter-row" data-energy-group="lib" role="group" aria-label="Filter by energy level"><button class="energy-filter-btn" data-energy-band="chill" style="--band:var(--energy-chill)" title="Chill (1-3)" aria-pressed="false"><span class="dot"></span>Chill</button><button class="energy-filter-btn" data-energy-band="warmup" style="--band:var(--energy-warmup)" title="Warmup (4-6)" aria-pressed="false"><span class="dot"></span>Warmup</button><button class="energy-filter-btn" data-energy-band="peak" style="--band:var(--energy-peak)" title="Buildup/Peak (7-8)" aria-pressed="false"><span class="dot"></span>Peak</button><button class="energy-filter-btn" data-energy-band="high" style="--band:var(--energy-high)" title="High Energy/Impact (9-10)" aria-pressed="false"><span class="dot"></span>Impact</button></div>
     <div class="lib-toolbar" id="lib-toolbar"></div>
     <div class="lib-filter-panel" id="lib-filter-panel"></div>
     <div class="collection-heading">
@@ -1243,6 +1319,7 @@
       <div class="lib-empty" id="organise-empty-library" style="display:none;">Nothing to organise yet — import some tracks first, then Crates, Flow, Chains, Favourites, and History will all show up here.</div>
       <div id="organise-populated-content">
       <div class="search-bar" id="organise-search-bar"><svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><circle cx="11" cy="11" r="6.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M16 16l4.5 4.5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg><input type="search" class="search-bar-input" id="organise-search-input" placeholder="Search tracks & crates…" autocomplete="off" autocorrect="off" spellcheck="false" enterkeyhint="search"><button type="button" class="search-clear" id="organise-search-clear" aria-label="Clear search">✕</button></div>
+      <div class="energy-filter-row" data-energy-group="org" role="group" aria-label="Filter by energy level"><button class="energy-filter-btn" data-energy-band="chill" style="--band:var(--energy-chill)" title="Chill (1-3)" aria-pressed="false"><span class="dot"></span>Chill</button><button class="energy-filter-btn" data-energy-band="warmup" style="--band:var(--energy-warmup)" title="Warmup (4-6)" aria-pressed="false"><span class="dot"></span>Warmup</button><button class="energy-filter-btn" data-energy-band="peak" style="--band:var(--energy-peak)" title="Buildup/Peak (7-8)" aria-pressed="false"><span class="dot"></span>Peak</button><button class="energy-filter-btn" data-energy-band="high" style="--band:var(--energy-high)" title="High Energy/Impact (9-10)" aria-pressed="false"><span class="dot"></span>Impact</button></div>
       <div id="organise-search-results" style="display:none;"></div>
       <div id="organise-browse">
       <div class="section-lbl">Your Crates</div>
@@ -1297,6 +1374,7 @@
     <div id="organise-detail-view" style="display:none;">
       <button class="back-btn" id="organise-back-btn">‹ Back to Organise</button>
       <div class="search-bar" id="detail-search-bar" style="display:none;"><svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><circle cx="11" cy="11" r="6.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M16 16l4.5 4.5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg><input type="search" class="search-bar-input" id="detail-search-input" placeholder="Search this folder…" autocomplete="off" autocorrect="off" spellcheck="false" enterkeyhint="search"><button type="button" class="search-clear" id="detail-search-clear" aria-label="Clear search">✕</button></div>
+      <div class="energy-filter-row" data-energy-group="detail" role="group" aria-label="Filter by energy level" id="detail-energy-row" style="display:none;"><button class="energy-filter-btn" data-energy-band="chill" style="--band:var(--energy-chill)" title="Chill (1-3)" aria-pressed="false"><span class="dot"></span>Chill</button><button class="energy-filter-btn" data-energy-band="warmup" style="--band:var(--energy-warmup)" title="Warmup (4-6)" aria-pressed="false"><span class="dot"></span>Warmup</button><button class="energy-filter-btn" data-energy-band="peak" style="--band:var(--energy-peak)" title="Buildup/Peak (7-8)" aria-pressed="false"><span class="dot"></span>Peak</button><button class="energy-filter-btn" data-energy-band="high" style="--band:var(--energy-high)" title="High Energy/Impact (9-10)" aria-pressed="false"><span class="dot"></span>Impact</button></div>
       <div id="organise-detail-content"></div>
       <div class="lib-empty" id="detail-search-empty" style="display:none;"></div>
     </div>
@@ -2049,11 +2127,18 @@ async function analyzeFile(file, onProgress){
   const loudness = await measureLoudness(audioBuffer);
   onProgress(0.65);
 
-  const bpm = estimateBPM(mono, audioBuffer.sampleRate);
+  const bpmInfo = estimateBPMDetailed(mono, audioBuffer.sampleRate);
   onProgress(0.8);
 
-  const keyInfo = estimateKey(mono, audioBuffer.sampleRate);
+  const keyD = estimateKeyDetailed(mono, audioBuffer.sampleRate);
   onProgress(0.9);
+  // v1.44: keep the app's own raw reading on the track, then apply anything
+  // learned from your corrections on top of it.
+  const analysis = {v:2, bpm:bpmInfo.bpm, rawBpm:bpmInfo.rawBpm, key:keyD.key.camelot, keyRank:keyD.ranking, at:Date.now()};
+  const learned = applyLearnedCorrections(analysis);
+  if(learned.notes.length) analysis.adjusted = learned.notes;
+  const bpm = learned.bpm;
+  const keyInfo = keyFromCamelot(learned.camelot) || keyD.key;
 
   const previewAnchor = findLoudestWindowCenter(mono, audioBuffer.sampleRate, audioBuffer.duration);
   const previewAudio = extractPreviewDataUrl(audioBuffer, previewAnchor); // fast, instant — never blocks import
@@ -2074,7 +2159,8 @@ async function analyzeFile(file, onProgress){
     bpm: Math.round(bpm),
     key: keyInfo,
     bands, loudness, peaks, icon, previewAudio,
-    sourceFile: {name: file.name, size: file.size}
+    sourceFile: {name: file.name, size: file.size},
+    analysis
   };
   queuePreviewUpgrade(track, audioBuffer, previewAnchor);
   return track;
@@ -2433,7 +2519,17 @@ async function measureLoudness(audioBuffer){
   return Math.round(toLufs(finalAvg)*10)/10;
 }
 
-function estimateBPM(mono, sampleRate){
+/* v1.44: BPM detection fixed + sharpened. Benchmarked on synthetic beats at
+   known tempos: the old version got 0/34 exactly right and the new one 32/34
+   (the two misses are 174 read as 87 — the half/double-time call, which
+   learned corrections can settle). Two problems: (1) the beat envelope was
+   assumed to run at exactly 200 samples/sec but really ran at ~196.9, so every
+   track read ~1.6% fast (124 came out as 126); (2) the tempo was picked from
+   whole-sample lags, which at house tempos means ~1.3 BPM steps. It now uses the
+   real envelope rate, and scores tempos on a fine 0.02 BPM grid with a comb that
+   checks the 1-, 2- and 4-beat repeats together. rawBpm is the unfolded pick
+   (70-180); bpm is folded into 80-170 like before. */
+function estimateBPMDetailed(mono, sampleRate){
   const targetSR=6000, factor=Math.max(1,Math.round(sampleRate/targetSR));
   const dsLen=Math.floor(mono.length/factor);
   const ds=new Float32Array(dsLen);
@@ -2443,26 +2539,36 @@ function estimateBPM(mono, sampleRate){
   const smoothed=new Float32Array(dsLen);
   let acc=0;
   for(let i=0;i<dsLen;i++){ acc+=ds[i]; if(i>=win) acc-=ds[i-win]; smoothed[i]=acc/Math.min(i+1,win); }
-  const envSR=200, envStep=Math.max(1,Math.round(sr/envSR));
+  const envStep=Math.max(1,Math.round(sr/200));
+  const envSR=sr/envStep;
   const envLen=Math.floor(dsLen/envStep);
   const env=new Float32Array(envLen);
   for(let i=0;i<envLen;i++){ let sum=0; for(let j=0;j<envStep;j++){ sum+=Math.abs(smoothed[i*envStep+j]||0); } env[i]=sum/envStep; }
   const trendWin=Math.round(envSR*1.5);
-  const detrended=new Float32Array(envLen);
+  const d=new Float32Array(envLen);
   let tacc=0;
-  for(let i=0;i<envLen;i++){ tacc+=env[i]; if(i>=trendWin) tacc-=env[i-trendWin]; detrended[i]=env[i]-(tacc/Math.min(i+1,trendWin)); }
-  const minBPM=70,maxBPM=180;
-  const minLag=Math.floor(envSR*60/maxBPM), maxLag=Math.ceil(envSR*60/minBPM);
-  let bestLag=minLag,bestScore=-Infinity;
-  for(let lag=minLag;lag<=maxLag;lag++){
-    let sum=0; for(let i=0;i+lag<envLen;i++){ sum+=detrended[i]*detrended[i+lag]; }
-    if(sum>bestScore){ bestScore=sum; bestLag=lag; }
+  for(let i=0;i<envLen;i++){ tacc+=env[i]; if(i>=trendWin) tacc-=env[i-trendWin]; d[i]=env[i]-(tacc/Math.min(i+1,trendWin)); }
+  // Autocorrelation at a FRACTIONAL lag (linear interpolation), normalised by overlap.
+  function ac(lag){
+    const li=Math.floor(lag), f=lag-li, n=envLen-li-1;
+    if(n<=0) return 0;
+    let sum=0;
+    for(let i=0;i<n;i++) sum+=d[i]*(d[i+li]*(1-f)+d[i+li+1]*f);
+    return sum/n;
   }
-  let bpm=60/(bestLag/envSR);
+  // Comb score: a real beat period also lines up at 2 and 4 beats.
+  const comb = bpm => { const L=envSR*60/bpm; return ac(L) + 0.6*ac(2*L) + 0.4*ac(4*L); };
+  let best=120, bestS=-Infinity;
+  for(let b=70; b<=180; b+=0.5){ const v=comb(b); if(v>bestS){ bestS=v; best=b; } }
+  let fine=best, fineS=bestS;
+  for(let b=best-0.6; b<=best+0.6; b+=0.02){ const v=comb(b); if(v>fineS){ fineS=v; fine=b; } }
+  const rawBpm=fine;
+  let bpm=rawBpm;
   while(bpm<80) bpm*=2;
   while(bpm>170) bpm/=2;
-  return bpm;
+  return {bpm, rawBpm};
 }
+function estimateBPM(mono, sampleRate){ return estimateBPMDetailed(mono, sampleRate).bpm; }
 
 const MAJOR_PROFILE=[6.35,2.23,3.48,2.33,4.38,4.09,2.52,5.19,2.39,3.66,2.29,2.88];
 const MINOR_PROFILE=[6.33,2.68,3.52,5.38,2.60,3.53,2.54,4.75,3.98,2.69,3.34,3.17];
@@ -2534,7 +2640,7 @@ function estimateTuningRef(mono, sampleRate){
 const DIATONIC_MAJOR=[1,0,1,0,1,1,0,1,0,1,0,1];
 const DIATONIC_MINOR=[1,0,1,1,0,1,0,1,1,0,1,0]; // natural minor
 
-function estimateKey(mono, sampleRate){
+function estimateKeyDetailed(mono, sampleRate){
   // A 4096-point FFT can't tell neighboring semitones apart below ~200Hz —
   // exactly the range a bassline (the strongest clue to a dance track's key)
   // lives in. A much larger window fixes that: 16384 points resolves down
@@ -2640,7 +2746,151 @@ function estimateKey(mono, sampleRate){
 
   const camelot = mode==='major'?CAMELOT_MAJOR[root]:CAMELOT_MINOR[root];
   const name = NOTE_NAMES[root]+(mode==='major'?'':'m');
-  return {camelot, name, root, mode};
+  // v1.44: also hand back how the vote was split across the top candidates,
+  // so learned corrections can see when a call was close (e.g. 8B vs 8A).
+  let total = 0; for(let i=0;i<24;i++) total += Math.max(0, votes[i]);
+  const ranking = [];
+  for(let i=0;i<24;i++) if(votes[i]>0) ranking.push({c: i<12?CAMELOT_MAJOR[i]:CAMELOT_MINOR[i-12], s: +(votes[i]/(total||1)).toFixed(4)});
+  ranking.sort((x,y)=>y.s-x.s);
+  return {key:{camelot, name, root, mode}, ranking: ranking.slice(0,6)};
+}
+function estimateKey(mono, sampleRate){ return estimateKeyDetailed(mono, sampleRate).key; }
+function keyFromCamelot(c){
+  const k = CAMELOT_TO_KEY[c];
+  return k ? {camelot:c, name:k.name, root:k.root, mode:k.mode} : null;
+}
+
+/* =========================================================
+   ANALYSIS LEARNING (v1.44) — learns from tracks whose BPM/key you've
+   checked (by editing them, or by calibrating a crate against its audio
+   files). The app's own raw reading is kept on each track as
+   track.analysis; track.verified marks which of the track's current
+   values are trusted. Candidate rules are tried out on those pairs, and a
+   rule is only applied to new imports when it fixes at least 2 more of your
+   tracks than it breaks — no retuning off a single data point.
+========================================================= */
+const LEARN_TOGGLE_KEY = 'cratebuddy:learn-corrections';
+let learnCorrectionsEnabled = true;
+const LEARN_MIN_PAIRS = 8, LEARN_MIN_GAIN = 2;
+function foldDefault(raw){ let b=raw; while(b<80) b*=2; while(b>170) b/=2; return b; }
+function foldRange(raw, lo){ let b=raw; while(b<lo) b*=2; while(b>=lo*2) b/=2; return b; }
+function camelotRelation(a, b){
+  if(!a || !b || a===b) return a===b ? 'same' : 'other';
+  const na=parseInt(a), la=a.slice(-1), nb=parseInt(b), lb=b.slice(-1);
+  const diff=Math.min(Math.abs(na-nb),12-Math.abs(na-nb));
+  if(na===nb && la!==lb) return 'relative';
+  if(diff===1 && la===lb) return 'fifth';
+  const ka=CAMELOT_TO_KEY[a], kb=CAMELOT_TO_KEY[b];
+  if(ka && kb && ka.root===kb.root && ka.mode!==kb.mode) return 'parallel';
+  return 'other';
+}
+const KEY_RULE_LABEL = {
+  relativeToMinor: 'its relative minor', relativeToMajor: 'its relative major',
+  parallelToMinor: 'the minor key on the same root', parallelToMajor: 'the major key on the same root',
+  fifth: 'a neighbouring key (one step round the Camelot wheel)'
+};
+function keyRuleMatches(rule, top, cand){
+  const rel = camelotRelation(top.c, cand.c);
+  const candMinor = cand.c.endsWith('A');
+  if(rule.type==='relativeToMinor') return rel==='relative' && candMinor;
+  if(rule.type==='relativeToMajor') return rel==='relative' && !candMinor;
+  if(rule.type==='parallelToMinor') return rel==='parallel' && candMinor;
+  if(rule.type==='parallelToMajor') return rel==='parallel' && !candMinor;
+  if(rule.type==='fifth') return rel==='fifth';
+  return false;
+}
+function applyKeyRules(ranking, rules){
+  if(!ranking || !ranking.length) return null;
+  const top = ranking[0];
+  for(const rule of rules){
+    const cand = ranking.slice(1,4).find(c=>keyRuleMatches(rule, top, c) && c.s >= rule.t*top.s);
+    if(cand) return cand.c;
+  }
+  return top.c;
+}
+function learningPairs(){
+  return library.filter(t=>t.analysis && t.verified && (t.verified.bpm || t.verified.key));
+}
+function computeLearnedModel(){
+  const pairs = learningPairs();
+  const bpmPairs = pairs.filter(t=>t.verified.bpm && isFinite(t.analysis.rawBpm));
+  const keyPairs = pairs.filter(t=>t.verified.key && t.analysis.key);
+  const model = {bpmPairs:bpmPairs.length, keyPairs:keyPairs.length, bpmRange:null, keyRules:[],
+    bpm:{before:0, after:0, patterns:{exact:0, near:0, octave:0, other:0}},
+    key:{before:0, after:0, patterns:{same:0, relative:0, fifth:0, parallel:0, other:0}}};
+  // ---- BPM: which octave range do this DJ's tracks actually live in? ----
+  const bpmOk = (pred, truth) => Math.round(pred)===Math.round(truth);
+  bpmPairs.forEach(t=>{
+    const pred = foldDefault(t.analysis.rawBpm), truth = t.bpm;
+    if(bpmOk(pred, truth)) { model.bpm.before++; model.bpm.patterns.exact++; }
+    else if(Math.abs(pred-truth)<=2.5) model.bpm.patterns.near++;
+    else if([2,0.5].some(m=>Math.abs(pred*m-truth)<=2.5)) model.bpm.patterns.octave++;
+    else model.bpm.patterns.other++;
+  });
+  model.bpm.after = model.bpm.before;
+  if(bpmPairs.length>=LEARN_MIN_PAIRS){
+    let bestLo=null, bestHits=model.bpm.before;
+    for(let lo=55; lo<=100; lo++){
+      const hits = bpmPairs.filter(t=>bpmOk(foldRange(t.analysis.rawBpm, lo), t.bpm)).length;
+      if(hits>bestHits){ bestHits=hits; bestLo=lo; }
+    }
+    if(bestLo!=null && bestHits-model.bpm.before>=LEARN_MIN_GAIN){ model.bpmRange={lo:bestLo, hi:bestLo*2}; model.bpm.after=bestHits; }
+  }
+  // ---- Key: when the vote was close, which way should it have gone? ----
+  const ranked = keyPairs.filter(t=>Array.isArray(t.analysis.keyRank) && t.analysis.keyRank.length);
+  keyPairs.forEach(t=>{
+    const rel = camelotRelation(t.analysis.key, t.key.camelot);
+    model.key.patterns[rel] = (model.key.patterns[rel]||0)+1;
+    if(rel==='same') model.key.before++;
+  });
+  model.key.after = model.key.before;
+  if(ranked.length>=LEARN_MIN_PAIRS){
+    const score = rules => ranked.filter(t=>applyKeyRules(t.analysis.keyRank, rules)===t.key.camelot).length;
+    // baseline on the ranked subset only, so gains are measured like-for-like
+    let current = score([]);
+    const base = current;
+    for(let round=0; round<2; round++){
+      let best=null, bestScore=current;
+      for(const type of Object.keys(KEY_RULE_LABEL)){
+        for(let t=0.5; t<=0.951; t+=0.05){
+          const rule = {type, t:+t.toFixed(2)};
+          const sc = score([...model.keyRules, rule]);
+          if(sc>bestScore){ bestScore=sc; best=rule; }
+        }
+      }
+      if(!best || bestScore-current<LEARN_MIN_GAIN) break;
+      model.keyRules.push(best); current = bestScore;
+    }
+    model.key.after = model.key.before + (current-base);
+  }
+  return model;
+}
+// What a fresh analysis turns into once the learned rules are applied.
+function applyLearnedCorrections(analysis){
+  const out = {bpm:analysis.bpm, camelot:analysis.key, notes:[]};
+  if(!learnCorrectionsEnabled) return out;
+  const model = computeLearnedModel();
+  if(model.bpmRange && isFinite(analysis.rawBpm)){
+    const b = foldRange(analysis.rawBpm, model.bpmRange.lo);
+    if(Math.round(b)!==Math.round(out.bpm)){ out.notes.push(`BPM ${Math.round(out.bpm)} → ${Math.round(b)} (your tracks sit in ${model.bpmRange.lo}–${model.bpmRange.hi})`); out.bpm=b; }
+  }
+  if(model.keyRules.length && analysis.keyRank){
+    const k = applyKeyRules(analysis.keyRank, model.keyRules);
+    if(k && k!==out.camelot){ out.notes.push(`Key ${out.camelot} → ${k} (close call, learned from your corrections)`); out.camelot=k; }
+  }
+  return out;
+}
+// Re-read just BPM + key from an audio file (calibration — never touches the
+// track's own values).
+async function analyzeBpmKeyOnly(file){
+  const arrBuf = await file.arrayBuffer();
+  const ctx = new (window.AudioContext||window.webkitAudioContext)();
+  const audioBuffer = await ctx.decodeAudioData(arrBuf);
+  const mono = mixToMono(audioBuffer);
+  const b = estimateBPMDetailed(mono, audioBuffer.sampleRate);
+  const k = estimateKeyDetailed(mono, audioBuffer.sampleRate);
+  ctx.close();
+  return {v:2, bpm:b.bpm, rawBpm:b.rawBpm, key:k.key.camelot, keyRank:k.ranking, at:Date.now()};
 }
 
 /* =========================================================
@@ -3260,6 +3510,46 @@ function setSearchBarValue(prefix, value){
   input.value = value||'';
   bar.classList.toggle('has-q', !!input.value);
 }
+// ---- v1.44: the same four energy buttons as Play, for Import and Organise.
+// Off = grey, on = the band color, none on = everything shows. Import's set
+// is the same one the Filter panel's energy chips use, so the two stay in sync;
+// Organise has one set shared by its top level and every folder inside it. ----
+const ENERGY_BAND_LABEL = {chill:'Chill', warmup:'Warmup', peak:'Buildup/Peak', high:'High Energy/Impact'};
+let orgEnergyBands = new Set();
+function syncEnergyGroupButtons(group, isOn){
+  document.querySelectorAll(`[data-energy-group="${group}"] [data-energy-band]`).forEach(btn=>{
+    const on = isOn(btn.dataset.energyBand);
+    btn.classList.toggle('on', on);
+    btn.setAttribute('aria-pressed', on ? 'true' : 'false');
+  });
+}
+function wireEnergyGroup(groupSelector, onToggle){
+  document.querySelectorAll(groupSelector).forEach(group=>{
+    group.querySelectorAll('[data-energy-band]').forEach(btn=>{
+      btn.addEventListener('click', ()=>{ hapticTap(10); onToggle(btn.dataset.energyBand); });
+    });
+  });
+}
+function energyBandsLabel(bands){
+  return [...bands].map(b=>({chill:'Chill',warmup:'Warmup',peak:'Peak',high:'Impact'})[b]).join(' / ');
+}
+wireEnergyGroup('[data-energy-group="lib"]', band=>{
+  const label = ENERGY_BAND_LABEL[band];
+  if(libEnergyFilter.has(label)) libEnergyFilter.delete(label); else libEnergyFilter.add(label);
+  importRenderedCount = LIBRARY_BATCH_SIZE;
+  renderLibrary();
+});
+wireEnergyGroup('[data-energy-group="org"], [data-energy-group="detail"]', band=>{
+  if(orgEnergyBands.has(band)) orgEnergyBands.delete(band); else orgEnergyBands.add(band);
+  syncEnergyGroupButtons('org', b=>orgEnergyBands.has(b));
+  syncEnergyGroupButtons('detail', b=>orgEnergyBands.has(b));
+  renderOrganiseSearch();
+  applyDetailSearch();
+});
+function passesOrgEnergy(t){
+  return !orgEnergyBands.size || orgEnergyBands.has(energyBandKey(t.energy));
+}
+
 let libSearchQuery = '';
 wireSearchBar('lib-search', q=>{
   libSearchQuery = q;
@@ -3321,6 +3611,8 @@ function renderLibrary(){
   renderLibToolbar();
   renderLibFilterPanel();
   document.getElementById('lib-search-bar').style.display = library.length ? '' : 'none';
+  document.querySelector('[data-energy-group="lib"]').style.display = library.length ? '' : 'none';
+  syncEnergyGroupButtons('lib', b=>libEnergyFilter.has(ENERGY_BAND_LABEL[b]));
   if(library.length===0){ el.innerHTML = `<div class="lib-empty">Your imported tracks will show up here.</div>`; return; }
   const filtered = getFilteredLibrary();
   if(filtered.length===0){ el.innerHTML = `<div class="lib-empty">${libSearchQuery.trim() ? `No tracks match "${escapeHtml(libSearchQuery.trim())}"${(libTagFilter.size||libEnergyFilter.size)?' with this filter':''}.` : 'No tracks match this filter.'}</div>`; return; }
@@ -3551,12 +3843,21 @@ function wireTrackEditActions(scopeEl){
       const panel = btn.closest('.edit-panel');
       track.name = panel.querySelector('.edit-name').value.trim() || track.name;
       track.artist = panel.querySelector('.edit-artist').value.trim();
+      const prevBpm = track.bpm, prevKey = track.key && track.key.camelot;
       const bpmVal = +panel.querySelector('.edit-bpm').value;
       if(bpmVal>0) track.bpm = Math.round(bpmVal);
       const keyVal = panel.querySelector('.edit-key').value;
       if(keyVal){
         const [code, root, mode, keyName] = keyVal.split('|');
         track.key = {camelot:code, name:keyName, root:+root, mode};
+      }
+      // v1.44: a BPM/key you change by hand is a correction the analysis can
+      // learn from (only meaningful when the app's own reading was kept).
+      if(track.analysis){
+        const v = track.verified || {};
+        if(track.bpm!==prevBpm) v.bpm = true;
+        if(track.key && track.key.camelot!==prevKey) v.key = true;
+        if(v.bpm || v.key) track.verified = v;
       }
       const picInput = panel.querySelector('.edit-pic-input');
       if(picInput.dataset.pending) track.icon = picInput.dataset.pending;
@@ -4868,32 +5169,109 @@ function showInfoToast(message, isError){
   setTimeout(()=>{ t.classList.remove('show'); setTimeout(()=>t.remove(),250); }, 2600);
 }
 
-async function exportLibrary(){
-  const payload = { app:'cratebuddy', version:2, exportedAt:Date.now(),
-    library, flows, crates, chains, favourites, activeWeights, historySessions };
+/* ---- v1.44: export, rebuilt. The old version built + gzipped the whole
+   backup (preview clips included) and only THEN clicked a hidden download
+   link — with a real library that takes seconds, by which point Safari no
+   longer counts it as your tap and silently drops the download. It also
+   revoked the file URL the instant after clicking (Safari can cancel the
+   download when that happens), and in a home-screen web app iOS doesn't do
+   link downloads at all. Now: the backup is prepared first, in a sheet, and
+   the Save tap itself triggers the download (fresh gesture), with the share
+   sheet as the route on iPhone/iPad and in home-screen mode. ---- */
+let exportPrepared = null; // {blob, filename, tracks}
+let exportBuildToken = 0;
+function isIOSLike(){
+  return /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform==='MacIntel' && navigator.maxTouchPoints>1);
+}
+function isStandaloneApp(){
+  return (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) || navigator.standalone===true;
+}
+function fmtBytes(n){
+  if(n<1024) return n+' B';
+  if(n<1024*1024) return (n/1024).toFixed(0)+' KB';
+  return (n/1024/1024).toFixed(1)+' MB';
+}
+async function buildBackupBlob(includePreviews){
+  const lib = includePreviews ? library : library.map(t=>{ const c = {...t}; delete c.previewAudio; return c; });
+  const payload = { app:'cratebuddy', version:2, exportedAt:Date.now(), appVersion:APP_VERSION,
+    library:lib, flows, crates, chains, favourites, activeWeights, historySessions, sets, badFlows };
   const jsonBytes = new TextEncoder().encode(JSON.stringify(payload));
-  let blob, filename;
+  const stamp = new Date().toISOString().slice(0,16).replace('T','_').replace(':','');
   try{
     const cs = new CompressionStream('gzip');
     const compressedStream = new Blob([jsonBytes]).stream().pipeThrough(cs);
     const compressedBytes = await new Response(compressedStream).arrayBuffer();
-    blob = new Blob([compressedBytes], {type:'application/gzip'});
-    filename = `cratebuddy-backup-${new Date().toISOString().slice(0,10)}.json.gz`;
+    return { blob:new Blob([compressedBytes], {type:'application/gzip'}), filename:`cratebuddy-backup-${stamp}.json.gz` };
   }catch(e){
-    // CompressionStream isn't available (very old browser) — fall back to
-    // an uncompressed export rather than failing the whole export.
     console.error('gzip compression unavailable, exporting uncompressed', e);
-    blob = new Blob([jsonBytes], {type:'application/json'});
-    filename = `cratebuddy-backup-${new Date().toISOString().slice(0,10)}.json`;
+    return { blob:new Blob([jsonBytes], {type:'application/json'}), filename:`cratebuddy-backup-${stamp}.json` };
+  }
+}
+function exportCanShareFile(){
+  if(!exportPrepared || !navigator.canShare) return false;
+  try{
+    return navigator.canShare({files:[new File([exportPrepared.blob], exportPrepared.filename, {type:exportPrepared.blob.type})]});
+  }catch(e){ return false; }
+}
+async function prepareExport(){
+  const token = ++exportBuildToken;
+  exportPrepared = null;
+  const status = document.getElementById('export-status');
+  const saveBtn = document.getElementById('export-save-btn');
+  const shareBtn = document.getElementById('export-share-btn');
+  const hint = document.getElementById('export-hint');
+  saveBtn.disabled = true; shareBtn.style.display = 'none'; hint.textContent = '';
+  status.textContent = 'Preparing your backup…';
+  const includePreviews = document.getElementById('export-include-previews').checked;
+  let built;
+  try{ built = await buildBackupBlob(includePreviews); }
+  catch(err){ console.error(err); if(token===exportBuildToken) status.textContent = "Couldn't prepare the backup — please try again."; return; }
+  if(token!==exportBuildToken) return; // superseded (toggle flipped mid-build)
+  exportPrepared = {...built, tracks:library.length};
+  status.innerHTML = `<b>Ready:</b> ${library.length} track${library.length===1?'':'s'}, your crates, Flows, Chains, Sets, History and settings — ${fmtBytes(built.blob.size)}${includePreviews?'':' (no preview clips)'}.`;
+  saveBtn.disabled = false;
+  const canShare = exportCanShareFile();
+  const preferShare = canShare && (isIOSLike() || isStandaloneApp());
+  saveBtn.textContent = preferShare ? 'Share / Save to Files…' : 'Save to Downloads';
+  saveBtn.dataset.mode = preferShare ? 'share' : 'download';
+  if(canShare && !preferShare){ shareBtn.style.display = ''; shareBtn.dataset.mode = 'share'; shareBtn.textContent = 'Share…'; }
+  else if(preferShare){ shareBtn.style.display = ''; shareBtn.dataset.mode = 'download'; shareBtn.textContent = 'Try a direct download instead'; }
+  hint.textContent = preferShare
+    ? 'On iPhone/iPad, pick "Save to Files" in the share sheet to keep the backup, or AirDrop / mail it.'
+    : 'The file lands in your Downloads folder (.json.gz — Crate Buddy reads it back in directly with Import).';
+}
+function runExportAction(mode){
+  if(!exportPrepared) return;
+  const {blob, filename} = exportPrepared;
+  if(mode==='share'){
+    const file = new File([blob], filename, {type:blob.type});
+    navigator.share({files:[file], title:'Crate Buddy backup'})
+      .then(()=>{ closeExportSheet(); showInfoToast('Backup shared', false); })
+      .catch(err=>{ if(err && err.name==='AbortError') return; console.error(err); showInfoToast("Sharing didn't work — try the direct download", true); });
+    return;
   }
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
-  a.href = url;
-  a.download = filename;
-  document.body.appendChild(a); a.click(); document.body.removeChild(a);
-  URL.revokeObjectURL(url);
-  showInfoToast(`Exported ${library.length} track${library.length===1?'':'s'} and your preferences`, false);
+  a.href = url; a.download = filename; a.rel = 'noopener';
+  document.body.appendChild(a); a.click(); a.remove();
+  // Keep the URL alive long enough for the browser to actually fetch it.
+  setTimeout(()=>URL.revokeObjectURL(url), 60000);
+  closeExportSheet();
+  showInfoToast(`Saved ${filename} — check your Downloads`, false);
 }
+function openExportSheet(){
+  document.getElementById('export-overlay').classList.add('show');
+  prepareExport();
+}
+function closeExportSheet(){
+  document.getElementById('export-overlay').classList.remove('show');
+}
+async function exportLibrary(){ openExportSheet(); }
+document.getElementById('export-save-btn').addEventListener('click', e=>runExportAction(e.currentTarget.dataset.mode));
+document.getElementById('export-share-btn').addEventListener('click', e=>runExportAction(e.currentTarget.dataset.mode));
+document.getElementById('export-include-previews').addEventListener('change', prepareExport);
+document.getElementById('export-close').addEventListener('click', closeExportSheet);
+document.getElementById('export-overlay').addEventListener('click', e=>{ if(e.target.id==='export-overlay') closeExportSheet(); });
 
 async function importLibraryFile(file){
   let payload;
@@ -4917,7 +5295,16 @@ async function importLibraryFile(file){
   await importLibraryPayload(payload);
 }
 async function importLibraryPayload(payload){
-    const hasAnyData = importedTracks.length || payload.flows || payload.crates || payload.chains || payload.favourites || payload.historySessions;
+    // v1.44 fix: this list was referenced below but never actually built
+    // (lost when importLibraryFile/importLibraryPayload were split), so every
+    // restore threw before importing anything. Accepts the normal backup
+    // shape and a bare array of tracks; drops anything that isn't a usable track.
+    if(Array.isArray(payload)) payload = {library:payload};
+    if(!payload || typeof payload!=='object'){ showInfoToast("That file doesn't look like a Crate Buddy backup", true); return; }
+    const rawTracks = Array.isArray(payload.library) ? payload.library : (Array.isArray(payload.tracks) ? payload.tracks : []);
+    const importedTracks = rawTracks.filter(t=>t && t.id && t.name && isFinite(+t.bpm) && t.key && t.key.camelot)
+      .map(t=>({...t, bpm:+t.bpm, tags:Array.isArray(t.tags)?t.tags:[]}));
+    const hasAnyData = importedTracks.length || payload.flows || payload.crates || payload.chains || payload.favourites || payload.historySessions || payload.sets;
     if(!hasAnyData){
       showInfoToast("That file doesn't look like a Crate Buddy backup", true);
       return;
@@ -5021,6 +5408,31 @@ async function importLibraryPayload(payload){
       if(historyChanged) await saveHistorySessions();
     }
 
+    // v1.44: Sets and unfavourable transitions are part of the backup now too.
+    if(Array.isArray(payload.sets)){
+      let setsChanged=false;
+      for(const st of payload.sets){
+        if(!st || !Array.isArray(st.trackIds)) continue;
+        const remapped = st.trackIds.map(id=>idRemap[id]).filter(Boolean);
+        if(remapped.length===0) continue;
+        if(sets.some(x=>x.id===st.id || (norm(x.name)===norm(st.name) && x.trackIds.join(',')===remapped.join(',')))) continue;
+        sets.push({...st, id:st.id || ('set_'+Date.now()+'_'+Math.random().toString(36).slice(2,7)), trackIds:remapped});
+        setsChanged = true;
+      }
+      if(setsChanged) await saveSets();
+    }
+    if(Array.isArray(payload.badFlows)){
+      let bfChanged=false;
+      for(const f of payload.badFlows){
+        if(!f || !f.from || !f.to) continue;
+        const from = idRemap[f.from], to = idRemap[f.to];
+        if(!from || !to || findBadFlowBetween(from, to)) continue;
+        badFlows.push({...f, from, to});
+        bfChanged = true;
+      }
+      if(bfChanged) await saveBadFlowsData();
+    }
+
     // Weight preferences — these fully replace the local split, since
     // "import preferences" should mean the new device now matches.
     if(payload.activeWeights && typeof payload.activeWeights==='object'){
@@ -5061,6 +5473,7 @@ document.getElementById('import-file-input').addEventListener('change', e=>{
 const DARK_MODE_KEY = 'cratebuddy:darkmode';
 document.getElementById('settings-btn').addEventListener('click', ()=>{
   document.getElementById('settings-overlay').classList.add('show');
+  updateLearnSettingsStatus();
 });
 document.getElementById('settings-close').addEventListener('click', ()=>{
   document.getElementById('settings-overlay').classList.remove('show');
@@ -5070,6 +5483,171 @@ document.getElementById('settings-overlay').addEventListener('click', e=>{
 });
 
 // ---- Studio Grade (v1.41, Decision 1B): deck-card edit, in a bottom sheet ----
+/* ---- v1.44: Analysis learning sheet ---- */
+let learnCalib = []; // [{track, analysis}] from the last file check
+async function loadLearnToggle(){
+  try{
+    if(hasArtifactStorage){
+      const r = await window.storage.get(LEARN_TOGGLE_KEY,false).catch(()=>null);
+      if(r && r.value!=null) learnCorrectionsEnabled = r.value==='1';
+    } else {
+      const v = localStorage.getItem(LEARN_TOGGLE_KEY);
+      if(v!=null) learnCorrectionsEnabled = v==='1';
+    }
+  }catch(e){}
+  document.getElementById('learn-toggle').checked = learnCorrectionsEnabled;
+  updateLearnSettingsStatus();
+}
+function updateLearnSettingsStatus(){
+  const el = document.getElementById('learn-settings-status');
+  if(!el) return;
+  const m = computeLearnedModel();
+  const n = learningPairs().length;
+  const rules = (m.bpmRange?1:0) + m.keyRules.length;
+  el.textContent = n===0 ? '— nothing checked yet' : `— ${n} checked track${n===1?'':'s'}${rules?`, ${rules} rule${rules===1?'':'s'} active`:''}`;
+}
+function pct(a,b){ return b ? Math.round(a/b*100)+'%' : '–'; }
+function renderLearnReport(){
+  const el = document.getElementById('learn-report');
+  const m = computeLearnedModel();
+  updateLearnSettingsStatus();
+  if(m.bpmPairs===0 && m.keyPairs===0){
+    el.innerHTML = `<div class="learn-card"><h4>Nothing to learn from yet</h4>
+      <div class="learn-big" style="color:var(--dim);line-height:1.5;">Two ways to teach it: fix a track's BPM or key in its edit panel (any track imported from v1.44 on), or check a crate you've already corrected against its audio files below. It starts applying rules once it has ${LEARN_MIN_PAIRS}+ checked tracks and a pattern that fixes at least ${LEARN_MIN_GAIN} of them.</div></div>`;
+    return;
+  }
+  const bp = m.bpm.patterns, kp = m.key.patterns;
+  const chip = (n, label, good) => n ? `<span class="learn-chip${good?' good':''}">${label} ${n}</span>` : '';
+  const bpmRule = m.bpmRange
+    ? `<div class="learn-rule">Applying: BPM is read into the <b>${m.bpmRange.lo}–${m.bpmRange.hi}</b> range instead of 80–170 → right on <b>${m.bpm.after}</b> of ${m.bpmPairs} instead of ${m.bpm.before}.</div>`
+    : `<div class="learn-rule none">No BPM rule — ${m.bpmPairs<LEARN_MIN_PAIRS?`needs ${LEARN_MIN_PAIRS - m.bpmPairs} more checked track${LEARN_MIN_PAIRS-m.bpmPairs===1?'':'s'}`:'no pattern that clearly helps yet'}.</div>`;
+  const keyRule = m.keyRules.length
+    ? m.keyRules.map(r=>`<div class="learn-rule">Applying: when the reading is a close call (runner-up at least ${Math.round(r.t*100)}% as strong) between a key and ${KEY_RULE_LABEL[r.type]}, pick ${KEY_RULE_LABEL[r.type].replace(/^its |^the |^a /,'the ')}.</div>`).join('') +
+      `<div class="learn-rule">→ right on <b>${m.key.after}</b> of ${m.keyPairs} instead of ${m.key.before}.</div>`
+    : `<div class="learn-rule none">No key rule — ${m.keyPairs<LEARN_MIN_PAIRS?`needs ${LEARN_MIN_PAIRS - m.keyPairs} more checked track${LEARN_MIN_PAIRS-m.keyPairs===1?'':'s'}`:'no pattern that clearly helps yet'}.</div>`;
+  el.innerHTML = `
+    <div class="learn-card"><h4>BPM</h4>
+      <div class="learn-big">${m.bpmPairs} checked track${m.bpmPairs===1?'':'s'} · the app was exactly right on <b>${m.bpm.before}</b> (${pct(m.bpm.before,m.bpmPairs)})</div>
+      <div class="learn-chips">${chip(bp.exact,'Exact',true)}${chip(bp.near,'Off by 1–2',false)}${chip(bp.octave,'Half/double',false)}${chip(bp.other,'Other',false)}</div>
+      ${bpmRule}</div>
+    <div class="learn-card"><h4>Key</h4>
+      <div class="learn-big">${m.keyPairs} checked track${m.keyPairs===1?'':'s'} · the app was exactly right on <b>${m.key.before}</b> (${pct(m.key.before,m.keyPairs)})</div>
+      <div class="learn-chips">${chip(kp.same,'Exact',true)}${chip(kp.relative,'Relative maj/min',false)}${chip(kp.fifth,'Neighbour key',false)}${chip(kp.parallel,'Parallel maj/min',false)}${chip(kp.other,'Other',false)}</div>
+      ${keyRule}</div>`;
+}
+function populateLearnCrateSelect(){
+  const sel = document.getElementById('learn-crate-select');
+  const cur = sel.value;
+  sel.innerHTML = crates.length ? crates.map(c=>`<option value="${c.id}">${escapeHtml(c.name)} (${c.trackIds.length})</option>`).join('')
+    : `<option value="">No crates yet</option>`;
+  if(crates.some(c=>c.id===cur)) sel.value = cur;
+  document.getElementById('learn-pick-files').disabled = !crates.length;
+}
+function openLearnSheet(){
+  document.getElementById('settings-overlay').classList.remove('show');
+  populateLearnCrateSelect();
+  renderLearnReport();
+  renderLearnCalib();
+  document.getElementById('learn-overlay').classList.add('show');
+}
+function closeLearnSheet(){ document.getElementById('learn-overlay').classList.remove('show'); }
+// Match picked files to a set of tracks: exact original file (name + size)
+// first, then the file name alone, then the file name against "artist - title".
+function matchFilesToTracks(files, tracks){
+  const norm = x => (x||'').toLowerCase().replace(/\.[a-z0-9]{2,5}$/,'').replace(/[^a-z0-9]+/g,' ').trim();
+  const used = new Set(), out = [];
+  const passes = [
+    (f,t)=>t.sourceFile && t.sourceFile.name===f.name && t.sourceFile.size===f.size,
+    (f,t)=>t.sourceFile && t.sourceFile.name===f.name,
+    (f,t)=>{ const fn=norm(f.name), tn=norm(t.name); return tn.length>2 && (fn===tn || fn.endsWith(' '+tn) || fn.includes(tn) && (!t.artist || fn.includes(norm(t.artist)))); }
+  ];
+  const pending = [...files];
+  for(const test of passes){
+    for(let i=pending.length-1;i>=0;i--){
+      const f = pending[i];
+      const t = tracks.find(tr=>!used.has(tr.id) && test(f,tr));
+      if(t){ used.add(t.id); out.push({file:f, track:t}); pending.splice(i,1); }
+    }
+  }
+  return {matches:out, unmatched:pending.length};
+}
+async function runLearnCalibration(files){
+  const crate = crates.find(c=>c.id===document.getElementById('learn-crate-select').value);
+  if(!crate) return;
+  const tracks = crate.trackIds.map(id=>library.find(t=>t.id===id)).filter(Boolean);
+  const {matches, unmatched} = matchFilesToTracks(files, tracks);
+  matches.sort((a,b)=>crate.trackIds.indexOf(a.track.id)-crate.trackIds.indexOf(b.track.id)); // list in the crate's own order
+  if(!matches.length){ showInfoToast(`None of those files matched a track in "${crate.name}"`, true); return; }
+  learnCalib = [];
+  const box = document.getElementById('learn-calib-results');
+  for(let i=0;i<matches.length;i++){
+    box.innerHTML = `<div class="learn-calib-summary">Listening… ${i+1} of ${matches.length} — ${escapeHtml(matches[i].track.name)}</div>`;
+    try{
+      const analysis = await analyzeBpmKeyOnly(matches[i].file);
+      learnCalib.push({track:matches[i].track, analysis});
+    }catch(err){ console.error('calibration read failed', err); }
+  }
+  learnCalib.unmatched = unmatched;
+  learnCalib.crateName = crate.name;
+  renderLearnCalib();
+}
+function renderLearnCalib(){
+  const box = document.getElementById('learn-calib-results');
+  if(!learnCalib.length){ box.innerHTML=''; return; }
+  const rows = learnCalib.map((c,i)=>{
+    const appBpm = Math.round(c.analysis.bpm), bpmHit = appBpm===Math.round(c.track.bpm);
+    const keyHit = c.analysis.key===c.track.key.camelot;
+    return `<label class="learn-row">
+      <input type="checkbox" data-learn-idx="${i}" checked>
+      <span class="lr-name">${escapeHtml(c.track.name)}</span>
+      <span class="lr-vals">You: ${Math.round(c.track.bpm)} · ${escapeHtml(c.track.key.camelot)}<br>
+        App: <span class="${bpmHit?'hit':'miss'}">${appBpm}</span> · <span class="${keyHit?'hit':'miss'}">${escapeHtml(c.analysis.key)}</span></span>
+    </label>`;
+  }).join('');
+  const bpmHits = learnCalib.filter(c=>Math.round(c.analysis.bpm)===Math.round(c.track.bpm)).length;
+  const keyHits = learnCalib.filter(c=>c.analysis.key===c.track.key.camelot).length;
+  box.innerHTML = `
+    <div class="learn-calib-summary">Read ${learnCalib.length} track${learnCalib.length===1?'':'s'} from "${escapeHtml(learnCalib.crateName||'')}"${learnCalib.unmatched?` (${learnCalib.unmatched} file${learnCalib.unmatched===1?'':'s'} didn't match a track)`:''}. The app already agrees with you on BPM for <b>${bpmHits}</b> and key for <b>${keyHits}</b>. Untick any track whose BPM/key you <i>haven't</i> checked yourself — only ticked tracks are learned from.</div>
+    <div class="learn-rows">${rows}</div>
+    <button class="edit-save learn-save-btn" id="learn-save-calib">Learn from ticked tracks</button>`;
+  document.getElementById('learn-save-calib').addEventListener('click', saveLearnCalibration);
+}
+async function saveLearnCalibration(){
+  const ticked = new Set([...document.querySelectorAll('[data-learn-idx]')].filter(cb=>cb.checked).map(cb=>+cb.dataset.learnIdx));
+  let n=0;
+  for(let i=0;i<learnCalib.length;i++){
+    const {track, analysis} = learnCalib[i];
+    track.analysis = analysis;
+    if(ticked.has(i)){ track.verified = {bpm:true, key:true, at:Date.now(), source:'calibration'}; n++; }
+    await persistTrackAdd(track);
+  }
+  learnCalib = [];
+  renderLearnCalib();
+  renderLearnReport();
+  showInfoToast(`Learning from ${n} checked track${n===1?'':'s'}`, false);
+}
+document.getElementById('learn-open-btn').addEventListener('click', openLearnSheet);
+document.getElementById('learn-close').addEventListener('click', closeLearnSheet);
+document.getElementById('learn-overlay').addEventListener('click', e=>{ if(e.target.id==='learn-overlay') closeLearnSheet(); });
+document.getElementById('learn-pick-files').addEventListener('click', ()=>document.getElementById('learn-files-input').click());
+document.getElementById('learn-files-input').addEventListener('change', e=>{
+  const files = [...e.target.files]; e.target.value='';
+  if(files.length) runLearnCalibration(files);
+});
+document.getElementById('learn-toggle').addEventListener('change', async e=>{
+  learnCorrectionsEnabled = e.target.checked;
+  try{
+    if(hasArtifactStorage) await window.storage.set(LEARN_TOGGLE_KEY, learnCorrectionsEnabled?'1':'0', false);
+    else localStorage.setItem(LEARN_TOGGLE_KEY, learnCorrectionsEnabled?'1':'0');
+  }catch(err){}
+});
+document.getElementById('learn-forget').addEventListener('click', async ()=>{
+  if(!confirm("Forget everything the analysis has learned? Your tracks' BPM and key stay exactly as they are.")) return;
+  for(const t of library){ if(t.verified){ delete t.verified; await persistTrackAdd(t); } }
+  renderLearnReport();
+  showInfoToast('Learning reset', false);
+});
+
 function openDeckEditModal(letter){
   const deck = letter==='A' ? deckA : deckB;
   if(!deck) return;
@@ -5860,12 +6438,12 @@ function renderOrganiseSearch(){
   const results = document.getElementById('organise-search-results');
   const browse = document.getElementById('organise-browse');
   const q = organiseSearchQuery.trim();
-  if(!q){ results.style.display='none'; results.innerHTML=''; browse.style.display=''; return; }
+  if(!q && !orgEnergyBands.size){ results.style.display='none'; results.innerHTML=''; browse.style.display=''; return; }
   browse.style.display='none';
   results.style.display='block';
   const ql = q.toLowerCase().split(/\s+/).filter(Boolean);
-  const crateHits = crates.filter(c=>ql.every(tok=>c.name.toLowerCase().includes(tok)));
-  const allTrackHits = library.filter(t=>trackMatchesSearch(t, q));
+  const crateHits = q ? crates.filter(c=>ql.every(tok=>c.name.toLowerCase().includes(tok))) : [];
+  const allTrackHits = library.filter(t=>trackMatchesSearch(t, q) && passesOrgEnergy(t));
   const trackHits = allTrackHits.slice(0, 40);
   let html = '';
   if(crateHits.length){
@@ -5876,9 +6454,10 @@ function renderOrganiseSearch(){
         <div class="chev">›</div>
       </div>`).join('');
   }
-  html += `<div class="section-lbl org-search-lbl">Tracks${allTrackHits.length>trackHits.length?` — first ${trackHits.length} of ${allTrackHits.length}`:''}</div>`;
+  const energyNote = orgEnergyBands.size ? ` · ${energyBandsLabel(orgEnergyBands)}` : '';
+  html += `<div class="section-lbl org-search-lbl">${q?'Tracks':'All tracks'}${energyNote}${allTrackHits.length>trackHits.length?` — first ${trackHits.length} of ${allTrackHits.length}`:` (${allTrackHits.length})`}</div>`;
   if(!trackHits.length){
-    html += `<div class="lib-empty">No tracks match "${escapeHtml(q)}".</div>`;
+    html += `<div class="lib-empty">No tracks match${q?` "${escapeHtml(q)}"`:''}${orgEnergyBands.size?` in ${energyBandsLabel(orgEnergyBands)}`:''}.</div>`;
   } else {
     html += trackHits.map(t=>{
       const inCrates = crates.filter(c=>c.trackIds.includes(t.id));
@@ -5924,19 +6503,20 @@ function applyDetailSearch(){
   const content = document.getElementById('organise-detail-content');
   const empty = document.getElementById('detail-search-empty');
   const q = detailSearchQuery.trim();
+  const energyOn = detailSearchSupported() && orgEnergyBands.size>0;
   let total = 0, shown = 0;
   content.querySelectorAll(DETAIL_SEARCH_ROWS).forEach(row=>{
     total++;
     let match = true;
-    if(q){
+    if(q || energyOn){
       const ids = row.dataset.searchIds ? row.dataset.searchIds.split(',') : [row.dataset.id];
-      match = ids.some(id=>{ const t = library.find(x=>x.id===id); return t && trackMatchesSearch(t, q); });
+      match = ids.some(id=>{ const t = library.find(x=>x.id===id); return t && trackMatchesSearch(t, q) && (!energyOn || passesOrgEnergy(t)); });
     }
     row.classList.toggle('search-hidden', !match);
     if(match) shown++;
   });
-  if(q && total>0 && shown===0){
-    empty.textContent = `Nothing in here matches "${q}".`;
+  if((q || energyOn) && total>0 && shown===0){
+    empty.textContent = `Nothing in here matches${q?` "${q}"`:''}${energyOn?` in ${energyBandsLabel(orgEnergyBands)}`:''}.`;
     empty.style.display = 'block';
   } else {
     empty.style.display = 'none';
@@ -5951,6 +6531,8 @@ function syncDetailSearchBar(){
   lastDetailKey = key;
   const supported = detailSearchSupported();
   document.getElementById('detail-search-bar').style.display = supported ? '' : 'none';
+  document.getElementById('detail-energy-row').style.display = supported ? '' : 'none';
+  syncEnergyGroupButtons('detail', b=>orgEnergyBands.has(b));
   if(!supported) detailSearchQuery = '';
   const input = document.getElementById('detail-search-input');
   input.placeholder = openCrateId==='__flow__' ? 'Search your Flows…'
@@ -6834,9 +7416,9 @@ function renderSetBuilder(){
 /* =========================================================
    INIT
 ========================================================= */
-const APP_VERSION = '1.43';
+const APP_VERSION = '1.44';
 const APP_BUILD = '2026-10-01';
-const APP_BUILD_TIME = '11:23';
+const APP_BUILD_TIME = '13:20';
 document.getElementById('version-display').textContent = `${APP_VERSION} · ${APP_BUILD} ${APP_BUILD_TIME}`;
 (function(){
   const el = document.getElementById('splash-version');
@@ -6849,6 +7431,7 @@ document.getElementById('version-display').textContent = `${APP_VERSION} · ${AP
 // from the very start, but accurate to the best of what was actually shipped.
 // Add one line here with each future update.
 const CHANGELOG = [
+  {v:'1.44', notes:'(1) Export fixed: it used to build and compress the whole backup (preview clips included) and only then trigger the download — with a real library that takes seconds, by which time Safari no longer treats it as your tap and quietly drops the file, while the app still said "Exported". It also threw away the file link right after clicking, and iOS home-screen apps never do link downloads at all. Now Export opens a sheet, prepares the backup, shows its size, and your tap on Save starts the download directly (on iPhone/iPad it opens the share sheet → Save to Files). Optional: leave out the 15s preview clips for a much smaller file. The backup now also includes Sets and unfavourable transitions. (2) Restore fixed: importing a backup crashed before it imported anything (an internal list of tracks was never built), and the file picker didn’t accept .json.gz backups on iOS. (3) Energy buttons (Chill/Warmup/Peak/Impact) in Import (synced with the Filter panel), at the top of Organise (tap one to list every track at that energy and the crates it’s in), and inside every folder. (4) BPM detection fixed: on test beats at known tempos the old detector was exact on 0 of 34 — it assumed its beat envelope ran at 200 samples/sec when it really ran at ~196.9, so everything read ~1.6% fast (124 → 126), and it could only step in ~1.3 BPM jumps. Now 32 of 34 exact (the two misses are 174 read as half-time). (5) Analysis learning (Settings → Analysis learning): every new import keeps the app’s own raw BPM/key reading next to the values, and a BPM or key you fix by hand becomes a correction it learns from. For crates you already fixed (from rekordbox), "Check a crate against its audio files" re-reads the files and stores what the app hears next to your values (yours are never changed; untick any you haven’t checked). It shows how often it was right and what kind of mistakes it makes, and only applies a rule to new imports — which BPM range your tracks live in, or which way to go when a key reading is a close call — when it fixes at least 2 more of your tracks than it breaks, with 8+ checked tracks. Can be switched off.'},
   {v:'1.43', notes:'Four changes. (1) Play’s energy filter now also applies to deck search: with Peak on, browsing a deck only shows Peak tracks (anything you’d already typed in the search box stays put when you flip a filter). (2) Search bars everywhere you browse tracks: Import (filters the collection list, and Select All now only selects what the search shows), the top of Organise (finds tracks across your whole library and shows which crates each one is in; tap a crate chip to jump straight into that crate, already filtered to the track), plus one inside every folder (crates, Favourites, Flow, Chains and History sessions). Every word you type has to match somewhere in the name, artist, tags, key or BPM, so "foreshadow 124" or "8a peak" both work. (3) The Key line in a suggestion’s details now says "Exact Same Key" when the keys are identical, so "Harmonically Compatible" only means a different key that still mixes. (4) Remove from playlist in Play: there’s a minus button on each loaded deck and a remove button in each suggestion’s details. With a crate picked in Play’s crate filter, it takes the track out of that crate; on All Tracks it hides the track from suggestions and deck search for this session (Reset brings it back). Both show an Undo toast. Gig Mode hides the crate version, like other edits, but keeps the hide-for-this-session version. Also fixed: the "Add a track…" pickers in Organise (crates, Flow, Set Builder) stuck out past the right edge of the screen.'},
   {v:'1.42', notes:'New: an energy filter in Play — four buttons (Chill, Warmup, Peak, Impact) right under the crate/set pills. Tap one to switch it on and it lights up in that band’s own color; tap again and it greys back out. Any mix can be on at once, and with none on, every energy level shows just like before. It narrows Top Matches the same way the crate filter does (tracks with no energy set are left out while a filter is on). Background, the sides this time: the glow layer was only 460px tall while the color inside it reached further down, so out at the left/right edges of a desktop or landscape window it stopped in a hard horizontal line. The glow now lives on a fixed, full-screen layer sized as a proportion of the screen in both directions, with an eased fade that tapers off to nothing well before any edge — smooth in portrait and landscape alike. And: the loading screen now shows the app version plus the date and time of the update under the logo (with the wordmark properly centered above it). Small fix spotted along the way: in light mode the All Tracks / Set / Filters pills and the undo button had a hard-coded dark fill, so their labels vanished into black blobs — they now follow the theme like every other card.'},
   {v:'1.41', notes:'The "Play, Upgraded" pitch deck, built (picks 1B · 2B · 3C), plus one more Sam asked for alongside it. A loaded deck card now carries its own ✎ edit button, opening the exact same Track Details/Tags/Energy panel used in Import and Organise in a bottom sheet — change a track’s BPM, key, art, tags or energy without ejecting it first. The favourite star is back in Play too, now living right on the deck label (next to Deck A/B’s own name) instead of only in Import/Organise — tap it mid-set to favourite whatever’s loaded. New: a thumbs-down button sits in the same row as Flow and the tonal/analytics button, between the decks — mark a transition unfavourable and it’s logged quietly (no scoring change, nothing hidden or blocked); if that same pairing ever comes back around in a suggestion row or deck search, a small red flag badge gives you a heads-up before you load it again. And: the energy-level dot + tag pill that Import and Organise already show under every track now show up everywhere in Play too — Top Matches rows, deck search results, and both loaded deck cards — so energy is visible at a glance wherever a track appears, not just while organising your crates.'},
@@ -6916,6 +7499,7 @@ showHeaderProgress('Loading your crate…');
 bootPromises.push(loadLibrary());
 bootPromises.push(loadFlows());
 bootPromises.push(loadBadFlows());
+bootPromises.push(loadLearnToggle());
 bootPromises.push(loadChains());
 bootPromises.push(loadCrates().then(populateCrateFilterSelect));
 bootPromises.push(loadFavourites());
