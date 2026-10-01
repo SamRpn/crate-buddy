@@ -107,12 +107,35 @@
      again. Switched both the ellipse's horizontal radius and its center offset to
      viewport-relative (%) units instead of px, so the two blobs always cover a
      fixed *proportion* of however wide the window is and stay deeply overlapped
-     in the middle at any width — mobile included, since the ratio is unchanged. ---- */
+     in the middle at any width — mobile included, since the ratio is unchanged.
+     v1.42 follow-up (the sides): the glow layer itself was only 460px tall, while
+     the ellipses inside it reached ~560px down — so the color got cut off dead
+     straight at y=460. In the middle of the screen content mostly hid that line,
+     but out at the left/right sides (bare background on a desktop or landscape
+     window) it read as a hard horizontal edge. Also, a plain "color, transparent"
+     ramp is linear, so it ends in a faint but visible ring. Now: the layer is a
+     fixed, full-viewport box (inset:0, so it can never be shorter than its own
+     gradients and never adds scroll width), both ellipses are sized in % of that
+     viewport in BOTH directions so the proportions hold in portrait and landscape
+     alike, and the fade uses eased stops that taper off gently to fully
+     transparent well before the box edge. ---- */
   .app{max-width:640px;margin:0 auto;padding:0 0 70px;position:relative;isolation:isolate;}
-  .app::before{content:"";position:absolute;top:0;left:50%;width:100vw;height:460px;
-    transform:translateX(-50%);pointer-events:none;z-index:-1;
-    background-image:radial-gradient(ellipse 78% 620px at 26% -60px, var(--glow-1), transparent),
-                      radial-gradient(ellipse 78% 620px at 74% -20px, var(--glow-2), transparent);
+  .app::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:-1;
+    background-image:
+      radial-gradient(ellipse 80% 72% at 24% -6%,
+        var(--glow-1) 0%,
+        color-mix(in srgb, var(--glow-1) 78%, transparent) 22%,
+        color-mix(in srgb, var(--glow-1) 48%, transparent) 46%,
+        color-mix(in srgb, var(--glow-1) 20%, transparent) 70%,
+        color-mix(in srgb, var(--glow-1) 5%, transparent) 88%,
+        transparent 100%),
+      radial-gradient(ellipse 80% 72% at 76% -2%,
+        var(--glow-2) 0%,
+        color-mix(in srgb, var(--glow-2) 78%, transparent) 22%,
+        color-mix(in srgb, var(--glow-2) 48%, transparent) 46%,
+        color-mix(in srgb, var(--glow-2) 20%, transparent) 70%,
+        color-mix(in srgb, var(--glow-2) 5%, transparent) 88%,
+        transparent 100%);
     background-repeat:no-repeat;}
   button{transition:transform 0.1s ease;}
   button:active{transform:scale(0.97);}
@@ -129,7 +152,7 @@
   .organise-slide-in{animation:organise-slide 0.26s ease both;}
 
   /* ---- Studio Grade (v1.33, Q12): splash screen ---- */
-  .splash-screen{position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;
+  .splash-screen{position:fixed;inset:0;z-index:9999;display:flex;flex-direction:column;gap:18px;align-items:center;justify-content:center;
     background-color:var(--bg);
     background-image:radial-gradient(ellipse 640px 420px at 50% 42%, var(--deck-a-color), transparent 62%),
                       radial-gradient(ellipse 640px 420px at 50% 58%, var(--deck-b-color), transparent 62%);
@@ -140,6 +163,11 @@
   .splash-logo{position:relative;width:220px;height:auto;z-index:1;
     animation:splash-pulse 1.6s ease-in-out infinite;}
   .splash-logo text{font-family:'Rubik Wet Paint', cursive;}
+  /* v1.42: version + build date/time under the wordmark */
+  .splash-version{position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;gap:3px;
+    font-variant-numeric:tabular-nums;text-align:center;}
+  .splash-version b{font-family:var(--font-display);font-size:var(--text-body);font-weight:600;letter-spacing:1.5px;color:var(--text);}
+  .splash-version span{font-size:var(--text-caption);color:var(--dim);letter-spacing:0.3px;}
   @keyframes splash-pulse{0%,100%{transform:scale(1);}50%{transform:scale(1.035);}}
   @media (prefers-reduced-motion: reduce){.splash-logo{animation:none;}}
 
@@ -412,13 +440,24 @@
   .tick-row span{width:2px;height:8px;border-radius:1px;background:#9ca3af;}
 
   .crate-filter-row{display:flex;align-items:center;gap:8px;margin-bottom:14px;flex-wrap:wrap;}
-  .filters-pill{display:inline-flex;align-items:center;gap:6px;background:#1c1d21;border:1px solid var(--line);
+  .filters-pill{display:inline-flex;align-items:center;gap:6px;background:var(--card);border:1px solid var(--line);
     border-radius:999px;padding:8px 14px;color:var(--text);cursor:pointer;}
   .filters-pill select{background:none;border:none;color:var(--text);font-size:var(--text-caption);font-weight:700;
     letter-spacing:0.4px;text-transform:uppercase;appearance:none;-webkit-appearance:none;padding:0;}
   button.filters-pill{font-family:inherit;}
   button.filters-pill span{font-size:var(--text-caption);font-weight:700;letter-spacing:0.4px;text-transform:uppercase;}
-  .filter-icon-btn{width:34px;height:34px;border-radius:50%;background:#1c1d21;border:1px solid var(--line);
+  /* v1.42: energy-level filter for Play's suggestions. Off = greyed out; on = the
+     band's own color (same four hues as the row energy dots). None on = show all. */
+  .energy-filter-row{display:flex;gap:6px;margin:-4px 0 14px;}
+  .energy-filter-btn{flex:1;min-width:0;display:inline-flex;align-items:center;justify-content:center;gap:6px;
+    padding:8px 4px;border-radius:999px;border:1px solid var(--line);background:var(--card);color:var(--dim);
+    font-family:inherit;font-size:var(--text-caption);font-weight:700;letter-spacing:0.4px;text-transform:uppercase;
+    cursor:pointer;white-space:nowrap;transition:background-color 0.18s ease, border-color 0.18s ease, color 0.18s ease, transform 0.1s ease;}
+  .energy-filter-btn .dot{width:8px;height:8px;border-radius:4px;background:var(--dim);opacity:0.45;flex-shrink:0;
+    transition:background-color 0.18s ease, opacity 0.18s ease;}
+  .energy-filter-btn.on{color:var(--band);border-color:var(--band);background:color-mix(in srgb, var(--band) 16%, var(--card));}
+  .energy-filter-btn.on .dot{background:var(--band);opacity:1;}
+  .filter-icon-btn{width:34px;height:34px;border-radius:50%;background:var(--card);border:1px solid var(--line);
     color:var(--dim);display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0;flex-shrink:0;}
   .filter-icon-btn:not(:disabled):active{color:var(--accent);border-color:var(--accent);}
   .filter-icon-btn:disabled{opacity:0.35;cursor:default;}
@@ -994,13 +1033,14 @@
      first thing anyone sees, before the Library even loads ---- -->
 <div class="splash-screen" id="splash-screen">
   <svg class="splash-logo" viewBox="0 0 140 54" xmlns="http://www.w3.org/2000/svg">
-    <text x="2" y="24" font-size="21" fill="#fff" stroke="#111" stroke-width="4.2"
+    <text x="70" y="24" text-anchor="middle" font-size="21" fill="#fff" stroke="#111" stroke-width="4.2"
       stroke-linejoin="round" paint-order="stroke fill" letter-spacing="-0.5"
-      rotate="-6,3,4,-3,5" transform="rotate(-3 60 16)">CRATE</text>
-    <text x="4" y="47" font-size="21" fill="#fff" stroke="#111" stroke-width="4.2"
+      rotate="-6,3,4,-3,5" transform="rotate(-3 70 16)">CRATE</text>
+    <text x="71" y="47" text-anchor="middle" font-size="21" fill="#fff" stroke="#111" stroke-width="4.2"
       stroke-linejoin="round" paint-order="stroke fill" letter-spacing="-0.5"
-      rotate="4,-3,5,-4,3" transform="rotate(2 60 40)">BUDDY</text>
+      rotate="4,-3,5,-4,3" transform="rotate(2 70 40)">BUDDY</text>
   </svg>
+  <div class="splash-version" id="splash-version"></div>
 </div>
 <div class="app">
   <header class="top">
@@ -1256,6 +1296,12 @@
           </div>
         </div>
       </div>
+    </div>
+    <div class="energy-filter-row" id="energy-filter-row" role="group" aria-label="Filter suggestions by energy level">
+      <button class="energy-filter-btn" data-energy-filter="chill" style="--band:var(--energy-chill)" title="Chill (1-3)" aria-pressed="false"><span class="dot"></span>Chill</button>
+      <button class="energy-filter-btn" data-energy-filter="warmup" style="--band:var(--energy-warmup)" title="Warmup (4-6)" aria-pressed="false"><span class="dot"></span>Warmup</button>
+      <button class="energy-filter-btn" data-energy-filter="peak" style="--band:var(--energy-peak)" title="Buildup/Peak (7-8)" aria-pressed="false"><span class="dot"></span>Peak</button>
+      <button class="energy-filter-btn" data-energy-filter="high" style="--band:var(--energy-high)" title="High Energy/Impact (9-10)" aria-pressed="false"><span class="dot"></span>Impact</button>
     </div>
     <div class="history-and-clock">
       <div id="play-history"></div>
@@ -4126,6 +4172,32 @@ document.getElementById('active-set-select').addEventListener('change', e=>{
   if(e.target.value) activateSet(e.target.value);
   else deactivateSet();
 });
+// v1.42: energy-level filter (Play). Empty set = no filter, every track shows.
+// When one or more bands are on, only tracks in those bands are suggested —
+// tracks with no energy set are left out while a filter is active.
+let energyFilterBands = new Set();
+function energyBandKey(v){
+  if(!v) return null;
+  if(v<=3) return 'chill';
+  if(v<=6) return 'warmup';
+  if(v<=8) return 'peak';
+  return 'high';
+}
+function passesEnergyFilter(t){
+  return !energyFilterBands.size || energyFilterBands.has(energyBandKey(t.energy));
+}
+document.querySelectorAll('[data-energy-filter]').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    const band = btn.dataset.energyFilter;
+    if(energyFilterBands.has(band)) energyFilterBands.delete(band);
+    else energyFilterBands.add(band);
+    const on = energyFilterBands.has(band);
+    btn.classList.toggle('on', on);
+    btn.setAttribute('aria-pressed', on ? 'true' : 'false');
+    hapticTap(10);
+    renderMatches();
+  });
+});
 const BAND_KEYS=['low','lowmid','himid','high'];
 
 let selectedMatchId = null;
@@ -4430,7 +4502,7 @@ function renderMatches(animateNew){
 
   const activeCrateFilter = suggestionsCrateFilterId ? crates.find(c=>c.id===suggestionsCrateFilterId) : null;
   const crateFilterSet = activeCrateFilter ? new Set(activeCrateFilter.trackIds) : null;
-  const eligible = library.filter(t=>t.id!==now.id && !playedTrackIds.has(t.id) && (!crateFilterSet || crateFilterSet.has(t.id)));
+  const eligible = library.filter(t=>t.id!==now.id && !playedTrackIds.has(t.id) && (!crateFilterSet || crateFilterSet.has(t.id)) && passesEnergyFilter(t));
 
   // If we're mid-chain, the chain's next step gets pinned above even the
   // Flow matches — it's not just one proven transition, it's a whole
@@ -4488,7 +4560,9 @@ function renderMatches(animateNew){
       sectionLbl.style.display='none';
       const allPlayed = library.length>1 && library.every(t=>t.id===now.id || playedTrackIds.has(t.id));
       const crateNote = activeCrateFilter ? ` in "${escapeHtml(activeCrateFilter.name)}"` : '';
-      list.innerHTML = allPlayed
+      list.innerHTML = energyFilterBands.size
+        ? `<div class="empty-state">No unplayed tracks${crateNote} in the selected energy level${energyFilterBands.size>1?'s':''} — tap another energy button, or turn them all off to see everything.</div>`
+        : allPlayed
         ? `<div class="empty-state">You've played everything${crateNote} this session — hit Reset below to start fresh.</div>`
         : `<div class="empty-state">${activeCrateFilter ? `No other tracks${crateNote} yet — add more, or switch back to All Tracks.` : 'Add more tracks to your library to see suggested matches.'}</div>`;
       lastRenderedResultsKey = '';
@@ -6496,13 +6570,22 @@ function renderSetBuilder(){
 /* =========================================================
    INIT
 ========================================================= */
-const APP_VERSION = '1.41';
+const APP_VERSION = '1.42';
 const APP_BUILD = '2026-10-01';
-document.getElementById('version-display').textContent = `${APP_VERSION} · ${APP_BUILD}`;
+const APP_BUILD_TIME = '10:55';
+document.getElementById('version-display').textContent = `${APP_VERSION} · ${APP_BUILD} ${APP_BUILD_TIME}`;
+(function(){
+  const el = document.getElementById('splash-version');
+  if(!el) return;
+  const [y,m,d] = APP_BUILD.split('-').map(Number);
+  const dateLabel = new Date(y, m-1, d).toLocaleDateString(undefined, {day:'numeric', month:'long', year:'numeric'});
+  el.innerHTML = `<b>v${APP_VERSION}</b><span>Updated ${dateLabel} · ${APP_BUILD_TIME}</span>`;
+})();
 // Reconstructed from this build session's history — not tracked in real time
 // from the very start, but accurate to the best of what was actually shipped.
 // Add one line here with each future update.
 const CHANGELOG = [
+  {v:'1.42', notes:'New: an energy filter in Play — four buttons (Chill, Warmup, Peak, Impact) right under the crate/set pills. Tap one to switch it on and it lights up in that band’s own color; tap again and it greys back out. Any mix can be on at once, and with none on, every energy level shows just like before. It narrows Top Matches the same way the crate filter does (tracks with no energy set are left out while a filter is on). Background, the sides this time: the glow layer was only 460px tall while the color inside it reached further down, so out at the left/right edges of a desktop or landscape window it stopped in a hard horizontal line. The glow now lives on a fixed, full-screen layer sized as a proportion of the screen in both directions, with an eased fade that tapers off to nothing well before any edge — smooth in portrait and landscape alike. And: the loading screen now shows the app version plus the date and time of the update under the logo (with the wordmark properly centered above it). Small fix spotted along the way: in light mode the All Tracks / Set / Filters pills and the undo button had a hard-coded dark fill, so their labels vanished into black blobs — they now follow the theme like every other card.'},
   {v:'1.41', notes:'The "Play, Upgraded" pitch deck, built (picks 1B · 2B · 3C), plus one more Sam asked for alongside it. A loaded deck card now carries its own ✎ edit button, opening the exact same Track Details/Tags/Energy panel used in Import and Organise in a bottom sheet — change a track’s BPM, key, art, tags or energy without ejecting it first. The favourite star is back in Play too, now living right on the deck label (next to Deck A/B’s own name) instead of only in Import/Organise — tap it mid-set to favourite whatever’s loaded. New: a thumbs-down button sits in the same row as Flow and the tonal/analytics button, between the decks — mark a transition unfavourable and it’s logged quietly (no scoring change, nothing hidden or blocked); if that same pairing ever comes back around in a suggestion row or deck search, a small red flag badge gives you a heads-up before you load it again. And: the energy-level dot + tag pill that Import and Organise already show under every track now show up everywhere in Play too — Top Matches rows, deck search results, and both loaded deck cards — so energy is visible at a glance wherever a track appears, not just while organising your crates.'},
   {v:'1.40', notes:'Two visual fixes Sam flagged from a real desktop-width screenshot. (1) The A/B deck-allocate buttons on each suggestion row now carry the same dashed "bracket" the deck cards already use for whichever deck isn’t currently active — so you can tell at a glance, straight from the suggestion list, which deck (A or B) is the one that’ll actually receive your next pick, without looking up at the decks themselves. (2) The header used to carry its own frosted box at all times, and the ambient glow behind it was still tuned in fixed pixels for the ~640px mobile column — on a real desktop-width window that meant a hard-edged bar sitting on a visible pink→teal seam. The glow’s two blobs are now sized and positioned as a percentage of the viewport instead of fixed px, so they stay deeply overlapped (and blend smoothly) at any window width; and the header itself is transparent by default — the wordmark and settings gear now drift directly over that glow — picking up its frosted tint and blur only once you actually scroll, so it stays legible over content passing underneath.'},
   {v:'1.39', notes:'The "Set Builder → Play: Live Set Mode" pitch deck, built (picks 1C · 2B · 3B · 4B): a saved Set can now be switched on either from a "▶ Play this set" button on its row in Organise, or from a new "Set:" pill in Play next to the crate filter — both flip the same switch. With one active, deck search pins that Set’s still-to-come tracks in order at the top, under their own label, with the rest of your library staying reachable right below. Play’s suggestion list gets a new accent-colored "▶ Next in <Set>" badge and ring for whichever track is next — its own color, not the grey Chain/Flow one, and it takes the #1 slot over a Chain pick if the two ever disagree. Playing off-script doesn’t drop the plan: it forgivingly re-syncs the same way a Chain already does, and every real in-order transition quietly writes itself into a proven Flow as it happens — no more waiting on an after-the-gig History match to guess whether a set got played. Finishing a Set’s last track shows a quiet "Set complete" toast and switches back off on its own.'},
