@@ -98,12 +98,21 @@
      line rather than a fade. Dropped the explicit percentage (radial-gradient's
      default "color, transparent" spreads the ramp across the ENTIRE ellipse instead
      of front-loading it) and enlarged the ellipses so the same glow now fades in
-     gradually over a much longer distance — no band, no edge, at any window width. ---- */
+     gradually over a much longer distance — no band, no edge, at any window width.
+     v1.40 follow-up: the two ellipses were still sized/offset in fixed px (900px
+     radius, ±282/320px from center) — tuned for the ~640px mobile column. On a real
+     desktop-width Safari window (~1500-1600px) that math no longer guarantees the
+     two blobs overlap enough where they meet, so the pink→teal handoff at the
+     horizontal middle still read as a seam instead of a blend, and Sam flagged it
+     again. Switched both the ellipse's horizontal radius and its center offset to
+     viewport-relative (%) units instead of px, so the two blobs always cover a
+     fixed *proportion* of however wide the window is and stay deeply overlapped
+     in the middle at any width — mobile included, since the ratio is unchanged. ---- */
   .app{max-width:640px;margin:0 auto;padding:0 0 70px;position:relative;isolation:isolate;}
   .app::before{content:"";position:absolute;top:0;left:50%;width:100vw;height:460px;
     transform:translateX(-50%);pointer-events:none;z-index:-1;
-    background-image:radial-gradient(ellipse 900px 620px at calc(50% - 282px) -60px, var(--glow-1), transparent),
-                      radial-gradient(ellipse 900px 620px at calc(50% + 320px) -20px, var(--glow-2), transparent);
+    background-image:radial-gradient(ellipse 78% 620px at 26% -60px, var(--glow-1), transparent),
+                      radial-gradient(ellipse 78% 620px at 74% -20px, var(--glow-2), transparent);
     background-repeat:no-repeat;}
   button{transition:transform 0.1s ease;}
   button:active{transform:scale(0.97);}
@@ -134,10 +143,19 @@
   @keyframes splash-pulse{0%,100%{transform:scale(1);}50%{transform:scale(1.035);}}
   @media (prefers-reduced-motion: reduce){.splash-logo{animation:none;}}
 
-  /* ---- header / logo ---- */
+  /* ---- header / logo ----
+     v1.40: the header used to carry its own frosted background at all times, which
+     on a wide desktop window read as a hard-edged "box" sitting on top of the ambient
+     glow instead of the wordmark/settings gear drifting over it. Now it's transparent
+     by default — the logo and gear sit directly on the glow — and only picks up the
+     frosted tint + blur (via .scrolled, toggled from JS on window scroll) once the
+     page has actually scrolled, so it stays legible over library/list content
+     passing underneath the sticky header. ---- */
   header.top{position:sticky;top:0;z-index:70;padding:max(22px, env(safe-area-inset-top)) 20px 10px;display:flex;align-items:center;
-    gap:12px;background:rgba(255,255,255,0.86);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);}
-  html.dark header.top{background:rgba(16,17,20,0.82);}
+    gap:12px;background:transparent;transition:background-color 0.25s ease, box-shadow 0.25s ease;}
+  header.top.scrolled{background:rgba(255,255,255,0.86);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+    box-shadow:0 1px 0 rgba(0,0,0,0.06);}
+  html.dark header.top.scrolled{background:rgba(16,17,20,0.82);box-shadow:0 1px 0 rgba(255,255,255,0.06);}
   .logo{width:134px;height:52px;overflow:visible;flex-shrink:0;margin-left:-15px;transition:opacity 0.15s ease;}
   .header-progress{flex:1;min-width:0;display:flex;flex-direction:column;justify-content:center;gap:4px;}
   .header-progress-label{font-size:var(--text-micro);color:var(--dim);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
@@ -565,10 +583,15 @@
     .deck-card .art-frame{margin-bottom:4px;}
     .deck-card .t{font-size:11.5px;}
     .deck-card .sub{margin:0;}
-    .flow-between-btn,.tonal-between-btn{width:30px;height:30px;}
+    .flow-between-btn,.tonal-between-btn,.bad-flow-btn{width:30px;height:30px;}
     .deck-mid-col{gap:5px;}
   }
   .deck-label-row{display:flex;align-items:center;justify-content:space-between;}
+  .deck-label-icons{display:flex;align-items:center;gap:1px;}
+  .deck-edit-btn{background:none;border:none;color:var(--deck-color);padding:2px;margin:2px 0 4px;cursor:pointer;
+    display:flex;align-items:center;justify-content:center;opacity:0.75;}
+  .deck-edit-btn:active{opacity:1;}
+  .deck-label-icons .fav-star{padding:2px;margin:2px 0 4px;}
   .deck-eject-btn{background:none;border:none;color:var(--deck-color);padding:2px;margin:2px 2px 4px 0;cursor:pointer;
     display:flex;align-items:center;justify-content:center;opacity:0.75;}
   .deck-eject-btn:active{opacity:1;}
@@ -595,11 +618,13 @@
   .deck-card.empty .deck-empty-icon{margin-bottom:8px;opacity:0.6;}
   .deck-card.empty .deck-empty-text{font-size:var(--text-caption);}
   .deck-mid-col{display:flex;flex-direction:column;gap:8px;align-items:center;justify-content:center;flex-shrink:0;}
-  .flow-between-btn,.tonal-between-btn{width:38px;height:38px;border-radius:50%;background:var(--card);border:2px solid var(--line);
+  .flow-between-btn,.tonal-between-btn,.bad-flow-btn{width:38px;height:38px;border-radius:50%;background:var(--card);border:2px solid var(--line);
     color:var(--dim);display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;padding:0;}
   .flow-between-btn{color:#8e8e93;border-color:#8e8e93;}
   .flow-between-btn.ready{border-color:var(--accent);color:var(--accent);}
   .tonal-between-btn{color:#8e8e93;border-color:#8e8e93;}
+  .bad-flow-btn{color:#8e8e93;border-color:#8e8e93;}
+  .bad-flow-btn.marked{border-color:#E5484D;color:#E5484D;background:color-mix(in srgb, #E5484D 14%, var(--card));}
   .tonal-between-btn.open{background:#8e8e93;color:#fff;}
   .tonal-dropdown{max-height:0;overflow:hidden;opacity:0;
     transition:max-height 0.32s ease, opacity 0.22s ease;margin-bottom:14px;}
@@ -678,6 +703,11 @@
   .deck-allocate-btn{width:40px;height:36px;border-radius:9px;background:none;border:2px solid var(--deck-color);
     color:var(--deck-color);font-size:14px;font-weight:800;cursor:pointer;padding:0;}
   .deck-allocate-btn:active{background:var(--deck-color);color:#fff;}
+  /* ---- v1.40: mirrors .deck-card.inactive's dashed "bracket" border so the A/B
+     allocate buttons on a suggestion row carry the same at-a-glance cue as the deck
+     cards above — dashed = that deck isn't the one currently active, i.e. the one
+     free to receive this pick next. ---- */
+  .deck-allocate-btn.inactive{border-style:dashed;}
   .chev{width:14px;text-align:center;color:#c2c2c8;font-size:var(--text-caption);transition:transform .15s;flex-shrink:0;}
   .match-row.open .chev{transform:rotate(180deg);}
   .breakdown{max-height:0;overflow:hidden;transition:max-height .2s ease;}
@@ -738,6 +768,12 @@
   .bd-flow-note{display:flex;align-items:flex-start;gap:8px;background:var(--bg);border-radius:var(--radius-control);
     padding:9px 11px;margin-bottom:12px;font-size:var(--text-body-sm);color:var(--text);font-style:italic;line-height:1.4;}
   .bd-flow-note-icon{flex-shrink:0;color:var(--accent);margin-top:1px;}
+  /* ---- v1.41, Decision 3C: a quiet heads-up when a pairing you've already
+     marked unfavourable resurfaces in Top Matches or deck search — never a
+     score change, just a note. ---- */
+  .bad-flow-peek{display:inline-flex;align-items:center;justify-content:center;width:15px;height:15px;
+    color:#E5484D;vertical-align:middle;margin-left:3px;flex-shrink:0;}
+  .bad-flow-note{font-size:11px;font-weight:700;color:#E5484D;margin-top:2px;}
 
   /* ---- Memory Game: Organise → Flow → Practice your Flows (v1.31) ---- */
   .game-launch-btn{display:block;width:100%;margin:2px 0 14px;background:var(--accent);
@@ -937,7 +973,8 @@
   html.gig-mode .track-row .edit-toggle, html.gig-mode .track-row .del,
   html.gig-mode .match-row .edit-toggle, html.gig-mode .del-crate,
   html.gig-mode .flow-pair-main .remove-btn, html.gig-mode .flow-pair-main .edit-toggle,
-  html.gig-mode .organise-row .remove-btn, html.gig-mode .edit-panel{display:none!important;}
+  html.gig-mode .organise-row .remove-btn, html.gig-mode .edit-panel,
+  html.gig-mode .deck-edit-btn{display:none!important;}
   html.gig-mode .match-play-btn, html.gig-mode .fav-star{transform:scale(1.18);}
   html.gig-mode .tabs button{padding-top:14px;padding-bottom:14px;}
   html.gig-mode .game-tile, html.gig-mode .game-picker-card{transform:scale(1.02);}
@@ -986,6 +1023,17 @@
       </button>
     </div>
   </header>
+
+  <!-- ---- Studio Grade (v1.41, "Play, Upgraded" pitch deck, Decision 1B): the
+       deck-card ✎ opens the SAME edit panel Import/Organise/Play suggestions
+       already use, but in this bottom sheet — the deck card itself never
+       resizes while it's open, which matters mid-set. ---- -->
+  <div class="modal-overlay" id="deck-edit-overlay">
+    <div class="modal-sheet">
+      <div class="modal-header"><b id="deck-edit-title">Edit Track</b><button id="deck-edit-close" aria-label="Close">✕</button></div>
+      <div id="deck-edit-body"></div>
+    </div>
+  </div>
 
   <div class="modal-overlay" id="settings-overlay">
     <div class="modal-sheet">
@@ -3421,6 +3469,15 @@ function maybeLoadMoreLibraryRows(){
 }
 window.addEventListener('scroll', maybeLoadMoreLibraryRows, {passive:true});
 
+// ---- Studio Grade (v1.40): header gains its frosted background only once the
+// page has actually scrolled — see the header.top/.scrolled CSS comment above. ----
+function updateHeaderScrollState(){
+  const header = document.querySelector('header.top');
+  if(!header) return;
+  header.classList.toggle('scrolled', window.scrollY > 4);
+}
+window.addEventListener('scroll', updateHeaderScrollState, {passive:true});
+
 /* =========================================================
    NOW PLAYING / MATCHING
 ========================================================= */
@@ -3595,6 +3652,52 @@ async function saveFlows(){
     if(hasArtifactStorage) await window.storage.set(FLOWS_KEY, JSON.stringify(flows), false);
     else localStorage.setItem(FLOWS_KEY, JSON.stringify(flows));
   }catch(e){ console.error('flow save failed', e); }
+}
+
+/* =========================================================
+   UNFAVOURABLE TRANSITIONS — the mirror of Flow (Studio Grade v1.41,
+   "Play, Upgraded" pitch deck, Decision 3C). A Flow remembers a pairing
+   that worked; this remembers one that didn't. Deliberately the SAFE
+   option from that deck rather than the "smart" one: it's a private log
+   that re-surfaces a note if the exact pair comes up again in Top Matches
+   or deck search, but it never touches scoring on its own. Revisiting
+   active suppression (Decision 3's option B) is flagged as a later idea
+   once there's real usage to learn from — the same "don't retune off one
+   data point" principle this project already holds to elsewhere. ---- */
+const BAD_FLOWS_KEY = 'cratebuddy:badflows';
+let badFlows = []; // {from, to, savedAt} — same shape as flows, opposite meaning
+async function loadBadFlows(){
+  try{
+    if(hasArtifactStorage){
+      const r = await window.storage.get(BAD_FLOWS_KEY, false).catch(()=>null);
+      badFlows = r && r.value ? JSON.parse(r.value) : [];
+    } else {
+      const raw = localStorage.getItem(BAD_FLOWS_KEY);
+      badFlows = raw ? JSON.parse(raw) : [];
+    }
+  }catch(e){ badFlows = []; }
+}
+async function saveBadFlowsData(){
+  try{
+    if(hasArtifactStorage) await window.storage.set(BAD_FLOWS_KEY, JSON.stringify(badFlows), false);
+    else localStorage.setItem(BAD_FLOWS_KEY, JSON.stringify(badFlows));
+  }catch(e){ console.error('bad flow save failed', e); }
+}
+function findBadFlowBetween(idA, idB){
+  return badFlows.find(f=>(f.from===idA && f.to===idB) || (f.from===idB && f.to===idA));
+}
+async function markBadFlow(fromId, toId){
+  if(findBadFlowBetween(fromId, toId)){ showInfoToast('Already marked unfavourable', false); return; }
+  badFlows.push({from:fromId, to:toId, savedAt:Date.now()});
+  await saveBadFlowsData();
+  showInfoToast('Marked unfavourable', false);
+  renderMatches();
+}
+async function unmarkBadFlow(flow){
+  badFlows = badFlows.filter(f=>f!==flow);
+  await saveBadFlowsData();
+  showInfoToast('Unfavourable mark removed', false);
+  renderMatches();
 }
 
 const CHAINS_KEY = 'cratebuddy:chains';
@@ -4059,13 +4162,25 @@ function renderDecks(){
     <div class="deck-card${letter!==activeDeck?' inactive':''}" style="--deck-color:${colorVar}">
       <div class="deck-label-row">
         <div class="deck-label">${label}</div>
-        <button class="deck-eject-btn" data-deck-eject="${letter}" title="Eject" aria-label="Eject ${label}">
-          <svg viewBox="0 0 24 24" width="12" height="12"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M12 4l6 8H6z M6 17h12"/></svg>
-        </button>
+        <div class="deck-label-icons">
+          <button class="deck-edit-btn" data-deck-edit="${letter}" title="Edit track details" aria-label="Edit ${escapeHtml(t.name)}">
+            <svg viewBox="0 0 24 24" width="12" height="12"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M12 20h9"/><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+          </button>
+          <button class="fav-star${favourites.includes(t.id)?' is-fav':''}" data-deck-fav="${t.id}" title="${favourites.includes(t.id)?'Remove from':'Add to'} Favourites" aria-label="${favourites.includes(t.id)?'Remove':'Add'} ${escapeHtml(t.name)} ${favourites.includes(t.id)?'from':'to'} Favourites">
+            <svg viewBox="0 0 24 24" width="14" height="14">
+              <path d="M12 2 L14.9 8.6 L22 9.3 L16.7 14.1 L18.2 21 L12 17.4 L5.8 21 L7.3 14.1 L2 9.3 L9.1 8.6 Z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
+              <path class="star-fill" d="M12 2 L14.9 8.6 L22 9.3 L16.7 14.1 L18.2 21 L12 17.4 L5.8 21 L7.3 14.1 L2 9.3 L9.1 8.6 Z" fill="#eab308" opacity="${favourites.includes(t.id)?'1':'0'}"/>
+            </svg>
+          </button>
+          <button class="deck-eject-btn" data-deck-eject="${letter}" title="Eject" aria-label="Eject ${label}">
+            <svg viewBox="0 0 24 24" width="12" height="12"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M12 4l6 8H6z M6 17h12"/></svg>
+          </button>
+        </div>
       </div>
       <div class="art-frame"><img class="art" src="${t.icon}"></div>
       <div class="t">${escapeHtml(t.name)}</div>
       <div class="sub">${t.bpm} bpm · ${fmtDuration(t.duration)}</div>
+      ${rowBadgesHtml(t)}
     </div>`;
   };
   holder.innerHTML = `<div class="deck-row">
@@ -4076,6 +4191,9 @@ function renderDecks(){
       </button>
       <button class="tonal-between-btn${tonalDropdownOpen?' open':''}" id="tonal-between-btn" title="Compare tonal balance" aria-label="Compare tonal balance of both decks" aria-expanded="${tonalDropdownOpen?'true':'false'}">
         <svg viewBox="0 0 24 24" width="18" height="18"><path d="M4 16 L4 12 M9 16 L9 8 M14 16 L14 11 M19 16 L19 6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>
+      </button>
+      <button class="bad-flow-btn${((deckA&&deckB)&&findBadFlowBetween(deckA.trackId,deckB.trackId))?' marked':''}" id="bad-flow-btn" title="Mark this transition unfavourable" aria-label="Mark this transition unfavourable">
+        <svg viewBox="0 0 24 24" width="18" height="18"><g transform="rotate(180 12 12)"><path fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" d="M7 10v11M3 10h4l2.5-7a1.5 1.5 0 0 1 2.8 1l-1 6h6.3a2 2 0 0 1 2 2.3l-1.4 7A2 2 0 0 1 16.2 21H7"/></g></svg>
       </button>
     </div>
     ${deckCard(deckBT, 'DECK B', DECK_B_COLOR, !deckBT, 'B')}
@@ -4113,6 +4231,21 @@ function renderDecks(){
         hapticTap(20);
       }
     });
+    // ---- Studio Grade (v1.41, Decision 3C): the mirror of the Flow button —
+    // logs that a pairing didn't work. Deliberately doesn't touch suggestion
+    // scoring (see markBadFlow's comment); it just remembers, and flags the
+    // pair again if it ever resurfaces in Top Matches or deck search. ----
+    document.getElementById('bad-flow-btn').addEventListener('click', ()=>{
+      const existing = findBadFlowBetween(deckA.trackId, deckB.trackId);
+      if(existing){
+        hapticTap(15);
+        unmarkBadFlow(existing);
+      } else {
+        const [from, to] = deckA.insertedAt <= deckB.insertedAt ? [deckA, deckB] : [deckB, deckA];
+        markBadFlow(from.trackId, to.trackId);
+        hapticTap(20);
+      }
+    });
   }
   document.getElementById('tonal-between-btn').addEventListener('click', ()=>{
     tonalDropdownOpen = !tonalDropdownOpen;
@@ -4125,6 +4258,28 @@ function renderDecks(){
     btn.addEventListener('click', e=>{
       e.stopPropagation();
       ejectDeck(btn.dataset.deckEject);
+    });
+  });
+  // ---- Studio Grade (v1.41, Decision 1B): ✎ opens the shared edit panel in a
+  // bottom sheet — same content as Import/Organise, but the deck card itself
+  // never resizes mid-set. ----
+  holder.querySelectorAll('[data-deck-edit]').forEach(btn=>{
+    btn.addEventListener('click', e=>{
+      e.stopPropagation();
+      openDeckEditModal(btn.dataset.deckEdit);
+    });
+  });
+  // ---- Studio Grade (v1.41, Decision 2B): the same fav-star component from
+  // Import/Organise, now visible (and tappable) right on the loaded deck. ----
+  holder.querySelectorAll('[data-deck-fav]').forEach(btn=>{
+    btn.addEventListener('click', async e=>{
+      e.stopPropagation();
+      const id = btn.dataset.deckFav;
+      hapticTap(12);
+      if(favourites.includes(id)) favourites = favourites.filter(fid=>fid!==id);
+      else favourites.push(id);
+      await saveFavourites();
+      renderMatches(); // re-renders decks too, and keeps suggestion-row fav marks in sync
     });
   });
 
@@ -4170,9 +4325,15 @@ function renderDeckSearchResults(letter, query){
     const score = otherT ? quickScoreTrack(otherT, t) : null;
     const scoreHtml = score==null ? '' : `<span class="now-sugg-score" style="color:${pctColor(score)}">${score}%</span>`;
     const posLabel = setPos!=null ? `<span class="deck-search-set-pos">${setPos}.</span>` : '';
+    // v1.41, Decision 3C: same quiet heads-up as Top Matches, scoped to the
+    // pairing with whatever's already loaded in the OTHER deck.
+    const isBadFlow = otherT && !!findBadFlowBetween(otherT.id, t.id);
+    const badFlowNote = isBadFlow ? `<span class="bad-flow-peek" title="You've marked this transition unfavourable before">
+      <svg viewBox="0 0 24 24" width="11" height="11"><g transform="rotate(180 12 12)"><path fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" d="M7 10v11M3 10h4l2.5-7a1.5 1.5 0 0 1 2.8 1l-1 6h6.3a2 2 0 0 1 2 2.3l-1.4 7A2 2 0 0 1 16.2 21H7"/></g></svg>
+    </span>` : '';
     return `<div class="now-suggestion-row" data-deck-search-pick="${t.id}">
       ${posLabel}<img src="${t.icon}">
-      <div class="now-sugg-info"><div class="t">${escapeHtml(t.name)}</div><div class="a">${t.bpm} bpm · ${escapeHtml(t.artist||'Unknown artist')}</div></div>
+      <div class="now-sugg-info"><div class="t">${escapeHtml(t.name)}${badFlowNote}</div><div class="a">${t.bpm} bpm · ${escapeHtml(t.artist||'Unknown artist')}</div>${rowBadgesHtml(t)}</div>
       ${scoreHtml}
     </div>`;
   };
@@ -4377,6 +4538,13 @@ function renderMatches(animateNew){
     const favBadge = isFav ? `<span class="fav-mark" title="Favourite">
       <svg viewBox="0 0 24 24" width="12" height="12"><path d="M12 2 L14.9 8.6 L22 9.3 L16.7 14.1 L18.2 21 L12 17.4 L5.8 21 L7.3 14.1 L2 9.3 L9.1 8.6 Z" fill="#eab308"/></svg>
     </span>` : '';
+    // ---- v1.41, Decision 3C: a quiet "you've marked this one before" note,
+    // independent of the set/chain/flow badges above — it's a warning, not a
+    // recommendation, so it never competes with them for the #1 slot. ----
+    const isBadFlow = !!findBadFlowBetween(now.id, r.t.id);
+    const badFlowNote = isBadFlow ? `<span class="bad-flow-peek" title="You've marked this transition unfavourable before">
+      <svg viewBox="0 0 24 24" width="11" height="11"><g transform="rotate(180 12 12)"><path fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" d="M7 10v11M3 10h4l2.5-7a1.5 1.5 0 0 1 2.8 1l-1 6h6.3a2 2 0 0 1 2 2.3l-1.4 7A2 2 0 0 1 16.2 21H7"/></g></svg>
+    </span>` : '';
     const detailChart = r.bandS==null
       ? `<span style="font-size:var(--text-caption);color:var(--dim);">No spectrum data for this track</span>`
       : bandCompareChartSvg(now.bands, r.t.bands, true);
@@ -4389,8 +4557,9 @@ function renderMatches(animateNew){
         </div>
         <div class="match-info drag-info">
           ${setBadge}${chainBadge}${flowBadge}
-          <div class="t">${favBadge}${escapeHtml(r.t.name)}${flowNoteBadge}</div>
+          <div class="t">${favBadge}${escapeHtml(r.t.name)}${flowNoteBadge}${badFlowNote}</div>
           <div class="a">${escapeHtml(r.t.artist||'Unknown artist')}</div>
+          ${rowBadgesHtml(r.t)}
         </div>
         <div class="match-score-block">
           <div class="match-score-num">${r.overall}<span class="match-score-pct">%</span></div>
@@ -4398,8 +4567,8 @@ function renderMatches(animateNew){
           <div class="match-score-label">MATCH</div>
         </div>
         <div class="deck-allocate-btns">
-          <button class="deck-allocate-btn" style="--deck-color:${DECK_A_COLOR}" data-allocate="${r.t.id}" data-deck="A" title="Load into Deck A" aria-label="Load ${escapeHtml(r.t.name)} into Deck A">A</button>
-          <button class="deck-allocate-btn" style="--deck-color:${DECK_B_COLOR}" data-allocate="${r.t.id}" data-deck="B" title="Load into Deck B" aria-label="Load ${escapeHtml(r.t.name)} into Deck B">B</button>
+          <button class="deck-allocate-btn${activeDeck!=='A'?' inactive':''}" style="--deck-color:${DECK_A_COLOR}" data-allocate="${r.t.id}" data-deck="A" title="Load into Deck A" aria-label="Load ${escapeHtml(r.t.name)} into Deck A">A</button>
+          <button class="deck-allocate-btn${activeDeck!=='B'?' inactive':''}" style="--deck-color:${DECK_B_COLOR}" data-allocate="${r.t.id}" data-deck="B" title="Load into Deck B" aria-label="Load ${escapeHtml(r.t.name)} into Deck B">B</button>
         </div>
         <div class="chev" title="Show details">▾</div>
       </div>
@@ -4676,6 +4845,33 @@ document.getElementById('settings-close').addEventListener('click', ()=>{
 document.getElementById('settings-overlay').addEventListener('click', e=>{
   if(e.target.id==='settings-overlay') document.getElementById('settings-overlay').classList.remove('show');
 });
+
+// ---- Studio Grade (v1.41, Decision 1B): deck-card edit, in a bottom sheet ----
+function openDeckEditModal(letter){
+  const deck = letter==='A' ? deckA : deckB;
+  if(!deck) return;
+  const t = library.find(x=>x.id===deck.trackId);
+  if(!t) return;
+  document.getElementById('deck-edit-title').textContent = `Edit — Deck ${letter}`;
+  const body = document.getElementById('deck-edit-body');
+  body.innerHTML = editPanelHtml(t);
+  body.querySelector('.edit-panel').classList.add('show'); // alone in its own sheet — always open, no inline toggle needed
+  wireTrackEditActions(body);
+  // wireTrackEditActions wires the actual save/cancel logic (which already
+  // re-renders the deck via renderMatches()); this just also closes the sheet.
+  body.querySelectorAll('[data-save], [data-cancel]').forEach(btn=>{
+    btn.addEventListener('click', closeDeckEditModal);
+  });
+  document.getElementById('deck-edit-overlay').classList.add('show');
+}
+function closeDeckEditModal(){
+  document.getElementById('deck-edit-overlay').classList.remove('show');
+}
+document.getElementById('deck-edit-close').addEventListener('click', closeDeckEditModal);
+document.getElementById('deck-edit-overlay').addEventListener('click', e=>{
+  if(e.target.id==='deck-edit-overlay') closeDeckEditModal();
+});
+
 function applyDarkMode(dark){
   document.documentElement.classList.toggle('dark', dark);
   if(currentTab==='match') renderMatches();
@@ -6300,13 +6496,15 @@ function renderSetBuilder(){
 /* =========================================================
    INIT
 ========================================================= */
-const APP_VERSION = '1.39';
-const APP_BUILD = '2026-09-28';
+const APP_VERSION = '1.41';
+const APP_BUILD = '2026-10-01';
 document.getElementById('version-display').textContent = `${APP_VERSION} · ${APP_BUILD}`;
 // Reconstructed from this build session's history — not tracked in real time
 // from the very start, but accurate to the best of what was actually shipped.
 // Add one line here with each future update.
 const CHANGELOG = [
+  {v:'1.41', notes:'The "Play, Upgraded" pitch deck, built (picks 1B · 2B · 3C), plus one more Sam asked for alongside it. A loaded deck card now carries its own ✎ edit button, opening the exact same Track Details/Tags/Energy panel used in Import and Organise in a bottom sheet — change a track’s BPM, key, art, tags or energy without ejecting it first. The favourite star is back in Play too, now living right on the deck label (next to Deck A/B’s own name) instead of only in Import/Organise — tap it mid-set to favourite whatever’s loaded. New: a thumbs-down button sits in the same row as Flow and the tonal/analytics button, between the decks — mark a transition unfavourable and it’s logged quietly (no scoring change, nothing hidden or blocked); if that same pairing ever comes back around in a suggestion row or deck search, a small red flag badge gives you a heads-up before you load it again. And: the energy-level dot + tag pill that Import and Organise already show under every track now show up everywhere in Play too — Top Matches rows, deck search results, and both loaded deck cards — so energy is visible at a glance wherever a track appears, not just while organising your crates.'},
+  {v:'1.40', notes:'Two visual fixes Sam flagged from a real desktop-width screenshot. (1) The A/B deck-allocate buttons on each suggestion row now carry the same dashed "bracket" the deck cards already use for whichever deck isn’t currently active — so you can tell at a glance, straight from the suggestion list, which deck (A or B) is the one that’ll actually receive your next pick, without looking up at the decks themselves. (2) The header used to carry its own frosted box at all times, and the ambient glow behind it was still tuned in fixed pixels for the ~640px mobile column — on a real desktop-width window that meant a hard-edged bar sitting on a visible pink→teal seam. The glow’s two blobs are now sized and positioned as a percentage of the viewport instead of fixed px, so they stay deeply overlapped (and blend smoothly) at any window width; and the header itself is transparent by default — the wordmark and settings gear now drift directly over that glow — picking up its frosted tint and blur only once you actually scroll, so it stays legible over content passing underneath.'},
   {v:'1.39', notes:'The "Set Builder → Play: Live Set Mode" pitch deck, built (picks 1C · 2B · 3B · 4B): a saved Set can now be switched on either from a "▶ Play this set" button on its row in Organise, or from a new "Set:" pill in Play next to the crate filter — both flip the same switch. With one active, deck search pins that Set’s still-to-come tracks in order at the top, under their own label, with the rest of your library staying reachable right below. Play’s suggestion list gets a new accent-colored "▶ Next in <Set>" badge and ring for whichever track is next — its own color, not the grey Chain/Flow one, and it takes the #1 slot over a Chain pick if the two ever disagree. Playing off-script doesn’t drop the plan: it forgivingly re-syncs the same way a Chain already does, and every real in-order transition quietly writes itself into a proven Flow as it happens — no more waiting on an after-the-gig History match to guess whether a set got played. Finishing a Set’s last track shows a quiet "Set complete" toast and switches back off on its own.'},
   {v:'1.38', notes:'Set Builder’s Tension Arc horizon bumped from 24 to 40 tracks — 24 was an average for long-blend opener sets, but plenty of opener/warm-up sets run a tighter, faster-turnover selection that’s closer to 40 tracks over 2 hours, so the arc strip and grid now default to the longer end of that range.'},
   {v:'1.37', notes:'Three fixes: (1) The header glow still showed a visible edge on a wide browser after 1.35’s fix — turned out the transparent cutoff was forced at 55-60% of the glow’s own radius, squeezing its whole fade into a band that the header happened to sit right on top of. Removed that forced cutoff (a plain "color, transparent" spreads the fade across the entire shape instead of the first half) and enlarged the glow to match, so it now fades out with no perceptible line at any window size. (2) Set Builder’s Tension Arc was planned around a 10-track set — a real 2-hour opener set runs closer to ~24 tracks with the long blends that style uses, so the arc strip and its tap-to-place grid now default to a 24-track horizon (and the grid’s display cap was raised so it can stretch further for a longer chain, scrolling horizontally past what fits on screen). (3) New: a crate filter at the top of Set Builder, matching the one already in Play — pick a crate and both the starting-track picker and every candidate list that follows are scoped to just that crate instead of your whole library.'},
@@ -6369,6 +6567,7 @@ showHeaderProgress('Loading your crate…');
 
 bootPromises.push(loadLibrary());
 bootPromises.push(loadFlows());
+bootPromises.push(loadBadFlows());
 bootPromises.push(loadChains());
 bootPromises.push(loadCrates().then(populateCrateFilterSelect));
 bootPromises.push(loadFavourites());
@@ -6621,6 +6820,7 @@ Promise.all(bootPromises).then(()=>{
   populateCrateFilterSelect();
   populateActiveSetSelect();
   renderMatches();
+  updateHeaderScrollState();
   const elapsed = Date.now() - splashShownAt;
   setTimeout(hideSplash, Math.max(0, 450 - elapsed));
 });
